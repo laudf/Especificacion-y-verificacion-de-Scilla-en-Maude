@@ -1,0 +1,113 @@
+--- fmod GRAMMAR is
+---  sorts @Token@ @Bubble@ @NeTokenList@ .
+---  sorts @Exp@ @Prog@ .
+
+---  subsort @Token@ < @Exp@ .
+
+---  op If_Then_Else_Fi : @Exp@ @Prog@ @Prog@ -> @Prog@ [ctor] .
+---  ops _*_ _+_ : @Exp@ @Exp@ -> @Exp@ [ctor comm assoc] .
+---  op _=_; : @Token@ @Exp@ -> @Prog@ [ctor] .
+--- endfm
+
+--- fmod MY-PROG is
+---  pr FLOAT .
+---  pr QID .
+
+---  sorts Var Exp Prog .
+---  subsort Qid < Var < Exp .
+---  subsort Float < Exp .
+
+---  op If_Then_Else_Fi : Exp Prog Prog -> Prog [ctor] .
+---  ops _*._ _+._ : Exp Exp -> Exp [ctor comm assoc] .
+---  op _=_; : Var Exp -> Prog [ctor] .
+--- endfm
+
+
+fmod GRAMMAR is
+  sorts @Token@ @Bubble@ @NeTokenList@ .
+  sorts @Exp@ @Prog@ .
+  subsort @Token@ < @Exp@ .
+
+  op _ : @Exp@ -> @Prog@ [ctor] .
+  op mul__ : @Exp@ @Exp@ -> @Exp@ [ctor comm assoc] .
+  op _=_ : @Token@ @Exp@ -> @Prog@ [ctor] .
+ 
+endfm
+
+fmod MY-PROG is
+  pr INT .
+  pr QID .
+  sorts Exp Prog .
+
+  subsort Int < Exp .
+
+  op _ : Exp -> Prog [ctor] .
+  op _*._ : Exp Exp -> Exp [ctor comm assoc] .
+  op _=_ : Qid Exp -> Prog [ctor] .
+
+endfm
+
+
+
+
+
+fmod META-SIGN is
+ including GRAMMAR .
+ pr META-LEVEL .
+
+ op BUBBLES : -> FModule .
+ op GRAMMAR : -> FModule [memo] .
+
+ eq BUBBLES
+    = (fmod 'GRAMMAR is
+        including 'QID-LIST .
+        sorts none .
+        none
+        op 'token : 'Qid -> '@Token@
+             [special(
+               (id-hook('Bubble, '1 '1)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)))] .
+        op 'bubble : 'QidList -> '@Bubble@
+             [special(
+               (id-hook('Bubble, '1 '-1 '`( '`))
+                op-hook('qidListSymbol, '__, 'QidList 'QidList, 'QidList)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)
+                id-hook('Exclude, 'eq 'ceq 'rl 'crl 'mb 'cmb 'sd 'csd
+                                  'var 'vars 'forall 'exists
+                                  'sorts 'subsort 'subsorts 'op 'ops
+                                  'protecting 'pr 'including 'inc 'extending
+                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec!)))] .
+        op 'neTokenList : 'QidList -> '@NeTokenList@
+             [special(
+               (id-hook('Bubble, '1 '-1 '`( '`))
+                op-hook('qidListSymbol, '__, 'QidList 'QidList, 'QidList)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)
+                id-hook('Exclude, '. ': '`[ 'forall 'exists)))] .
+        none
+        none
+     endfm) .
+ eq GRAMMAR = addImports(BUBBLES, (including 'GRAMMAR .)) .
+
+ var  SSDS : SubsortDeclSet .
+ vars IL IL' : ImportList .
+ var  EqS : EquationSet .
+ var  ODS : OpDeclSet .
+ var  MAS : MembAxSet .
+ var  RS : RuleSet .
+ var  M : Module .
+ var  SS : SortSet .
+ var  H : Header .
+
+ op setImports : Module ImportList -> Module .
+ eq setImports(fmod H is IL sorts SS . SSDS ODS MAS EqS endfm, IL')
+    = fmod H is IL' sorts SS . SSDS ODS MAS EqS endfm .
+ eq setImports(mod H is IL sorts SS . SSDS ODS MAS EqS RS endm, IL')
+    = mod H is IL' sorts SS . SSDS ODS MAS EqS RS endm .
+ eq setImports(fth H is IL sorts SS . SSDS ODS MAS EqS endfth, IL')
+    = fth H is IL' sorts SS . SSDS ODS MAS EqS endfth .
+ eq setImports(th H is IL sorts SS . SSDS ODS MAS EqS RS endth, IL')
+    = th H is IL' sorts SS . SSDS ODS MAS EqS RS endth .
+
+ op addImports : Module ImportList -> Module .
+ eq addImports(M, IL) = setImports(M, (getImports(M) IL)) .
+endfm
