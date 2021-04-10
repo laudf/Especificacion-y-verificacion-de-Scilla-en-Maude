@@ -1,0 +1,283 @@
+fmod GRAMMAR is
+  sorts @Token@ @Bubble@ @NeTokenList@ .
+  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ .
+  subsort @DeclaracionOp@ @Entero@ < @Prog@ .
+
+  ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
+  ops Uint32 Uint64 Uint128 Uint256 Int32 Int64 Int128 Int256 : -> @TipoEntero@ [ctor] .
+  op __ : @TipoEntero@ @Token@ -> @Entero@ [ctor] .
+  ***op __ : @TipoEnteroInt@ Num -> @EnteroInt@ [ctor] . 
+
+  ***Declaración de la operacion de igualdad.
+  op eq__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm] .
+  ***Declaración de la operación Suma.
+  op add__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm] .
+  ***Declaración de la operación resta
+  op sub__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación de multiplicación.
+  op mul__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm] .
+  ***Declaración de la operación de división.
+  op div__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación resto.
+  op rem__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación menor
+  op lt__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación de exponente.
+  op pow__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación de raíz cuadrada.
+  op isqrt_ : @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación to_nat.
+  op to-nat_ : @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operación to_(u)int32/64/128/256.
+  ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> @TipoOpto@ [ctor] .
+  op __ : @TipoOpto@ @Token@ -> @DeclaracionOp@ [ctor] . 
+
+  
+  op __ : @Prog@ @Prog@ -> @Prog@ [ctor] .
+
+endfm
+
+
+fmod datos_primitivos is 
+  pr INT .
+  pr STRING .
+  pr QID .
+  ***pr NAT .
+  pr CONVERSION .
+
+  sort EnteroUint EnteroInt Entero TipoEntero TipoEnteroUint TipoEnteroInt TipoOpToNat TipoOpto ByStr32 Tipo_to_string Byte Bytes TipoHash DeclaracionOp
+       TipoClave TipoValor Map MapVacio ByStr20 BNum DeclaracionOpMapI Lista Prog Num .
+  **** TipoClaveF TipoValorF DeclaracionOp Tipo_to_string Pareja Map1 Map2 Cadena .
+  ***TipoClave comprende los siguientes tipos.
+  ***subsort String Int ByStr32 BNum < TipoClaveF .
+  --- ***Todos los tipos excepto una función (añadir más)
+  --- subsort String Int ByStr32 BNum < TipoValorF .
+  subsort EnteroUint EnteroInt < Entero .
+  subsorts TipoEnteroUint TipoEnteroInt < TipoEntero .
+  subsorts Nat Byte < Bytes .
+  subsort TipoEntero < TipoClave .
+  ***Puede ser cualquier tipo definido tambien por el usuario (mapas o datos alegbraicos)
+  subsorts TipoEntero Map < TipoValor .
+  subsort DeclaracionOp EnteroUint < Prog .
+
+  ***Acepta tambien cualquier bystrX 
+---   ops String ByStr32 ByStr BNum : -> TipoClave [ctor] .
+---   ops String ByStr32 ByStr BNum : -> TipoValor [ctor] .
+
+
+  ***Declaración de los distintos tipos que puede ser un entero 
+  ***ops Uint32 Uint64 Uint128 Uint256 Int32 Int64 Int128 Int256 : -> TipoEntero [ctor] .
+
+  ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
+  ***op _ : Qid -> EnteroUint [ctor] .
+  ***op __ : TipoEnteroInt Int -> EnteroInt [ctor] . 
+
+  op __ : Prog Prog -> Prog [ctor] .
+  ***Declaración de operaciones de los enteros (las entradas son strings porque se usa el nombre para hacer referencia al entero).
+  ***Declaración de la operacion de igualdad.
+  ***op eq__ : String String -> DeclaracionOp [ctor comm] .
+  ***Declaración de la operación Suma.
+---   op add__ : String String -> DeclaracionOp [ctor comm] .
+---   ***Declaración de la operación resta
+---   op sub__ : String String -> DeclaracionOp [ctor] .
+
+---   ***Declaración de la operación de multiplicación.
+---   op mul__ : String String -> DeclaracionOp [ctor comm] .
+
+---   ***Declaración de la operación de división.
+---   op div__ : String String -> DeclaracionOp [ctor] .
+
+---   ***Declaración de la operación resto.
+---   op rem__ : String String -> DeclaracionOp [ctor] .
+
+---   ***Declaración de la operación menor
+---   op lt__ : String String -> DeclaracionOp [ctor] .
+
+---   ***Declaración de la operación de exponente.
+  ***op pow__ : Qid Qid -> DeclaracionOp [ctor] .
+
+  ***Declaración de la operación de raíz cuadrada.
+  op raiz_ : Qid -> DeclaracionOp [ctor] .
+  --- op raiz1__ : Nat Nat -> Nat [ctor] .
+  --- ceq raiz1 n2 n3 = n3
+  ---     if n3 * n3 == n2 .
+  --- ceq raiz1 n2 n3 = n3 
+  ---     if n3 * n3 < n2 /\ (n3 + 1) * (n3 + 1) > n2 .
+  --- ceq raiz1 n2 n3 = raiz1 n2 sd(n3,1)
+  ---     if n3 * n3 > n2 .
+  --- op raiz_ : Nat -> Nat [ctor] .
+  --- eq raiz n2 = raiz1 n2 n2 .
+
+  ***Declaración de la operación to_nat.
+  op to-nat_ : Qid -> DeclaracionOp [ctor] .
+
+  ***Declaración de la operación to_(u)int32/64/128/256.
+  ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> TipoOpto [ctor] .
+  op __ : TipoOpto Qid -> DeclaracionOp [ctor] . 
+  
+---   ***Los strings ya están definidos por defecto.
+---   ***Operaciones para los strings.
+---   ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
+---   ***Declaración de la operacion de concatenar dos strings.
+---   op concat__ : String String -> DeclaracionOp [ctor comm] .
+---   ***Declaración de la operación de substring (string posición_inicio longitud_substring).
+---   op substr___ : String String String -> DeclaracionOp [ctor] .
+---   op substr___ : String Nat Nat -> DeclaracionOp [ctor] .
+---   ***Declaración de la operacion to-string que convierte un elemento de tipo Intx/Uintx/BystrX/ByStr a string.
+---   op to-string_ : String -> DeclaracionOp [ctor] .
+---   ***Declaración de la operacion strlen (devuelve la longitud del string).
+---   op strlen_ : String -> DeclaracionOp [ctor] .
+
+
+---   ***Definición Hash
+---   ops a b c d e f : -> Byte [ctor] .
+---   op __ : Bytes Bytes -> Bytes [ctor assoc] .
+---   op [0x_] : Bytes -> ByStr32 [ctor] .
+---   ***Definición de operación eq (usaremos la definida para enteros).
+---   ***Definición operación sha256hash.
+---   op sha256hash_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación keccak256hash.
+---   op keccak256hash_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación ripemd160hash.
+---   op ripemd160hash_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación to_bystr (convierte un hash en un tipo ByStr).
+---   op to-bystr : String -> DeclaracionOp [ctor] .
+---   ***Definición operación substr (extrae una subcadena del hash).
+---   op substr___ : String String String -> DeclaracionOp [ctor] .
+---   op substr___ : String Nat Nat -> DeclaracionOp [ctor] .
+---   ***Definición operación strrev (da la vuelta a los bytes).
+---   op strrev_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación to_bystrX
+
+---   ***Definición operación to_uint(32/64/128/256)-> convierte el hash a un uint, el hash debe ser menor que 4/8/16/32 respectivamente.
+---   ops to-uint32 to-uint64 to-uint128 to-uint256 : -> TipoHash [ctor] .
+---   op __ : TipoHash String -> DeclaracionOp [ctor] .
+---   ***Definición operación schnorr_verify.
+---   op schnorr-verify___ : String String String -> DeclaracionOp [ctor] .
+---   ***Definición operación ecdsa_verify.
+---   op ecdsa-verify___ : String String String -> DeclaracionOp [ctor] .
+---   ***Definición operación ecdsa_recover_pk.
+---   op ecdsa-recover-pk___ : String String String -> DeclaracionOp [ctor] .
+---   ***Definición operación concat -> concatena los dos hashes ByStrx ByStrY resultado ByStr(X+Y).
+---   ***op concat__ : String String -> DeclaracionOp [ctor] .  Ya está definido para los strings
+---   ***Definición operación strlen.
+---   op strlen_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación bech32_to_bystr20.
+---   op bech32-to-bystr20__ : String String -> DeclaracionOp [ctor] .
+---   ***Definición operación bystr20_to_bech32
+---   op bystr20-to-bech32__ : String String -> DeclaracionOp [ctor] .
+---   ***Definición operación alt_bn128_G1_add
+---   op alt-bn128-G1-add__ : String String -> DeclaracionOp [ctor] .
+---   ***Definición operación alt_bn128_G1_mul
+---   op alt-bn128-G1-mul__ : String String -> DeclaracionOp [ctor] .
+---   ***Definición operación alt_bn128_pairing_product
+---   op alt-bn128-pairing-product_ : String -> DeclaracionOp [ctor] .
+
+---   ***Definición maps
+---   op Emp__ : TipoClave TipoValor -> MapVacio [ctor] .
+---   op Map__ : TipoClave TipoValor -> Map [ctor] .
+---   ***Definición operación insertar.
+---   ***Funcional
+---   op put___ : String String String -> DeclaracionOp [ctor] .
+---   ***In-place.
+---   op _[_]:=_ : String String String -> DeclaracionOpMapI [ctor] .
+---   ***Definición operación obtener valor.
+---   ***Funcional
+---   op get__ : String String -> DeclaracionOp [ctor] .
+---   ***In-place
+---   op _<-_[_] : String String String -> DeclaracionOpMapI [ctor] .
+---   ***Definición operación contener.
+---   ***Funcional
+---   op contains__ : String String -> DeclaracionOp [ctor] .
+---   ***In-place
+---   op _<-exists_[_] : String String String -> DeclaracionOpMapI [ctor] .
+---   ***Definición operación eliminar.
+---   ***Funcional
+---   op remove__ : String String -> DeclaracionOp [ctor] .
+---   ***In-place
+---   op delete_[_] : String String -> DeclaracionOpMapI [ctor] .
+---   ***Definición operación convertir a lista.
+---   ***Funcional
+---   op to-list_ : String -> DeclaracionOp [ctor] .
+---   ***Definición operación obtener tamaño.
+---   ***Funcional
+---   op size_ : String -> DeclaracionOp [ctor] .
+
+---   ***Definición direcciones
+---   op 0x_ : Bytes -> ByStr20 [ctor] .
+---   ***Solo tiene una operación, la de eq y usaremos la misma que la que está definida para los enteros.
+
+---   ***Definición número de bloques
+---   op 'BNum_' : Int -> BNum [ctor] .
+---   ***Definción de operaciones
+---   ***La operación eq ya está definida para los enteros.
+---   ***Definición operación blt(menor o igual).
+---   op blt__ : String String -> DeclaracionOp [ctor] .
+---   ***Declaración operación badd (suma un Bnum con un UintX).
+---   op badd__ : String String -> DeclaracionOp [ctor] .
+---   ***Declaración operación bsub(resta de dos Bnums).
+---   op bsub__ : String String -> DeclaracionOp [ctor] .
+
+
+endfm
+
+fmod META-SIGN is
+ including GRAMMAR .
+ pr META-LEVEL .
+
+ op BUBBLES : -> FModule .
+ op GRAMMAR : -> FModule [memo] .
+
+ eq BUBBLES
+    = (fmod 'GRAMMAR is
+        including 'QID-LIST .
+        sorts none .
+        none
+        op 'token : 'Qid -> '@Token@
+             [special(
+               (id-hook('Bubble, '1 '1)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)))] .
+        op 'bubble : 'QidList -> '@Bubble@
+             [special(
+               (id-hook('Bubble, '1 '-1 '`( '`))
+                op-hook('qidListSymbol, '__, 'QidList 'QidList, 'QidList)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)
+                id-hook('Exclude, 'eq 'ceq 'rl 'crl 'mb 'cmb 'sd 'csd
+                                  'var 'vars 'forall 'exists
+                                  'sorts 'subsort 'subsorts 'op 'ops
+                                  'protecting 'pr 'including 'inc 'extending
+                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec!)))] .
+        op 'neTokenList : 'QidList -> '@NeTokenList@
+             [special(
+               (id-hook('Bubble, '1 '-1 '`( '`))
+                op-hook('qidListSymbol, '__, 'QidList 'QidList, 'QidList)
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)
+                id-hook('Exclude, '. ': '`[ 'forall 'exists)))] .
+        none
+        none
+     endfm) .
+ eq GRAMMAR = addImports(BUBBLES, (including 'GRAMMAR .)) .
+
+ var  SSDS : SubsortDeclSet .
+ vars IL IL' : ImportList .
+ var  EqS : EquationSet .
+ var  ODS : OpDeclSet .
+ var  MAS : MembAxSet .
+ var  RS : RuleSet .
+ var  M : Module .
+ var  SS : SortSet .
+ var  H : Header .
+
+ op setImports : Module ImportList -> Module .
+ eq setImports(fmod H is IL sorts SS . SSDS ODS MAS EqS endfm, IL')
+    = fmod H is IL' sorts SS . SSDS ODS MAS EqS endfm .
+ eq setImports(mod H is IL sorts SS . SSDS ODS MAS EqS RS endm, IL')
+    = mod H is IL' sorts SS . SSDS ODS MAS EqS RS endm .
+ eq setImports(fth H is IL sorts SS . SSDS ODS MAS EqS endfth, IL')
+    = fth H is IL' sorts SS . SSDS ODS MAS EqS endfth .
+ eq setImports(th H is IL sorts SS . SSDS ODS MAS EqS RS endth, IL')
+    = th H is IL' sorts SS . SSDS ODS MAS EqS RS endth .
+
+ op addImports : Module ImportList -> Module .
+ eq addImports(M, IL) = setImports(M, (getImports(M) IL)) .
+endfm
