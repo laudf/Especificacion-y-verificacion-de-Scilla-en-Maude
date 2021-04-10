@@ -72,6 +72,18 @@ fmod PARSING is
   if < M1, T1' > := parse(M, T1) .
  ceq parse(M, 'to-nat_[T1]) = < M1, 'to-nat_[T1'] >
   if < M1, T1' > := parse(M, T1) .
+
+ ceq parse(M, 'concat__[T1, T2]) = < M2, '_++_[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+ ceq parse(M, 'substr___[T1, T2, T3]) = < M3, 'substr___[T1', T2', T3'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) /\
+     < M3, T3' > := parse(M2, T3) .
+ ceq parse(M, 'to-string_[T1]) = < M1, 'to-string_[T1'] >
+  if < M1, T1' > := parse(M, T1) .
+ ceq parse(M, 'strlen_[T1]) = < M1, 'length_[T1'] >
+  if < M1, T1' > := parse(M, T1) .
  *** TODO: terminar
  eq parse(M, T) = < M, T > [owise] .
 

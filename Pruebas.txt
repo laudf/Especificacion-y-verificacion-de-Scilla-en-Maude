@@ -1,2 +1,2 @@
-to-int32 b
-to-nat a
+Uint32 -1
+substr a a a

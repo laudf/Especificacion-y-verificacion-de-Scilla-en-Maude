@@ -1,11 +1,14 @@
 fmod GRAMMAR is
+  pr STRING .
+  pr INT .
   sorts @Token@ @Bubble@ @NeTokenList@ .
   sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ .
-  subsort @DeclaracionOp@ @Entero@ < @Prog@ .
+  subsort @DeclaracionOp@ @Entero@ String < @Prog@ .
 
+  ***ENTEROS
   ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
   ops Uint32 Uint64 Uint128 Uint256 Int32 Int64 Int128 Int256 : -> @TipoEntero@ [ctor] .
-  op __ : @TipoEntero@ @Token@ -> @Entero@ [ctor] .
+  op __ : @TipoEntero@ Int -> @Entero@ [ctor] .
   ***op __ : @TipoEnteroInt@ Num -> @EnteroInt@ [ctor] . 
 
   ***Declaración de la operacion de igualdad.
@@ -31,6 +34,18 @@ fmod GRAMMAR is
   ***Declaración de la operación to_(u)int32/64/128/256.
   ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> @TipoOpto@ [ctor] .
   op __ : @TipoOpto@ @Token@ -> @DeclaracionOp@ [ctor] . 
+
+  ***STRINGS
+  ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
+  ***Declaración de la operacion de concatenar dos strings.
+  op concat__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm] .
+  ***Declaración de la operación de substring (string posición_inicio longitud_substring).
+  op substr___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***op substr___ : @Token@ Nat Nat -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operacion to-string que convierte un elemento de tipo Intx/Uintx/BystrX/ByStr a string.
+  op to-string_ : @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operacion strlen (devuelve la longitud del string).
+  op strlen_ : @Token@ -> @DeclaracionOp@ [ctor] .
 
   
   op __ : @Prog@ @Prog@ -> @Prog@ [ctor] .
@@ -115,16 +130,16 @@ fmod datos_primitivos is
   ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> TipoOpto [ctor] .
   op __ : TipoOpto Qid -> DeclaracionOp [ctor] . 
   
----   ***Los strings ya están definidos por defecto.
----   ***Operaciones para los strings.
----   ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
----   ***Declaración de la operacion de concatenar dos strings.
+  ***Los strings ya están definidos por defecto.
+  ***Operaciones para los strings.
+  ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
+  ***Declaración de la operacion de concatenar dos strings.
 ---   op concat__ : String String -> DeclaracionOp [ctor comm] .
 ---   ***Declaración de la operación de substring (string posición_inicio longitud_substring).
----   op substr___ : String String String -> DeclaracionOp [ctor] .
+  ***op subCadena___ : Qid Qid Qid -> DeclaracionOp [ctor] .
 ---   op substr___ : String Nat Nat -> DeclaracionOp [ctor] .
 ---   ***Declaración de la operacion to-string que convierte un elemento de tipo Intx/Uintx/BystrX/ByStr a string.
----   op to-string_ : String -> DeclaracionOp [ctor] .
+  op to-string_ : Qid -> DeclaracionOp [ctor] .
 ---   ***Declaración de la operacion strlen (devuelve la longitud del string).
 ---   op strlen_ : String -> DeclaracionOp [ctor] .
 
