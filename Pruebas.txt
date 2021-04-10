@@ -1,2 +1,2 @@
-Pair String String
-Pair String String a a
+Nat
+Succ a

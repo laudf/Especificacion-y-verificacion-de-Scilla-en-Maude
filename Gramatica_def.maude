@@ -2,8 +2,8 @@ fmod GRAMMAR is
   pr STRING .
   pr INT .
   sorts @Token@ @Bubble@ @NeTokenList@ .
-  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ @BNum@ @NombreTipo@ @Option@ @Lista@ @Par@ .
-  subsort @DeclaracionOp@ @Entero@ String @BNum@ @Option@ @Lista@ @Par@ < @Prog@ .
+  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ @BNum@ @NombreTipo@ @Option@ @Lista@ @Par@ @Natural@ .
+  subsort @DeclaracionOp@ @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ < @Prog@ .
 
   ***DATOS PRMITIVOS
 
@@ -83,6 +83,13 @@ fmod GRAMMAR is
   op Pair__ : @NombreTipo@ @NombreTipo@ -> @Par@ [ctor] .
   ***Constructora Pair
   op Pair____ : @NombreTipo@ @NombreTipo@ @Token@ @Token@ -> @Par@ [ctor] .
+
+  ***Declaración Nat
+  op Nat : -> @Natural@ [ctor] .
+  ***Constructoras de Nat
+  op Zero : -> @Natural@ [ctor] .
+  op Succ_ : @Token@ -> @Natural@ [ctor] .
+  ***op Succ_ : Nat -> Natural [ctor] .
 
 
   
@@ -308,8 +315,8 @@ fmod datos_algebraicos is
 ---   ***Declaración Nat
 ---   op Nat : -> Natural [ctor] .
 ---   ***Constructoras de Nat
----   op Zero : -> Natural [ctor] .
----   op Succ_ : String -> Natural [ctor] .
+---   op Zero : -> Natural [ctor] . 
+  op Sucesor_ : Qid -> Natural [ctor] .
 ---   ***op Succ_ : Nat -> Natural [ctor] .
 
 endfm

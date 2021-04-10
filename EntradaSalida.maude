@@ -115,6 +115,9 @@ fmod PARSING is
      < M2, T2' > := parse(M1, T2) /\
      < M3, T3' > := parse(M2, T3) /\ 
      < M4, T4' > := parse(M3, T4) .
+ ***Naturales
+ ceq parse(M, 'Succ_[T1]) = < M1, 'Sucesor_[T1'] >
+  if < M1, T1' > := parse(M, T1) .
 
 
 
