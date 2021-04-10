@@ -2,8 +2,10 @@ fmod GRAMMAR is
   pr STRING .
   pr INT .
   sorts @Token@ @Bubble@ @NeTokenList@ .
-  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ .
-  subsort @DeclaracionOp@ @Entero@ String < @Prog@ .
+  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ @BNum@ @NombreTipo@ @Option@ @Lista@ @Par@ .
+  subsort @DeclaracionOp@ @Entero@ String @BNum@ @Option@ @Lista@ @Par@ < @Prog@ .
+
+  ***DATOS PRMITIVOS
 
   ***ENTEROS
   ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
@@ -47,6 +49,42 @@ fmod GRAMMAR is
   ***Declaración de la operacion strlen (devuelve la longitud del string).
   op strlen_ : @Token@ -> @DeclaracionOp@ [ctor] .
 
+  ***BNUM
+    ***Definición número de bloques
+  op BNum_ : Int -> @BNum@ [ctor] .
+  ***Definción de operaciones
+  ***La operación eq ya está definida para los enteros.
+  ***Definición operación blt(menor o igual).
+  op blt__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración operación badd (suma un Bnum con un UintX).
+  op badd__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+  ***Declaración operación bsub(resta de dos Bnums).
+  op bsub__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor] .
+
+  ***Falta por meter los mapas, hashes y direcciones.
+
+  ***DATOS ALGEBRAICOS
+  ***Declaración option
+  ops String ByStr32 ByStr20 BNum Bool : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
+  op Option_ : @NombreTipo@ -> @Option@ [ctor] .
+  ***Constructoras option
+  op None{_} : @NombreTipo@ -> @Option@ [ctor] .
+  op None : -> @Option@ [ctor] .
+  op Some__ : @NombreTipo@ @Token@ -> @Option@ [ctor] . 
+  op Some_ : @Token@ -> @Option@ [ctor] .
+
+  ***Declaración Lista
+  op List_ : @NombreTipo@ -> @Lista@ [ctor] .
+  ***Constructoras de las listas
+  op Nil{_} : @NombreTipo@ -> @Lista@ [ctor] .
+  op Cons___ : @NombreTipo@ @Token@ @Token@ -> @Lista@ [ctor] .
+
+  ***Declaración Pares
+  op Pair__ : @NombreTipo@ @NombreTipo@ -> @Par@ [ctor] .
+  ***Constructora Pair
+  op Pair____ : @NombreTipo@ @NombreTipo@ @Token@ @Token@ -> @Par@ [ctor] .
+
+
   
   op __ : @Prog@ @Prog@ -> @Prog@ [ctor] .
 
@@ -61,7 +99,7 @@ fmod datos_primitivos is
   pr CONVERSION .
 
   sort EnteroUint EnteroInt Entero TipoEntero TipoEnteroUint TipoEnteroInt TipoOpToNat TipoOpto ByStr32 Tipo_to_string Byte Bytes TipoHash DeclaracionOp
-       TipoClave TipoValor Map MapVacio ByStr20 BNum DeclaracionOpMapI Lista Prog Num .
+       TipoClave TipoValor Map MapVacio ByStr20 BNum DeclaracionOpMapI Prog Num .
   **** TipoClaveF TipoValorF DeclaracionOp Tipo_to_string Pareja Map1 Map2 Cadena .
   ***TipoClave comprende los siguientes tipos.
   ***subsort String Int ByStr32 BNum < TipoClaveF .
@@ -85,7 +123,7 @@ fmod datos_primitivos is
 
   ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
   ***op _ : Qid -> EnteroUint [ctor] .
-  ***op __ : TipoEnteroInt Int -> EnteroInt [ctor] . 
+  ***op Entero__ : TipoEnteroInt Int -> Entero [ctor] . 
 
   op __ : Prog Prog -> Prog [ctor] .
   ***Declaración de operaciones de los enteros (las entradas son strings porque se usa el nombre para hacer referencia al entero).
@@ -223,7 +261,7 @@ fmod datos_primitivos is
 ---   ***Solo tiene una operación, la de eq y usaremos la misma que la que está definida para los enteros.
 
 ---   ***Definición número de bloques
----   op 'BNum_' : Int -> BNum [ctor] .
+  ***op BNum_ : Int -> BNum [ctor] .
 ---   ***Definción de operaciones
 ---   ***La operación eq ya está definida para los enteros.
 ---   ***Definición operación blt(menor o igual).
@@ -232,7 +270,47 @@ fmod datos_primitivos is
 ---   op badd__ : String String -> DeclaracionOp [ctor] .
 ---   ***Declaración operación bsub(resta de dos Bnums).
 ---   op bsub__ : String String -> DeclaracionOp [ctor] .
+endfm
 
+fmod datos_algebraicos is 
+  pr datos_primitivos .
+---   pr NAT .
+  sort NombreTipo Option Lista Par Natural .
+
+---   sort Booleano ConstOp TipoList DeclaracionAlg .
+---   --- subsort Bool TipoInteger < TipoList .
+---   ***subsort Nat < TipoList .
+  subsort TipoEntero Map < NombreTipo .
+   
+  ***Declaración booleano -> ya está predefinido en maude.
+
+  ***Declaración option
+---   ops String ByStr32 ByStr20 BNum Bool : -> NombreTipo [ctor] .
+---   op Option_ : NombreTipo -> Option [ctor] .
+---   ***Constructoras option
+---   op None{_} : NombreTipo -> Option [ctor] .
+---   op None : -> Option [ctor] .
+  op Some__ : NombreTipo Qid -> Option [ctor] . 
+  op Some_ : Qid -> Option [ctor] .
+
+
+---   ***Declaración Lista
+---   op List_ : NombreTipo -> Lista [ctor] .
+---   ***Constructoras de las listas
+---   op Nil{_} : NombreTipo -> Lista [ctor] .
+  op Cons___ : NombreTipo Qid Qid -> Lista [ctor] .
+
+---   ***Declaración Pares
+---   op Pair__ : NombreTipo NombreTipo -> Par [ctor] .
+---   ***Constructora Pair
+  op Pair____ : NombreTipo NombreTipo Qid Qid -> Par [ctor] .
+
+---   ***Declaración Nat
+---   op Nat : -> Natural [ctor] .
+---   ***Constructoras de Nat
+---   op Zero : -> Natural [ctor] .
+---   op Succ_ : String -> Natural [ctor] .
+---   ***op Succ_ : Nat -> Natural [ctor] .
 
 endfm
 

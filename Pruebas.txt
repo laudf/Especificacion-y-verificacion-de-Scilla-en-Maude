@@ -1,2 +1,2 @@
-Uint32 -1
-substr a a a
+Pair String String
+Pair String String a a

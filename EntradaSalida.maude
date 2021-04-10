@@ -8,8 +8,8 @@ fmod PARSING is
  sort ParsingRes .
  op <_,_> : Module Term -> ParsingRes [ctor] .
 
- vars T T1 T1' T2 T2' T3 T3' : Term .
- vars M M1 M2 M3 : Module .
+ vars T T1 T1' T2 T2' T3 T3' T4 T4' : Term .
+ vars M M1 M2 M3 M4 : Module .
  var  Ct : Constant .
  var  S : String .
  var  F : Float .
@@ -17,7 +17,7 @@ fmod PARSING is
  var  I : Int .
 
  op parse : Term -> ParsingRes .
- eq parse(T) = parse(upModule('datos_primitivos, true), T) .
+ eq parse(T) = parse(upModule('datos_algebraicos, true), T) .
 
  op parse : Module Term -> ParsingRes .
  ceq parse(M, '__[T1, T2]) = < M2, '__[T1', T2'] >
@@ -43,7 +43,7 @@ fmod PARSING is
  ceq parse(M, '_+_[T1, T2]) = < M2, '_+._[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
-
+ ***ENTEROS
  ceq parse(M, 'eq__[T1, T2]) = < M2, '_==_[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
@@ -73,6 +73,7 @@ fmod PARSING is
  ceq parse(M, 'to-nat_[T1]) = < M1, 'to-nat_[T1'] >
   if < M1, T1' > := parse(M, T1) .
 
+ ***STRINGS
  ceq parse(M, 'concat__[T1, T2]) = < M2, '_++_[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
@@ -84,6 +85,39 @@ fmod PARSING is
   if < M1, T1' > := parse(M, T1) .
  ceq parse(M, 'strlen_[T1]) = < M1, 'length_[T1'] >
   if < M1, T1' > := parse(M, T1) .
+
+ ***BNUM
+ ceq parse(M, 'blt__[T1, T2]) = < M2, '_<_[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+ ceq parse(M, 'badd__[T1, T2]) = < M2, '_+_[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+ ceq parse(M, 'bsub__[T1, T2]) = < M2, '_-_[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+
+ ***DATOS ALGEBRAICOS
+ ***Option
+ ceq parse(M, 'Some__[T1, T2]) = < M2, 'Some__[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+ ceq parse(M, 'Some_[T1]) = < M1, 'Some_[T1'] >
+  if < M1, T1' > := parse(M, T1) .
+ ***Listas
+ ceq parse(M, 'Cons___[T1, T2, T3]) = < M3, 'Cons___[T1', T2', T3'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) /\
+     < M3, T3' > := parse(M2, T3) .
+ ***Pares
+ ceq parse(M, 'Pair____[T1, T2, T3, T4]) = < M4, 'Pair____[T1', T2', T3', T4'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) /\
+     < M3, T3' > := parse(M2, T3) /\ 
+     < M4, T4' > := parse(M3, T4) .
+
+
+
  *** TODO: terminar
  eq parse(M, T) = < M, T > [owise] .
 
