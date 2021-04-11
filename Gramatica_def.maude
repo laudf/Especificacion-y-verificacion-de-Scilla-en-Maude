@@ -2,8 +2,8 @@ fmod GRAMMAR is
   pr STRING .
   pr INT .
   sorts @Token@ @Bubble@ @NeTokenList@ .
-  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ @BNum@ @NombreTipo@ @Option@ @Lista@ @Par@ @Natural@ .
-  subsort @DeclaracionOp@ @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ < @Prog@ .
+  sort @DeclaracionOp@ @Prog@ @TipoEntero@ @Num@ @Entero@ @TipoOpto@ @BNum@ @NombreTipo@ @Option@ @Lista@ @Par@ @Natural@ @Contrato@ .
+  ***subsort @DeclaracionOp@ @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ParametrosInm@ @Campo_mod@ @Version@ < @Prog@ .
 
   ***DATOS PRMITIVOS
 
@@ -89,11 +89,38 @@ fmod GRAMMAR is
   ***Constructoras de Nat
   op Zero : -> @Natural@ [ctor] .
   op Succ_ : @Token@ -> @Natural@ [ctor] .
-  ***op Succ_ : Nat -> Natural [ctor] .
+
+  ***PARÁMETROS INMUTABLES
+  sort @TipoParamInm@ @ParamInm@ @ListaParamInm@ @ParametrosInm@ .
+  subsort @ParamInm@ < @ListaParamInm@ .
+
+  ops ByStr20 BNum String ByStr32 Bool : -> @TipoParamInm@ [ctor] .
+  ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
+  op _:_ : @Token@ @TipoParamInm@ -> @ParamInm@ [ctor] .
+  ***op vacio : -> ListaParamInm [ctor] .
+  ***op _ : ParamInm -> ListaParamInm [ctor] .
+  op _;_ : @ListaParamInm@ @ListaParamInm@ -> @ListaParamInm@ [ctor comm] . 
+  ***op <> : -> ParametrosInm [ctor] .
+  op _ : @ListaParamInm@ -> @ParametrosInm@ [ctor] .
+  --- ***op [_with_=>] : ParametrosInm OperacionBooleana -> Restriccion [ctor] .
+
+  ***CAMPOS MODIFICABLES
+  sort @ValorCampo@ @Campo_mod@ @ListaCamposMod@ .
+  ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
+  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String < @ValorCampo@ .
+  subsort @Campo_mod@ < @ListaCamposMod@ .
+  op cv : -> @Campo_mod@ [ctor] .
+  op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor] .
+  op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor] .
+
+ 
+
+
+ 
 
 
   
-  op __ : @Prog@ @Prog@ -> @Prog@ [ctor] .
+  op scilla-version__ : Nat @ListaCamposMod@ -> @Contrato@ [ctor] .
 
 endfm
 
@@ -320,6 +347,51 @@ fmod datos_algebraicos is
 ---   ***op Succ_ : Nat -> Natural [ctor] .
 
 endfm
+
+fmod param_inmutables is
+
+  pr datos_algebraicos .
+  ***pr expresiones .
+  ***pr STRING .
+
+  sort TipoParamInm ParamInm ParamInmSolo ListaParamInm ParametrosInm Restriccion OperacionBooleana .
+  subsort TipoEntero Map Option Lista Par Natural < TipoParamInm .
+  subsort ParamInm < ListaParamInm .
+  ***subsort ExpresionBuilt < OperacionBooleana .
+  
+  --- ops ByStr20 BNum String ByStr32 Bool : -> TipoParamInm [ctor] .
+  --- ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
+  op _:_ : Qid TipoParamInm -> ParamInm [ctor] .
+  op LParamInm_ : ListaParamInm -> ParametrosInm [ctor] .
+  --- ***op vacio : -> ListaParamInm [ctor] .
+  --- ***op _ : ParamInm -> ListaParamInm [ctor] .
+  --- op _,_ : ListaParamInm ListaParamInm -> ListaParamInm [ctor assoc comm] . 
+  --- ***op <> : -> ParametrosInm [ctor] .
+  --- op <_> : ListaParamInm -> ParametrosInm [ctor] .
+  --- ***op [_with_=>] : ParametrosInm OperacionBooleana -> Restriccion [ctor] .
+
+endfm
+
+fmod campos_modificables is
+  pr param_inmutables .
+
+  sort ValorCampo Campo_mod ListaCamposModA .
+  subsort Entero MapVacio ByStr32 ByStr20 Option Lista Par Natural String Bool < ValorCampo .
+  subsort Campo_mod < ListaCamposModA .
+
+  --- op field_=_ : ParamInm ValorCampo -> Campo_mod [ctor] .
+  --- op __ : ListaCamposModA ListaCamposModA -> ListaCamposModA [ctor assoc] . 
+  --- op 
+
+endfm 
+
+fmod contrato is
+
+  sort Contrato Version Campo_mod .
+  
+  op Contrato__ : Version Campo_mod -> Contrato [ctor] .
+
+endfm 
 
 fmod META-SIGN is
  including GRAMMAR .

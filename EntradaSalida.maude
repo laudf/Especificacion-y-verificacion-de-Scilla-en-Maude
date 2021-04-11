@@ -17,10 +17,10 @@ fmod PARSING is
  var  I : Int .
 
  op parse : Term -> ParsingRes .
- eq parse(T) = parse(upModule('datos_algebraicos, true), T) .
+ eq parse(T) = parse(upModule('param_inmutables, true), T) .
 
  op parse : Module Term -> ParsingRes .
- ceq parse(M, '__[T1, T2]) = < M2, '__[T1', T2'] >
+ ceq parse(M, 'scilla-version__[T1, T2]) = < M2, 'Contrato__[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
  ceq parse(M, 'token[T]) = < M, upTerm(F) >
@@ -117,6 +117,13 @@ fmod PARSING is
      < M4, T4' > := parse(M3, T4) .
  ***Naturales
  ceq parse(M, 'Succ_[T1]) = < M1, 'Sucesor_[T1'] >
+  if < M1, T1' > := parse(M, T1) .
+
+ ***PARÁMETROS INMUTABLES
+ ceq parse(M, '_:_[T1, T2]) = < M2, '_:_[T1', T2'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) .
+ ceq parse(M, '_[T1]) = < M1, 'LParamInm_[T1'] >
   if < M1, T1' > := parse(M, T1) .
 
 
@@ -251,7 +258,7 @@ endm
 
 
 red metaParse(GRAMMAR, tokenize("If xxw\nThen 4 = 4 + w ;\nElse z = 4.5 ;\nFi"), anyType) .
-red metaParse(GRAMMAR, tokenize("Uint32 1"), anyType) .
+red metaParse(GRAMMAR, tokenize("scilla-version 0 field a : BNum = Uint32 1 field a : BNum = Uint32 1"), anyType) .
 
 set print attribute on .
 
