@@ -1,2 +1,5 @@
 scilla-version 1
+(a : String ,
+b : BNum ,
+c : BNum)
 cv

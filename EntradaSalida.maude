@@ -20,9 +20,11 @@ fmod PARSING is
  eq parse(T) = parse(upModule('param_inmutables, true), T) .
 
  op parse : Module Term -> ParsingRes .
- ceq parse(M, 'scilla-version__[T1, T2]) = < M2, 'Contrato__[T1', T2'] >
+ ceq parse(M, 'scilla-version___[T1, T2, T3]) = < M3, 'Contrato___[T1', T2', T3'] >
   if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+     < M2, T2' > := parse(M1, T2) /\
+     < M3, T3' > := parse(M2, T3) . ***/\
+     ***< M4, T4' > := parse(M3, T4) .
  ceq parse(M, 'token[T]) = < M, upTerm(F) >
   if Q := downQid(T) /\
      S := string(Q) /\
@@ -123,8 +125,7 @@ fmod PARSING is
  ceq parse(M, '_:_[T1, T2]) = < M2, '_:_[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '_[T1]) = < M1, 'LParamInm_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
+
 
 
 
