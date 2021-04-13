@@ -50,7 +50,7 @@ fmod GRAMMAR is
   op strlen_ : @Token@ -> @DeclaracionOp@ [ctor] .
 
   ***BNUM
-    ***Definición número de bloques
+  ***Definición número de bloques
   op BNum_ : Int -> @BNum@ [ctor] .
   ***Definción de operaciones
   ***La operación eq ya está definida para los enteros.
@@ -92,11 +92,12 @@ fmod GRAMMAR is
 
   ***PARÁMETROS INMUTABLES
   sort @TipoParamInm@ @ParamInm@ @ListaParamInm@ @ParametrosInm@ .
+  subsort @TipoEntero@ < @TipoParamInm@ .
   subsort @ParamInm@ < @ListaParamInm@ .
 
   ops ByStr20 BNum String ByStr32 Bool : -> @TipoParamInm@ [ctor] .
   ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
-  op _:_ : @Token@ @TipoParamInm@ -> @ParamInm@ [ctor prec 16] .
+  op _:_ : @Token@ @TipoParamInm@ -> @ParamInm@ [ctor prec 15] .
   ***op vacio : -> ListaParamInm [ctor] .
   ***op _ : ParamInm -> ListaParamInm [ctor] .
   op (_,_) : @ListaParamInm@ @ListaParamInm@ -> @ListaParamInm@ [ctor assoc prec 17] . 
@@ -113,6 +114,57 @@ fmod GRAMMAR is
   op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 16] .
   op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor assoc prec 17] .
 
+  ***EXPRESIONES
+  sort @TipoDato@ @Expresion@ @Operacion@ @ExpresionFuncion@ @ListaArgumentos@ @OperacionBuilt@ @ListaExpresiones@ @TipoOpcion@ @Opcion@
+       @ListaOpciones@ .
+  ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
+  subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ < @TipoDato@ .
+  --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
+  subsort @Expresion@ @Lista@ < @Operacion@ .
+  subsort @TipoEntero@ < @ListaArgumentos@ .
+  subsort @DeclaracionOp@ < @OperacionBuilt@ .
+  subsort @Expresion@ < @ListaExpresiones@ . 
+  subsort @Option@ @Par@ < @TipoOpcion@ .
+  subsort @Opcion@ < @ListaOpciones@ .
+
+  op let_=_ : @Token@ @TipoDato@ -> @Expresion@ [ctor prec 19]  .
+  op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 19] .
+  ***Falta añadir los mensajes
+  op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 19] .
+  op __ : @Token@ @Token@ -> @Expresion@ [ctor prec 19] .
+  --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
+  ***op String : -> @ListaArgumentos@ [ctor] .
+  op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 18] .
+  op @__ : @Token@ @ListaArgumentos@ -> @Expresion@ [ctor prec 19] .  
+
+  --- op [_] : String -> Argumento [ctor] .
+  --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
+  --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
+  op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 19] .
+
+  op |_=>_ : @TipoOpcion@ @Expresion@ -> @Opcion@ [ctor] .  ***La segunda entrada no sería un string sino un statement.
+  op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor] .
+  op match_with_end : @Token@ @ListaOpciones@ -> @Expresion@ [ctor] .
+  ***op __ : @ListaExpresiones@ @ListaExpresiones@ -> @ListaExpresiones@ [ctor assoc prec 20] .
+
+  ***DECLARACIONES
+  sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
+  ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ < @Valor@ .
+  subsort @Declaracion@ < @ListaDeclaraciones@ .
+
+  op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
+  op _:=_ : @Token@ @Token@ -> @Declaracion@ [ctor prec 16] .
+  op _<-&BLOCKNUMBER : @Token@ -> @Declaracion@ [ctor prec 16] .
+  op _=_ : @Token@ @Valor@ -> @Declaracion@ [ctor prec 16] .
+  ***op __ : @Token@ @ListaArgumentos@ -> @Declaracion@ [ctor] .
+  op forall__ : @Token@ @Token@ -> @Declaracion@ [ctor prec 16] .
+  op accept : -> @Declaracion@ [ctor] .
+  op send_ : @Token@ -> @Declaracion@ [ctor prec 16] .
+  op event_ : @Token@ -> @Declaracion@ [ctor prec 16] .
+
+  op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 17] .
+
  
 
 
@@ -120,7 +172,8 @@ fmod GRAMMAR is
 
 
   
-  op scilla-version___ : Nat @ListaParamInm@ @ListaCamposMod@ -> @Contrato@ [ctor] .
+  op scilla-version____ : Nat @ListaParamInm@ @ListaCamposMod@ @ListaDeclaraciones@ -> @Contrato@ [ctor] .
+  ***op scilla-version__ : Nat @BNum@ -> @Contrato@ [ctor] .
 
 endfm
 
@@ -355,14 +408,14 @@ fmod param_inmutables is
   ***pr STRING .
 
   sort TipoParamInm ParamInm ParamInmSolo ListaParamInm ParametrosInm Restriccion OperacionBooleana .
-  subsort TipoEntero Map Option Lista Par Natural < TipoParamInm .
-  subsort ParamInm < ListaParamInm .
+  ***subsort TipoEntero Map Option Lista Par Natural < TipoParamInm .
+  ***subsort ParamInm < ListaParamInm .
   ***subsort ExpresionBuilt < OperacionBooleana .
   
   --- ops ByStr20 BNum String ByStr32 Bool : -> TipoParamInm [ctor] .
   --- ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
   op _:_ : Qid TipoParamInm -> ParamInm [ctor] .
-  ***op LParamInm__ : ListaParamInm ListaParamInm -> ListaParamInm [ctor] .
+  op ListaParamInm__ : ListaParamInm ListaParamInm -> ListaParamInm [ctor] .
   --- ***op vacio : -> ListaParamInm [ctor] .
   --- ***op _ : ParamInm -> ListaParamInm [ctor] .
   --- op _,_ : ListaParamInm ListaParamInm -> ListaParamInm [ctor assoc comm] . 
@@ -372,24 +425,102 @@ fmod param_inmutables is
 
 endfm
 
---- fmod campos_modificables is
----   pr param_inmutables .
+fmod campos_modificables is
 
----   sort ValorCampo Campo_mod ListaCamposModA .
----   subsort Entero MapVacio ByStr32 ByStr20 Option Lista Par Natural String Bool < ValorCampo .
----   subsort Campo_mod < ListaCamposModA .
+  sort ListaCamposMod ParamInm ValorCampo Campo_mod .
+  subsort Campo_mod < ListaCamposMod .
 
----   --- op field_=_ : ParamInm ValorCampo -> Campo_mod [ctor] .
----   --- op __ : ListaCamposModA ListaCamposModA -> ListaCamposModA [ctor assoc] . 
----   --- op 
+  op campo__ : ParamInm ValorCampo -> Campo_mod [ctor] .
+  op ListaCamposMod__ : ListaCamposMod ListaCamposMod -> ListaCamposMod [ctor] .
+  --- ***op vacio : -> ListaParamInm [ctor] .
+  --- ***op _ : ParamInm -> ListaParamInm [ctor] .
+  --- op _,_ : ListaParamInm ListaParamInm -> ListaParamInm [ctor assoc comm] . 
+  --- ***op <> : -> ParametrosInm [ctor] .
+  --- op <_> : ListaParamInm -> ParametrosInm [ctor] .
+  --- ***op [_with_=>] : ParametrosInm OperacionBooleana -> Restriccion [ctor] .
 
---- endfm 
+endfm
+
+fmod expresiones is
+  ***pr QID .
+  pr param_inmutables .
+  --- pr BoolUtils .
+  --- pr IntUtils .
+  --- sort TipoDato Expresion Operacion ListaEntradas EventoMsg Opcion ListaOpciones Argumento ListaArgumentos 
+  ---      ExpresionBuilt Expresiones ExpresionFuncion Expresion@ OperacionBuilt TipoOpcion ExpresionMatch .
+  --- subsorts Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion < TipoDato .
+  --- subsorts ExpresionFuncion ExpresionBuilt EventoMsg Expresion@ ExpresionMatch < Expresion .
+  --- subsort ParamInm < ListaEntradas .
+  --- subsort Opcion < ListaOpciones .
+  --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
+  --- subsort Argumento < ListaArgumentos .
+  --- subsort DeclaracionOp < OperacionBuilt .
+  --- subsorts Option Bool Par < TipoOpcion .
+  --- ***subsort Expresion ExpresionBuilt < Expresiones .
+  --- ***Entrada: nombre de la variable y el valor
+
+  sort Expresion TipoDato Operacion ListaArgumentos .
+  subsorts Entero String BNum < TipoDato .
+
+  op let__ : Qid TipoDato -> Expresion [ctor]  .
+
+  op let__in_ : Qid TipoDato Operacion -> Expresion [ctor] .
+
+  --- ***Declaracion expresion de evento o mensaje
+  --- ***op _:_ : String String -> Entrada [ctor] .
+  --- op _:_ : String String -> ParamInm [ctor] .
+  --- op _;_ : ListaEntradas ListaEntradas -> ListaEntradas [ctor assoc] .
+  --- op {_} : ListaEntradas -> EventoMsg [ctor] .
+
+  --- ***Declaracion de funcion
+  --- op fun(_) =>_ : ParamInm Operacion -> ExpresionFuncion [ctor] .
+
+  ***op Funcion__ : Qid Qid -> Expresion [ctor] .
+
+  --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
+
+  op @__ : Qid Qid -> Expresion [ctor] .  ***No es exactamente string (hay que cambiarlo).
+  ***subsort TipoEntero < ListaArgumentos .
+  ***op lista__ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor prec 17] .
+
+  --- op [_] : String -> Argumento [ctor] .
+  --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
+  --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
+  --- op builtin_ : OperacionBuilt -> ExpresionBuilt [ctor] .
+
+  --- op |_=>_ : TipoOpcion String -> Opcion [ctor] .  ***La segunda entrada no sería un string sino un statement.
+  --- op __ : ListaOpciones ListaOpciones -> ListaOpciones [ctor] .
+  --- op match_with_end : String ListaOpciones -> ExpresionMatch [ctor] .
+
+endfm
+
+fmod declaraciones is
+  pr expresiones .
+
+  --- sort Declaracion Valor ListaDeclaraciones DeclaracionFuncion .
+  --- subsorts Entero String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts < Valor .
+  --- subsorts Declaracion ExpresionMatch < ListaDeclaraciones .
+  --- subsort DeclaracionFuncion < Declaracion .
+  sort Declaracion Valor ListaDeclaraciones .
+  
+  op guardar__ : Qid Qid -> Declaracion [ctor] .
+  op actualizar__ : Qid Qid -> Declaracion [ctor] .
+  op _<-&BLOCKNUMBER : Qid -> Declaracion [ctor] .
+  op _=_ : Qid Valor -> Declaracion [ctor] .
+  op __ : Qid ListaArgumentos -> Declaracion [ctor] .
+  op forall__ : Qid Qid -> Declaracion [ctor] .
+  op enviar_ : Qid -> Declaracion [ctor] .
+  op evento_ : Qid -> Declaracion [ctor] .
+
+  op ListaDec__ : ListaDeclaraciones ListaDeclaraciones -> ListaDeclaraciones [ctor assoc] .
+
+endfm
 
 fmod contrato is
 
-  sort Contrato Version Campo_mod ListaParamInm .
+  sort Contrato Version Campo_mod ListaParamInm ListaDeclaraciones .
   
-  op Contrato___ : Version ListaParamInm Campo_mod -> Contrato [ctor] .
+  op Contrato____ : Version ListaParamInm Campo_mod ListaDeclaraciones -> Contrato [ctor] .
 
 endfm 
 

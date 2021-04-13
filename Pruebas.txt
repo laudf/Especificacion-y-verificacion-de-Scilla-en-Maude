@@ -1,5 +1,15 @@
 scilla-version 1
 (a : String ,
 b : BNum ,
-c : BNum)
-cv
+c : Uint32)
+field a : Uint32 = ""
+field a : String = ""
+a <- b ; 
+a := b ;
+event e
+
+
+
+
+
+
