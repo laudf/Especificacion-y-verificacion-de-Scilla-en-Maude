@@ -165,6 +165,13 @@ fmod GRAMMAR is
 
   op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 17] .
 
+  ***TRANSICIONES
+  sort @Transicion@ @ListaTransiciones@ .
+  subsort @Transicion@ < @ListaTransiciones@ .
+
+  op transition_(_)_end : @Token@ @ListaParamInm@ @ListaDeclaraciones@ -> @Transicion@ [ctor prec 16] .
+  op __ : @ListaTransiciones@ @ListaTransiciones@ -> @ListaTransiciones@ [ctor assoc prec 17] .
+
  
 
 
@@ -172,7 +179,7 @@ fmod GRAMMAR is
 
 
   
-  op scilla-version____ : Nat @ListaParamInm@ @ListaCamposMod@ @ListaDeclaraciones@ -> @Contrato@ [ctor] .
+  op scilla-version____ : Nat @ListaParamInm@ @ListaCamposMod@ @ListaTransiciones@ -> @Contrato@ [ctor] .
   ***op scilla-version__ : Nat @BNum@ -> @Contrato@ [ctor] .
 
 endfm
@@ -426,18 +433,13 @@ fmod param_inmutables is
 endfm
 
 fmod campos_modificables is
+  pr param_inmutables .
 
-  sort ListaCamposMod ParamInm ValorCampo Campo_mod .
+  sort ListaCamposMod ValorCampo Campo_mod .
   subsort Campo_mod < ListaCamposMod .
 
   op campo__ : ParamInm ValorCampo -> Campo_mod [ctor] .
   op ListaCamposMod__ : ListaCamposMod ListaCamposMod -> ListaCamposMod [ctor] .
-  --- ***op vacio : -> ListaParamInm [ctor] .
-  --- ***op _ : ParamInm -> ListaParamInm [ctor] .
-  --- op _,_ : ListaParamInm ListaParamInm -> ListaParamInm [ctor assoc comm] . 
-  --- ***op <> : -> ParametrosInm [ctor] .
-  --- op <_> : ListaParamInm -> ParametrosInm [ctor] .
-  --- ***op [_with_=>] : ParametrosInm OperacionBooleana -> Restriccion [ctor] .
 
 endfm
 
@@ -513,6 +515,17 @@ fmod declaraciones is
   op evento_ : Qid -> Declaracion [ctor] .
 
   op ListaDec__ : ListaDeclaraciones ListaDeclaraciones -> ListaDeclaraciones [ctor assoc] .
+
+endfm
+
+
+fmod transiciones is
+  pr param_inmutables .
+  pr declaraciones .
+
+  sort Transicion .
+  
+  op transicion___ : Qid ListaParamInm ListaDeclaraciones -> Transicion [ctor] .
 
 endfm
 

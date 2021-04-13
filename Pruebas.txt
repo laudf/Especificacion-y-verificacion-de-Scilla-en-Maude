@@ -4,9 +4,23 @@ b : BNum ,
 c : Uint32)
 field a : Uint32 = ""
 field a : String = ""
-a <- b ; 
-a := b ;
-event e
+transition a (a : BNum , b : Uint32)
+  a <- b ; 
+  a := b ;
+  event e
+end
+transition a (a : BNum , b : Uint32)
+  a <- b ; 
+  a := b ;
+  event e
+end
+transition a (a : BNum , b : Uint32)
+  a <- b ; 
+  a := b ;
+  event e
+end
+
+
 
 
 

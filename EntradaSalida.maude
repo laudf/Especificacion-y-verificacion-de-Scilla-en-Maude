@@ -17,10 +17,10 @@ fmod PARSING is
  var  I : Int .
 
  op parse : Term -> ParsingRes .
- eq parse(T) = parse(upModule('param_inmutables, true), T) .
+ eq parse(T) = parse(upModule('campos_modificables, true), T) .
 
  op parse : Module Term -> ParsingRes .
- ceq parse(M, 'scilla-version_____[T1, T2, T3, T4]) = < M4, 'Contrato_____[T1', T2', T3', T4'] >
+ ceq parse(M, 'scilla-version____[T1, T2, T3, T4]) = < M4, 'Contrato____[T1', T2', T3', T4'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) /\
      < M3, T3' > := parse(M2, T3) /\
@@ -181,6 +181,12 @@ fmod PARSING is
  ceq parse(M, '_;_[T1, T2]) = < M2, 'ListaDec__[T1', T2'] >
   if < M1, T1' > := parse(M, T1) /\
      < M2, T2' > := parse(M1, T2) .
+
+ ***TRANSICIONES
+ ceq parse(M, 'transition_`(_`)_end[T1, T2, T3]) = < M3, 'transicion___[T1', T2', T3'] >
+  if < M1, T1' > := parse(M, T1) /\
+     < M2, T2' > := parse(M1, T2) /\
+     < M3, T3' > := parse(M2, T3) .
 
 
 
