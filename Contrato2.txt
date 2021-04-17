@@ -1,0 +1,57 @@
+scilla-version 0
+
+library BookStore
+
+let one_msg =
+  fun (msg : Message) =>
+  let nil_msg = Nil {Message} in
+  Cons {Message} msg nil_msg
+
+let code_success = Uint32 0
+let code_book_not_found = Uint32 1
+let code_not_authorized = Uint32 2
+let code_invalid_params = Uint32 3
+let code_bookid_exist = Uint32 4
+
+contract BookStore
+(owner : ByStr20 ,
+storeName : String)
+
+field members : Map ByStr20 (Pair (String) (Uint32))
+                = Emp ByStr20 (Pair (String) (Uint32))
+field welcome_msg : Option String = None {String}
+field bookInventory : Map Uint32 (Pair (String) (String))
+                    = Emp Uint32 (Pair (String) (String))
+
+
+transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
+    is_authorized = builtin eq _sender owner
+   
+end
+
+transition addBook (book_title : String , author : String , bookID : Uint32)
+
+    books <- bookInventory ; 
+    bookExist = builtin contains books bookID
+
+    
+end
+
+transition removeBook(book_id : Uint32)
+
+    delete bookInventory[book_id]
+
+end
+
+transition updateBook(book_id : Uint32 , book_title : String , author : String)
+   
+    books <- bookInventory ;
+    exist = builtin contains books book_id 
+   
+
+
+end
+
+
+
+

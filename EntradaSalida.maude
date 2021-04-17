@@ -4,199 +4,232 @@ load file.maude
 fmod PARSING is
  pr META-LEVEL .
  pr CONVERSION .
+ pr datos_primitivos .
 
- sort ParsingRes .
- op <_,_> : Module Term -> ParsingRes [ctor] .
+---  sort ParsingRes .
+---  op <_> : Term -> ParsingRes [ctor] .
 
- vars T T1 T1' T2 T2' T3 T3' T4 T4' T5 T5' : Term .
- vars M M1 M2 M3 M4 M5 : Module .
+ vars T T1 T1' T2 T2' T3 T3' T4 T4' T5 T5' T6 T6' T7 T7' : Term .
+ var  TL : TermList .
  var  Ct : Constant .
  var  S : String .
  var  F : Float .
  var  Q : Qid .
  var  I : Int .
 
- op parse : Term -> ParsingRes .
- eq parse(T) = parse(upModule('campos_modificables, true), T) .
+ op parse : Term -> Term .
+ ***eq parse(T) = parse(upModule('campos_modificables, true), T) .
+ ***eq parse(T) = parse(T) .
 
- op parse : Module Term -> ParsingRes .
- ceq parse(M, 'scilla-version____[T1, T2, T3, T4]) = < M4, 'Contrato____[T1', T2', T3', T4'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) /\
-     < M4, T4' > := parse(M3, T4) . *** /\
-     ***< M5, T5' > := parse(M4, T5) .
---- ceq parse(M, 'scilla-version__[T1, T2]) = < M2, 'Contrato__[T1', T2'] >
----   if < M1, T1' > := parse(M, T1) /\ 
----      < M2, T2' > := parse(M1, T2).
- ceq parse(M, 'token[T]) = < M, upTerm(F) >
+ ***op parse : Term -> ParsingRes .
+ ceq parse('scilla-version______[T1, T2, T3, T4, T5, T6]) = 'Contrato______[T1', T2', T3', T4', T5', T6']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) /\
+     T4' := parse(T4) /\
+     T5' := parse(T5) /\
+     T6' := parse(T6) . ***/\
+     ***T7' := parse(T7)  .
+--- ceq parse('scilla-version__[T1, T2]) = 'Contrato__[T1', T2']
+---   if T1' := parse(T1) /\ 
+---      T2' := parse(T2).
+ ceq parse('token[T]) = upTerm(F)
   if Q := downQid(T) /\
      S := string(Q) /\
      F := float(S) .
- ceq parse(M, 'token[T]) = < M, upTerm(F) >
+ ceq parse('token[T]) = upTerm(F)
   if Q := downQid(T) /\
      S := string(Q) /\
      rat(S, 10) :: Nat /\
      F := float(S + ".0") .
- ceq parse(M, 'token[T]) = < M, T >
+ ceq parse('token[T]) = T
   if Q := downQid(T) /\
      S := string(Q) /\
      not (float(S) :: Float) /\
      not (rat(S, 10) :: Nat) .
- ceq parse(M, '_=_;[T1, T2]) = < M2, '_=_;[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '_+_[T1, T2]) = < M2, '_+._[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('_=_;[T1, T2]) = '_=_;[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('_+_[T1, T2]) = '_+._[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
  ***ENTEROS
- ceq parse(M, 'eq__[T1, T2]) = < M2, '_==_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'add__[T1, T2]) = < M2, '_+_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'sub__[T1, T2]) = < M2, '_-_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'mul__[T1, T2]) = < M2, '_*_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'div__[T1, T2]) = < M2, '_/_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'rem__[T1, T2]) = < M2, '_rem_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'lt__[T1, T2]) = < M2, '_<_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'pow__[T1, T2]) = < M2, '_^_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'isqrt_[T1]) = < M1, 'raiz_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
- ceq parse(M, 'to-nat_[T1]) = < M1, 'to-nat_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
+ ceq parse('eq__[T1, T2]) = '_==_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('add__[T1, T2]) = '_+_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('sub__[T1, T2]) = '_-_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('mul__[T1, T2]) = '_*_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('div__[T1, T2]) = '_/_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('rem__[T1, T2]) = '_rem_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('lt__[T1, T2]) = '_<_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('pow__[T1, T2]) = '_^_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('isqrt_[T1]) = 'raiz_[T1']
+  if T1' := parse(T1) .
+ ceq parse('to-nat_[T1]) = 'to-nat_[T1']
+  if T1' := parse(T1) .
 
  ***STRINGS
- ceq parse(M, 'concat__[T1, T2]) = < M2, '_++_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'substr___[T1, T2, T3]) = < M3, 'substr___[T1', T2', T3'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) .
- ceq parse(M, 'to-string_[T1]) = < M1, 'to-string_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
- ceq parse(M, 'strlen_[T1]) = < M1, 'length_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
+ ceq parse('concat__[T1, T2]) = '_++_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('substr___[T1, T2, T3]) = 'substr___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+ ceq parse('to-string_[T1]) = 'to-string_[T1']
+  if T1' := parse(T1) .
+ ceq parse('strlen_[T1]) = 'length_[T1']
+  if T1' := parse(T1) .
+
+ ***MAPS
+ ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('delete_`[_`][T1, T2]) = 'delete__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
  ***BNUM
- ceq parse(M, 'blt__[T1, T2]) = < M2, '_<_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'badd__[T1, T2]) = < M2, '_+_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'bsub__[T1, T2]) = < M2, '_-_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('blt__[T1, T2]) = '_<_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('badd__[T1, T2]) = '_+_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('bsub__[T1, T2]) = '_-_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
  ***DATOS ALGEBRAICOS
  ***Option
- ceq parse(M, 'Some__[T1, T2]) = < M2, 'Some__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'Some_[T1]) = < M1, 'Some_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
+ ceq parse('Some__[T1, T2]) = 'Some__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('Some_[T1]) = 'Some_[T1']
+  if T1' := parse(T1) .
  ***Listas
- ceq parse(M, 'Cons___[T1, T2, T3]) = < M3, 'Cons___[T1', T2', T3'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) .
+ ceq parse('Cons`{_`}__[T1, T2, T3]) = 'Cons___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ***Pares
- ceq parse(M, 'Pair____[T1, T2, T3, T4]) = < M4, 'Pair____[T1', T2', T3', T4'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) /\ 
-     < M4, T4' > := parse(M3, T4) .
+ ceq parse('Pair____[T1, T2, T3, T4]) = 'Pair____[T1', T2', T3', T4']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) /\ 
+     T4' := parse(T4) .
  ***Naturales
- ceq parse(M, 'Succ_[T1]) = < M1, 'Sucesor_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
+ ceq parse('Succ_[T1]) = 'Sucesor_[T1']
+  if T1' := parse(T1) .
 
  ***PARÁMETROS INMUTABLES
- ceq parse(M, '_:_[T1, T2]) = < M2, '_:_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '_`,_[T1, T2]) = < M2, 'ListaParamInm__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('_:_[T1, T2]) = '_:_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+---  ceq parse(M, '_`,_[T1, T2]) = M2, 'ListaParamInm__[T1', T2']
+---   if M1, T1' := parse(M, T1) /\
+---      M2, T2' := parse(M1, T2) .
+ eq parse('_`,_[TL]) = 'LParamInm__[parseL(TL)]  .
 
  ***CAMPOS MODIFICABLES
- ceq parse(M, 'field_=_[T1, T2]) = < M2, 'campo__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '__[T1, T2]) = < M2, 'ListaCamposMod__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('field_=_[T1, T2]) = 'campo__[T1', T2'] 
+  if T1'  := parse(T1) /\
+     T2'  := parse(T2) .
+ eq parse('__[TL]) = 'ListaCamposMod__[parseL(TL)] .
 
  ***EXPRESIONES
- ceq parse(M, 'let_=_[T1, T2]) = < M2, 'let__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'let_=_in_[T1, T2, T3]) = < M3, 'let__in_[T1', T2', T3'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) .
----  ceq parse(M, '__[T1, T2]) = < M2, 'lista__[T1', T2'] >
----   if < M1, T1' > := parse(M, T1) /\
----      < M2, T2' > := parse(M1, T2) .
----  ceq parse(M, '__[T1, T2]) = < M2, 'Funcion__[T1', T2'] >
----   if < M1, T1' > := parse(M, T1) /\
----      < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '@__[T1, T2]) = < M2, '@__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('let_=_[T1, T2]) = 'let__[T1', T2'] 
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('let_=_in_[T1, T2, T3]) = 'let__in_[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+ ceq parse('fun`(_`)=>_[T1, T2]) = 'funcion__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+---  ceq parse(M, '__[T1, T2]) = M2, 'Funcion__[T1', T2']
+---   if M1, T1' := parse(M, T1) /\
+---      M2, T2' := parse(M1, T2) .
+ ceq parse('@__[T1, T2]) = '@__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('builtin_[T1]) = 'builtin_[T1']
+  if T1' := parse(T1) .
+ ceq parse('|_=>_[T1, T2]) = 'opcionMatch__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('match_with_end[T1, T2]) = 'match__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
  ***DECLARACIONES
- ceq parse(M, '_<-_[T1, T2]) = < M2, 'guardar__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '_:=_[T1, T2]) = < M2, 'actualizar__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, '_<-&BLOCKNUMBER[T1]) = < M1, '_<-&BLOCKNUMBER[T1'] >
-  if < M1, T1' > := parse(M, T1) .
- ceq parse(M, '_=_[T1, T2]) = < M2, '_=_[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'forall__[T1, T2]) = < M2, 'forall__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
- ceq parse(M, 'send_[T1]) = < M1, 'enviar_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
- ceq parse(M, 'event_[T1]) = < M1, 'evento_[T1'] >
-  if < M1, T1' > := parse(M, T1) .
- ceq parse(M, '_;_[T1, T2]) = < M2, 'ListaDec__[T1', T2'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) .
+ ceq parse('_<-_[T1, T2]) = 'guardar__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('_:=_[T1, T2]) = 'actualizar__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('_<-&BLOCKNUMBER[T1]) = '_<-&BLOCKNUMBER[T1']
+  if T1' := parse(T1) .
+ ceq parse('_=_[T1, T2]) = '_=_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('forall__[T1, T2]) = 'forall__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('send_[T1]) = 'enviar_[T1']
+  if T1' := parse(T1) .
+ ceq parse('event_[T1]) = 'evento_[T1']
+  if T1' := parse(T1) .
+ eq parse('_;_[TL]) = 'ListaDec__[parseL(TL)] .
+
+ ***COMUNICACIONES 
+ ceq parse('`{_;_`}[T1, T2]) = 'contenidoEvento__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
  ***TRANSICIONES
- ceq parse(M, 'transition_`(_`)_end[T1, T2, T3]) = < M3, 'transicion___[T1', T2', T3'] >
-  if < M1, T1' > := parse(M, T1) /\
-     < M2, T2' > := parse(M1, T2) /\
-     < M3, T3' > := parse(M2, T3) .
+ ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+
+ ceq parse('library_[T1]) = 'NombreLibreria_[T1']
+  if T1' := parse(T1) .
+ ceq parse('contract_[T1]) = 'NombreContrato_[T1']
+  if T1' := parse(T1) .
 
 
 
 
  *** TODO: terminar
- eq parse(M, T) = < M, T > [owise] .
+
+ eq parse(T) = T [owise] .
+
+ op parseL : TermList -> TermList .
+ eq parseL(empty) = empty .
+ eq parseL((T, TL)) = parse(T), parseL(TL) .
 
  op downQid : Term -> [Qid] [memo] .
  eq downQid(Ct)
     = qid(substr(string(getName(Ct)), 1, length(string(getName(Ct))))) .
+
 endfm
 
 mod MTP is
@@ -289,7 +322,7 @@ crl [parsing] :
  if Read =/= "" /\
     QIL := tokenize(Read) /\
     {T, Ty} := metaParse(GRAMMAR, QIL, anyType) /\
-    < M, T' > := parse(T) [print T "\nParseado: " T'] .
+    T' := parse(T) [print T "\nParseado: " T'] .
 
  ***                              ***
  ***          closedFile          ***
