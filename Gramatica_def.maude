@@ -14,9 +14,9 @@ fmod GRAMMAR is
   ***op __ : @TipoEnteroInt@ Num -> @EnteroInt@ [ctor] . 
 
   ***Declaración de la operacion de igualdad.
-  op eq__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm prec 14] .
+  op eq__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm prec 13] .
   ***Declaración de la operación Suma.
-  op add__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm prec 14] .
+  op add__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor comm prec 13] .
   ***Declaración de la operación resta
   op sub__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
   ***Declaración de la operación de multiplicación.
@@ -26,7 +26,7 @@ fmod GRAMMAR is
   ***Declaración de la operación resto.
   op rem__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
   ***Declaración de la operación menor
-  op lt__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
+  op lt__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***Declaración de la operación de exponente.
   op pow__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
   ***Declaración de la operación de raíz cuadrada.
@@ -140,7 +140,7 @@ fmod GRAMMAR is
   subsort @TipoEntero@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ < @OperacionBuilt@ .
   subsort @Expresion@ @ExpresionMatch@ < @ListaExpresiones@ . 
-  subsort @Expresion@ @Option@ @ListaDeclaraciones@ < @Expresiones@ .
+  subsort @Declaracion@ < @Expresiones@ .
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
 
@@ -157,8 +157,9 @@ fmod GRAMMAR is
   --- --- op [_] : String -> Argumento [ctor] .
   --- --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
   --- --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
-  op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 15] .
+  op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 14] .
 
+  op _,_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 17] .
   op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 18] .  ***La segunda entrada no sería un string sino un statement.
   op ov : -> @ListaOpciones@ [ctor] .
   op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 19] .
@@ -168,7 +169,7 @@ fmod GRAMMAR is
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ < @Valor@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ < @Valor@ .
   subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ < @ListaDeclaraciones@ .
 
   op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
@@ -181,7 +182,7 @@ fmod GRAMMAR is
   op send_ : @Token@ -> @Declaracion@ [ctor prec 16] .
   op event_ : @Token@ -> @Declaracion@ [ctor prec 16] .
 
-  op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 17] .
+  op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 22] .
 
   ***TRANSICIONES
   sort @Transicion@ @ListaTransiciones@ .
@@ -194,10 +195,10 @@ fmod GRAMMAR is
   ***COMUNICACIONES
   sort @NombreEvento@ @ListaCamposEvento@ @Evento@ @CampoEvento@ .
   subsort @CampoEvento@ < @ListaCamposEvento@ .
-  op -eventname:_ : String -> @NombreEvento@ [ctor prec 13] .
-  op _:_ : @Token@ @Token@ -> @CampoEvento@ [ctor prec 13] .
-  op _;_ : @ListaCamposEvento@ @ListaCamposEvento@ -> @ListaCamposEvento@ [ctor assoc prec 14] .
-  op {_;_} : @NombreEvento@ @ListaCamposEvento@ -> @Evento@ [ctor prec 15] .
+  op -eventname:_ : String -> @NombreEvento@ [ctor prec 12] .
+  op _:_ : @Token@ @Token@ -> @CampoEvento@ [ctor prec 12] .
+  op _;_ : @ListaCamposEvento@ @ListaCamposEvento@ -> @ListaCamposEvento@ [ctor assoc prec 13] .
+  op {_;_} : @NombreEvento@ @ListaCamposEvento@ -> @Evento@ [ctor prec 14] .
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ .
   op library_ : @Token@ -> @NombreLibreria@ [ctor] .

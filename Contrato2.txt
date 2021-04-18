@@ -25,7 +25,15 @@ field bookInventory : Map Uint32 (Pair (String) (String))
 
 
 transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
-    is_authorized = builtin eq _sender owner
+    is_authorized = builtin eq _sender owner ;
+    match is_authorized with
+    | true => 
+        valid_type = let three = Uint32 3 in
+                        builtin lt memberType three 
+        
+    | false =>
+        send msgs
+    end
    
 end
 
