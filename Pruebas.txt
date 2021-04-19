@@ -1,50 +1,9 @@
-scilla-version 1
-(a : String ,
-b : BNum ,
-c : Uint32)
-let nil_msg = 
-    fun (msg : String) => 
-    let nil_msg = Nil {String} in
-    Cons {String} msg nil_msg
-@ a Uint32 Uint32
-let a = builtin add a a
-match c with
-  | False => 
-    let bs1 = builtin add a a
-  | True => None {String}
-end
-field a : Uint32 = Uint32 1
-field a : String = ""
-field a : String = ""
-transition a (a : BNum , b : Uint32)
-  a <- b ; 
-  a := b ;
-  event e
-end
+scilla-version 0
+{-tag: "" ; 
+-recipient: _sender ; 
+-amount: Uint128 0 ;
+code : code_not_authorized}
 
-match c with
-    | true => let bs1 = builtin add a a
-    | false => None {String}
-  end
-
-transition setHello (msg : String)
-  is_owner = builtin eq owner _sender;
-  match is_owner with
-  | False =>
-    e = {-eventname : "setHello"; code : not_owner_code};
-    event e
-  | True =>
-    welcome_msg := msg;
-    e = {-eventname : "setHello"; code : set_hello_code};
-    event e
-  end
-end
-
-transition getHello ()
-  r <- welcome_msg;
-  e = {_eventname: "getHello"; msg: r};
-  event e
-end
 
 
 

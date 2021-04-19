@@ -10,7 +10,7 @@ fmod GRAMMAR is
   ***ENTEROS
   ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
   ops Uint32 Uint64 Uint128 Uint256 Int32 Int64 Int128 Int256 : -> @TipoEntero@ [ctor] .
-  op __ : @TipoEntero@ Int -> @Entero@ [ctor prec 13] .
+  op __ : @TipoEntero@ Int -> @Entero@ [ctor prec 11] .
   ***op __ : @TipoEnteroInt@ Num -> @EnteroInt@ [ctor] . 
 
   ***Declaración de la operacion de igualdad.
@@ -57,6 +57,11 @@ fmod GRAMMAR is
 
   op Emp__ : @TipoClave@ @TipoValor@ -> @MapVacio@ [ctor prec 15] .
   op Map__ : @TipoClave@ @TipoValor@ -> @Map@ [ctor prec 15] .
+  ***Definición operación insertar.
+---   ***Funcional
+---   op put___ : String String String -> DeclaracionOp [ctor] .
+  ***In-place.
+  op _[_]:=_ : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación contener.
   ***Funcional
   op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
@@ -85,7 +90,7 @@ fmod GRAMMAR is
   ***Constructoras option
   op None{_} : @NombreTipo@ -> @Option@ [ctor prec 13] .
   op None : -> @Option@ [ctor] .
-  op Some__ : @NombreTipo@ @Token@ -> @Option@ [ctor prec 13] . 
+  op Some{_}_ : @NombreTipo@ @Token@ -> @Option@ [ctor prec 13] . 
   op Some_ : @Token@ -> @Option@ [ctor prec 13] .
 
   ***Declaración Lista
@@ -97,7 +102,7 @@ fmod GRAMMAR is
   ***Declaración Pares
   op Pair__ : @NombreTipo@ @NombreTipo@ -> @Par@ [ctor prec 13] .
   ***Constructora Pair
-  op Pair____ : @NombreTipo@ @NombreTipo@ @Token@ @Token@ -> @Par@ [ctor prec 13] .
+  op Pair{__}__ : @NombreTipo@ @NombreTipo@ @Token@ @Token@ -> @Par@ [ctor prec 13] .
 
   ***Declaración Nat
   op Nat : -> @Natural@ [ctor] .
@@ -140,7 +145,8 @@ fmod GRAMMAR is
   subsort @TipoEntero@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ < @OperacionBuilt@ .
   subsort @Expresion@ @ExpresionMatch@ < @ListaExpresiones@ . 
-  subsort @Declaracion@ < @Expresiones@ .
+  ***subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
+  subsort @ListaDeclaraciones@ < @Expresiones@ .
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
 
@@ -148,7 +154,7 @@ fmod GRAMMAR is
   op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 14] .
   --- ***Falta añadir los mensajes
   op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 15] .
-  --- op __ : @Token@ @Token@ -> @Expresion@ [ctor prec 19] .
+  op _=__ : @Token@ @Token@ @Token@ -> @Expresion@ [ctor prec 15] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
   op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 16] .
@@ -159,17 +165,17 @@ fmod GRAMMAR is
   --- --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
   op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 14] .
 
-  op _,_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 17] .
-  op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 18] .  ***La segunda entrada no sería un string sino un statement.
+  op _,_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 20] .
+  op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
   op ov : -> @ListaOpciones@ [ctor] .
-  op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 19] .
+  op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 20] .
   op match_with_end : @Token@ @ListaOpciones@ -> @ExpresionMatch@ [ctor prec 20] .
   op __ : @ListaExpresiones@ @ListaExpresiones@ -> @ListaExpresiones@ [ctor assoc prec 21] .
 
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ < @Valor@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ < @Valor@ .
   subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ < @ListaDeclaraciones@ .
 
   op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
@@ -182,7 +188,7 @@ fmod GRAMMAR is
   op send_ : @Token@ -> @Declaracion@ [ctor prec 16] .
   op event_ : @Token@ -> @Declaracion@ [ctor prec 16] .
 
-  op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 22] .
+  op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 20] .
 
   ***TRANSICIONES
   sort @Transicion@ @ListaTransiciones@ .
@@ -193,12 +199,20 @@ fmod GRAMMAR is
   op __ : @ListaTransiciones@ @ListaTransiciones@ -> @ListaTransiciones@ [ctor assoc prec 24] .
 
   ***COMUNICACIONES
-  sort @NombreEvento@ @ListaCamposEvento@ @Evento@ @CampoEvento@ .
+  sort @NombreEvento@ @ListaCamposEvento@ @Evento@ @CampoEvento@ @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @Mensaje@ .
   subsort @CampoEvento@ < @ListaCamposEvento@ .
+  ***Eventos
   op -eventname:_ : String -> @NombreEvento@ [ctor prec 12] .
   op _:_ : @Token@ @Token@ -> @CampoEvento@ [ctor prec 12] .
   op _;_ : @ListaCamposEvento@ @ListaCamposEvento@ -> @ListaCamposEvento@ [ctor assoc prec 13] .
   op {_;_} : @NombreEvento@ @ListaCamposEvento@ -> @Evento@ [ctor prec 14] .
+  ***Mensajes
+  op -tag:_ : String -> @TagMensaje@ [ctor prec 12] .
+  op -recipient:_ : @Token@ -> @EnvioMensaje@ [ctor prec 12] .
+  op -amount:_ : @Entero@ -> @CantidadMensaje@ [ctor prec 12] .
+  ***op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
+  op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
+  
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ .
   op library_ : @Token@ -> @NombreLibreria@ [ctor] .
@@ -214,7 +228,7 @@ fmod GRAMMAR is
 
   
   op scilla-version______ : Nat @Libreria@ @NombreContrato@ @ListaParamInm@ @ListaCamposMod@ @ListaTransiciones@ -> @Contrato@ [ctor] .
-  ***op scilla-version__ : Nat @Evento@ -> @Contrato@ [ctor] .
+  ***op scilla-version__ : Nat @Mensaje@ -> @Contrato@ [ctor] .
 
 endfm
 
@@ -361,7 +375,7 @@ fmod datos_primitivos is
 ---   ***Funcional
 ---   op put___ : String String String -> DeclaracionOp [ctor] .
 ---   ***In-place.
----   op _[_]:=_ : String String String -> DeclaracionOpMapI [ctor] .
+  op insertar___ : Qid Qid Qid -> DeclaracionOpMapI [ctor] .
 ---   ***Definición operación obtener valor.
 ---   ***Funcional
 ---   op get__ : String String -> DeclaracionOp [ctor] .
@@ -513,6 +527,7 @@ fmod expresiones is
   --- op fun(_) =>_ : ParamInm Operacion -> ExpresionFuncion [ctor] .
 
   op funcion__ : ParamInm Operacion -> ExpresionFuncion [ctor] .
+  op aplicarFuncion___ : Qid Qid Qid -> Expresion [ctor] .
 
   --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
 
@@ -555,10 +570,13 @@ fmod declaraciones is
 endfm
 
 fmod comunicaciones is
+  pr QID . 
   
-  sort NombreEvento ListaCamposEvento Evento .
+  sort NombreEvento ListaCamposEvento Evento TagMensaje EnvioMensaje CantidadMensaje Mensaje .
 
   op contenidoEvento__ : NombreEvento ListaCamposEvento -> Evento [ctor] .
+  op dirEnvio_ : Qid -> EnvioMensaje [ctor] .
+  op contenidoMensaje____ : TagMensaje EnvioMensaje CantidadMensaje ListaCamposEvento -> Mensaje [ctor] .
 
 endfm
 

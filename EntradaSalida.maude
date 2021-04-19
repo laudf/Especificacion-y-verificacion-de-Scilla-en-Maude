@@ -97,6 +97,10 @@ fmod PARSING is
   if T1' := parse(T1) .
 
  ***MAPS
+ ceq parse('_`[_`]:=_[T1, T2, T3]) = 'insertar___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
@@ -117,7 +121,7 @@ fmod PARSING is
 
  ***DATOS ALGEBRAICOS
  ***Option
- ceq parse('Some__[T1, T2]) = 'Some__[T1', T2']
+ ceq parse('Some`{_`}_[T1, T2]) = 'Some__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('Some_[T1]) = 'Some_[T1']
@@ -128,7 +132,7 @@ fmod PARSING is
      T2' := parse(T2) /\
      T3' := parse(T3) .
  ***Pares
- ceq parse('Pair____[T1, T2, T3, T4]) = 'Pair____[T1', T2', T3', T4']
+ ceq parse('Pair`{__`}__[T1, T2, T3, T4]) = 'Pair____[T1', T2', T3', T4']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) /\ 
@@ -163,6 +167,10 @@ fmod PARSING is
  ceq parse('fun`(_`)=>_[T1, T2]) = 'funcion__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+ ceq parse('_=__[T1, T2, T3]) = 'aplicarFuncion___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
 ---  ceq parse(M, '__[T1, T2]) = M2, 'Funcion__[T1', T2']
 ---   if M1, T1' := parse(M, T1) /\
 ---      M2, T2' := parse(M1, T2) .
@@ -203,6 +211,13 @@ fmod PARSING is
  ceq parse('`{_;_`}[T1, T2]) = 'contenidoEvento__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+ ceq parse('-recipient:_[T1]) = 'dirEnvio_[T1']
+  if T1' := parse(T1) .
+ ceq parse('`{_;_;_;_`}[T1, T2, T3, T4]) = 'contenidoMensaje___[T1', T2', T3', T4']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) /\
+     T4' := parse(T4) .
 
  ***TRANSICIONES
  ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___[T1', T2', T3']
