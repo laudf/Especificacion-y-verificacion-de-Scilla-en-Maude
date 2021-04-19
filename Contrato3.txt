@@ -1,4 +1,3 @@
-
 scilla-version 0
 
 import BoolUtils
@@ -10,24 +9,6 @@ let one_msg =
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
     
-let check_update = 
-  fun (bs : Map ByStr20 Uint128) =>
-  fun (sender : ByStr20) =>
-  fun (amount : Uint128) =>
-    let c = builtin contains bs sender in
-    match c with 
-    | False => 
-      let bs1 = builtin put bs sender amount in
-      Some {Map ByStr20 Uint128} bs1 
-    | True  => None {Map ByStr20 Uint128}
-    end
-
-let blk_leq =
-  fun (blk1 : BNum) =>
-  fun (blk2 : BNum) =>
-    let bc1 = builtin blt blk1 blk2 in 
-    let bc2 = builtin eq blk1 blk2 in 
-    orb bc1 bc2
 
 let accepted_code = Int32 1
 let missed_deadline_code = Int32 2
@@ -46,12 +27,11 @@ contract Crowdfunding
  goal      : Uint128)
 
 field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
-field funded : Bool = False
+field funded : Bool = false
 
-transition Donate ()
-  blk <- & BLOCKNUMBER;
-  in_time = blk_leq blk max_block;
- match in_time with 
+transition Donate (lpv)
+  blk <-&BLOCKNUMBER ;
+  match in_time with 
   | true  => 
     bs  <- backers ;
     match res with
@@ -59,27 +39,29 @@ transition Donate ()
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
               code : already_backed_code} ;
       msgs = one_msg msg ;
-      send msgs
+      send msgs  
     | Some bs1 =>
-      backers := bs1 ; 
-      accept ; 
+      backers := bs1 ;
+      accept ;
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
               code : accepted_code} ;
       msgs = one_msg msg ;
-      e = { _eventname: "DonationAccepted" ; donor : _sender ; amount : _amount } ;
+      e = { -eventname: "DonationAccepted" ; donor : _sender ; amount : _amount } ;
       event e ;
-      send msgs     
+      send msgs 
     end  
+
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
             code : missed_deadline_code} ;
     msgs = one_msg msg ;
     send msgs
   end 
+ 
 end
 
-transition GetFunds ()
-  is_owner = builtin eq owner _sender;
+transition GetFunds (lpv)
+  is_owner = builtin eq owner _sender ;
   match is_owner with
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
@@ -97,35 +79,29 @@ transition GetFunds ()
       msgs = one_msg msg ;
       send msgs
     | true => 
-      tt = true ;
       funded := tt ;
-      msg  = {-tag: "" ; -recipient: owner ; -amount: bal ; 
-              code : got_funds_code} ;
       msgs = one_msg msg ;
       send msgs
     end
-  end 
+  end
+  
 end
 
-transition ClaimBack ()
-  blk <- & BLOCKNUMBER;
-  after_deadline = builtin blt max_block blk;
+transition ClaimBack (lpv)
+  blk <-&BLOCKNUMBER ;
+  after_deadline = builtin blt max_block blk ;
   match after_deadline with
-  | False =>
-    msg  = {_tag : ""; _recipient : _sender; _amount : Uint128 0;
-            code : too_early_code};
-    msgs = one_msg msg;
+  | false =>
+    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+            code : too_early_code} ;
+    msgs = one_msg msg ;
     send msgs
-  | True =>
-    bs <- backers;
-    bal <- _balance;
-    (* Goal has not been reached *)
-    f <- funded;
-    c1 = builtin lt bal goal;
-    c2 = builtin contains bs _sender;
-    c3 = negb f;
-    c4 = andb c1 c2;
-    c5 = andb c3 c4;
+  | true =>
+    bs <- backers ;
+    bal <- _balance ;
+    f <- funded ;
+    c1 = builtin lt bal goal ;
+    c2 = builtin contains bs _sender ;  
     match c5 with
     | false =>
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
@@ -144,18 +120,12 @@ transition ClaimBack ()
         bs1 = builtin remove bs _sender ;
         backers := bs1 ;
         msgs = one_msg msg ;
-        e = { _eventname: "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
+        e = { -eventname: "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
         event e ;
         send msgs
+     
       end
     end
+   
   end  
 end
-
-
-
-
-
-
-
-

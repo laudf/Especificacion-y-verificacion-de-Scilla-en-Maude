@@ -62,9 +62,15 @@ fmod GRAMMAR is
 ---   op put___ : String String String -> DeclaracionOp [ctor] .
   ***In-place.
   op _[_]:=_ : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
+  ***Definición operación obtener valor.
+  ***Funcional
+  op get__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***Definición operación contener.
   ***Funcional
-  op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
+  op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
+  ***Definición operación eliminar.
+  ***Funcional
+  op remove__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***In-place
   op delete_[_] : @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor] .
 
@@ -137,7 +143,7 @@ fmod GRAMMAR is
 
   ***EXPRESIONES
   sort @TipoDato@ @Expresion@ @Operacion@ @ExpresionFuncion@ @ListaArgumentos@ @OperacionBuilt@ @ListaExpresiones@ @TipoOpcion@ @Opcion@
-       @ListaOpciones@ @Expresiones@ @ExpresionMatch@ .
+       @ListaOpciones@ @Expresiones@ @ExpresionMatch@ @ListaArg@ .
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
   subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
@@ -149,11 +155,13 @@ fmod GRAMMAR is
   subsort @ListaDeclaraciones@ < @Expresiones@ .
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
+  subsort @Token@ < @ListaArg@ .
 
   op let_=_ : @Token@ @TipoDato@ -> @Expresion@ [ctor prec 16]  .
   op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 14] .
   --- ***Falta añadir los mensajes
   op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 15] .
+  ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 15] .
   op _=__ : @Token@ @Token@ @Token@ -> @Expresion@ [ctor prec 15] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
@@ -175,7 +183,7 @@ fmod GRAMMAR is
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ < @Valor@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool < @Valor@ .
   subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ < @ListaDeclaraciones@ .
 
   op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
@@ -214,9 +222,12 @@ fmod GRAMMAR is
   op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
   
 
-  sort @NombreLibreria@ @NombreContrato@ @Libreria@ .
+  sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
   op library_ : @Token@ -> @NombreLibreria@ [ctor] .
   op contract_ : @Token@ -> @NombreContrato@ [ctor] .
+  op BoolUtils : -> @LibImportar@ [ctor] .
+  op iv : -> @Importacion@ [ctor] .
+  op import_ : @LibImportar@ -> @Importacion@ [ctor] .
 
   op __ : @NombreLibreria@ @ListaExpresiones@ -> @Libreria@ [ctor] .
 
@@ -227,7 +238,7 @@ fmod GRAMMAR is
 
 
   
-  op scilla-version______ : Nat @Libreria@ @NombreContrato@ @ListaParamInm@ @ListaCamposMod@ @ListaTransiciones@ -> @Contrato@ [ctor] .
+  op scilla-version_______ : Nat @Importacion@ @Libreria@ @NombreContrato@ @ListaParamInm@ @ListaCamposMod@ @ListaTransiciones@ -> @Contrato@ [ctor] .
   ***op scilla-version__ : Nat @Mensaje@ -> @Contrato@ [ctor] .
 
 endfm
@@ -376,9 +387,9 @@ fmod datos_primitivos is
 ---   op put___ : String String String -> DeclaracionOp [ctor] .
 ---   ***In-place.
   op insertar___ : Qid Qid Qid -> DeclaracionOpMapI [ctor] .
----   ***Definición operación obtener valor.
----   ***Funcional
----   op get__ : String String -> DeclaracionOp [ctor] .
+  ***Definición operación obtener valor.
+  ***Funcional
+  op get__ : Qid Qid -> DeclaracionOp [ctor] .
 ---   ***In-place
 ---   op _<-_[_] : String String String -> DeclaracionOpMapI [ctor] .
   ***Definición operación contener.
@@ -387,8 +398,8 @@ fmod datos_primitivos is
 ---   ***In-place
 ---   op _<-exists_[_] : String String String -> DeclaracionOpMapI [ctor] .
 ---   ***Definición operación eliminar.
----   ***Funcional
----   op remove__ : String String -> DeclaracionOp [ctor] .
+  ***Funcional
+  op remove__ : Qid Qid -> DeclaracionOp [ctor] .
   ***In-place
   op delete__ : Qid Qid -> DeclaracionOpMapI [ctor] .
 ---   ***Definición operación convertir a lista.
@@ -527,7 +538,7 @@ fmod expresiones is
   --- op fun(_) =>_ : ParamInm Operacion -> ExpresionFuncion [ctor] .
 
   op funcion__ : ParamInm Operacion -> ExpresionFuncion [ctor] .
-  op aplicarFuncion___ : Qid Qid Qid -> Expresion [ctor] .
+  op aplicarFuncion___ : Qid Qid ListaArgumentos -> Expresion [ctor] .
 
   --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
 
@@ -593,12 +604,12 @@ endfm
 fmod contrato is
   pr QID .
 
-  sort Contrato Version Campo_mod ListaParamInm NombreLibreria NombreContrato NombreEvento ListaTransiciones Libreria .
+  sort Contrato Version Campo_mod ListaParamInm NombreLibreria NombreContrato NombreEvento ListaTransiciones Libreria Importacion .
 
   op NombreLibreria_ : Qid -> NombreLibreria [ctor] .
   op NombreContrato_ : Qid -> NombreContrato [ctor] .
   
-  op Contrato______ : Version Libreria NombreContrato ListaParamInm Campo_mod ListaTransiciones -> Contrato [ctor] .
+  op Contrato_______ : Version Importacion Libreria NombreContrato ListaParamInm Campo_mod ListaTransiciones -> Contrato [ctor] .
   ***op Contrato__ : Version NombreEvento -> Contrato [ctor] .
 
 endfm 

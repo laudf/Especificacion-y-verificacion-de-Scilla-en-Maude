@@ -1,0 +1,11 @@
+fmod PREPARSE is
+ pr CONVERSION .
+ pr QID-LIST .
+
+ var S : String .
+
+ op preparse : String -> String .
+ eq preparse("scilla_version") = "scilla-version" .
+
+ eq preparse(S) = S [owise] .
+endfm

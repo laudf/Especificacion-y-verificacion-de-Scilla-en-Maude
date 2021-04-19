@@ -1,9 +1,11 @@
+load preparse.maude
 load Gramatica_def.maude
 load file.maude
 
 fmod PARSING is
  pr META-LEVEL .
  pr CONVERSION .
+ pr PREPARSE .
  pr datos_primitivos .
 
 ---  sort ParsingRes .
@@ -22,14 +24,14 @@ fmod PARSING is
  ***eq parse(T) = parse(T) .
 
  ***op parse : Term -> ParsingRes .
- ceq parse('scilla-version______[T1, T2, T3, T4, T5, T6]) = 'Contrato______[T1', T2', T3', T4', T5', T6']
+ ceq parse('scilla-version_______[T1, T2, T3, T4, T5, T6, T7]) = 'Contrato_______[T1', T2', T3', T4', T5', T6', T7']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) /\
      T4' := parse(T4) /\
      T5' := parse(T5) /\
-     T6' := parse(T6) . ***/\
-     ***T7' := parse(T7)  .
+     T6' := parse(T6) /\
+     T7' := parse(T7)  .
 --- ceq parse('scilla-version__[T1, T2]) = 'Contrato__[T1', T2']
 ---   if T1' := parse(T1) /\ 
 ---      T2' := parse(T2).
@@ -101,7 +103,13 @@ fmod PARSING is
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
+ ceq parse('get__[T1, T2]) = 'get__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
  ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('remove__[T1, T2]) = 'remove__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('delete_`[_`][T1, T2]) = 'delete__[T1', T2']
@@ -324,7 +332,7 @@ rl [newLine] :
    gotLine(example, FHIn, Text)
    < example : EXAMPLE | file: FHIn, read: Read, state: reading, Attrs >
 => if Text == ""
-   then < example : EXAMPLE | file: FHIn, read: Read, state: parsing, Attrs >
+   then < example : EXAMPLE | file: FHIn, read: preparse(Read), state: parsing, Attrs > 
         closeFile(FHIn, example)
    else < example : EXAMPLE | file: FHIn, read: (Read + Text), state: reading, Attrs >
         getLine(FHIn, example)
