@@ -8,7 +8,21 @@ let one_msg =
   fun (msg : Message) => 
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
-    
+
+let check_update = 
+  fun (bs : Map ByStr20 Uint128) =>
+  fun (sender : ByStr20) =>
+  fun (amount : Uint128) =>
+    let c = builtin contains bs sender in
+    orb bc1 bc2 
+   
+
+let blk_leq =
+  fun (blk1 : BNum) =>
+  fun (blk2 : BNum) =>
+    let bc1 = builtin blt blk1 blk2 in 
+    let bc2 = builtin eq blk1 blk2 in 
+    orb bc1 bc2  
 
 let accepted_code = Int32 1
 let missed_deadline_code = Int32 2
@@ -72,6 +86,8 @@ transition GetFunds (lpv)
     blk <-&BLOCKNUMBER ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;
+    c3 = (negb c2) ;
+    c4 = andb c1 c3 ;
     match c4 with 
     | false =>  
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
@@ -102,6 +118,9 @@ transition ClaimBack (lpv)
     f <- funded ;
     c1 = builtin lt bal goal ;
     c2 = builtin contains bs _sender ;  
+    c3 = (negb f) ;
+    c4 = andb c1 c2 ;
+    c5 = andb c3 c4 ;
     match c5 with
     | false =>
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;

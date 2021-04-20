@@ -90,7 +90,7 @@ fmod GRAMMAR is
 
   ***DATOS ALGEBRAICOS
   ***Declaración option
-  subsort @TipoEntero@ < @NombreTipo@ .
+  subsort @TipoEntero@ @Map@ < @NombreTipo@ .
   ops String ByStr32 ByStr20 BNum Bool Message : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
   op Option_ : @NombreTipo@ -> @Option@ [ctor prec 13] .  ***A lo mejor hay que hacer un tipo declaracionOption para diferenciarlo.
   ***Constructoras option
@@ -135,7 +135,7 @@ fmod GRAMMAR is
   ***CAMPOS MODIFICABLES
   sort @ValorCampo@ @Campo_mod@ @ListaCamposMod@ .
   ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
-  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ String < @ValorCampo@ .
+  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ String Bool < @ValorCampo@ .
   subsort @Campo_mod@ < @ListaCamposMod@ .
   op cv : -> @Campo_mod@ [ctor] .
   op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 16] .
@@ -147,9 +147,9 @@ fmod GRAMMAR is
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
   subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
-  subsort @Expresion@ @Lista@ < @Operacion@ .
+  subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ < @Operacion@ .
   subsort @TipoEntero@ < @ListaArgumentos@ .
-  subsort @DeclaracionOp@ < @OperacionBuilt@ .
+  subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
   subsort @Expresion@ @ExpresionMatch@ < @ListaExpresiones@ . 
   ***subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
   subsort @ListaDeclaraciones@ < @Expresiones@ .
@@ -183,8 +183,8 @@ fmod GRAMMAR is
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool < @Valor@ .
-  subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ < @ListaDeclaraciones@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool @DeclaracionOpBools@ < @Valor@ .
+  subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ @Expresion@ < @ListaDeclaraciones@ .
 
   op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
   op _:=_ : @Token@ @Token@ -> @Declaracion@ [ctor prec 16] .
@@ -220,6 +220,12 @@ fmod GRAMMAR is
   op -amount:_ : @Entero@ -> @CantidadMensaje@ [ctor prec 12] .
   ***op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
   op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
+
+  ***LIBRERIA BOOLUTILS
+  sort @DeclaracionOpBools@ .
+
+  ops andb__ orb__ : @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
+  ops negb_ bool-to-string_ : @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
   
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
@@ -599,6 +605,18 @@ fmod transiciones is
   
   op transicion___ : Qid ListaParamInm ListaDeclaraciones -> Transicion [ctor] .
 
+endfm
+
+fmod BoolUtils is 
+  pr QID .
+  sort DeclaracionOpBools .
+ 
+
+  ops _and_ _or_ : Qid Qid -> DeclaracionOpBools [ctor] .
+  ops negb_ bool-to-string_ : Qid -> DeclaracionOpBools [ctor] .
+  --- op pasarString : Bool -> String .
+  --- eq pasarString(true) = "True" .
+  --- eq pasarString(false) = "False" .
 endfm
 
 fmod contrato is

@@ -1,8 +1,5 @@
 scilla-version 0
-{-tag: "" ; 
--recipient: _sender ; 
--amount: Uint128 0 ;
-code : code_not_authorized}
+c3 = (negb c2)
 
 
 

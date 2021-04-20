@@ -233,6 +233,18 @@ fmod PARSING is
      T2' := parse(T2) /\
      T3' := parse(T3) .
 
+***BOOLUTILS
+ ceq parse('andb__[T1, T2]) = '_and_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('orb__[T1, T2]) = '_or_[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+ ceq parse('negb_[T1]) = 'negb_[T1']
+  if T1' := parse(T1) .
+ ceq parse('bool-to-string_[T1]) = 'bool-to-string_[T1']
+  if T1' := parse(T1) .
+
  ceq parse('library_[T1]) = 'NombreLibreria_[T1']
   if T1' := parse(T1) .
  ceq parse('contract_[T1]) = 'NombreContrato_[T1']
@@ -378,6 +390,7 @@ endm
 
 red metaParse(GRAMMAR, tokenize("If xxw\nThen 4 = 4 + w ;\nElse z = 4.5 ;\nFi"), anyType) .
 red metaParse(GRAMMAR, tokenize("scilla-version 0 (a : String , b : BNum , c : Uint32) cv | None => @ a Uint32 | None => @ a Uint32"), anyType) .
+red metaParse(GRAMMAR, tokenize("add s s"), anyType) .
 
 set print attribute on .
 

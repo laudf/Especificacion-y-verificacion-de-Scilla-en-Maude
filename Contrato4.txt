@@ -1,0 +1,140 @@
+scilla-version 0
+
+import BoolUtils
+
+library OpenAuction
+
+let blk_leq =
+  fun (blk1 : BNum) =>
+  fun (blk2 : BNum) =>
+    let bc1 = builtin blt blk1 blk2 in 
+    let bc2 = builtin eq blk1 blk2 in 
+    orb bc1 bc2
+
+
+let one_msg = 
+  fun (msg : Message) => 
+    let nil_msg = Nil {Message} in
+    Cons {Message} msg nil_msg
+    
+    
+let late_to_bid_code = Int32 1
+let too_early_to_bid_code = Int32 2
+let bid_too_low_code = Int32 3
+let first_bid_accepted_code  = Int32 4
+let bid_accepted_code  = Int32 5
+let money_sent_code  = Int32 6
+let nothing_to_withdraw_code  = Int32 7
+let auction_is_still_on_code  = Int32 8
+let auction_end_code  = Int32 9
+   
+    
+
+
+contract OpenAuction
+
+(auctionStart : BNum ,
+ biddingTime  : Uint128 ,
+ beneficiary  : ByStr20
+)
+
+field ended : Bool = false
+field highestBidder  : Option ByStr20  = None {ByStr20}
+field highestBid     : Uint128 = Uint128 0
+field pendingReturns : Map ByStr20 Uint128 = Emp ByStr20 Uint128
+
+transition Bid (lpv)
+  blk <-&BLOCKNUMBER ;
+  endtime = builtin badd auctionStart biddingTime ;
+  after_end = let one = Uint128 1 
+    in builtin badd endtime one ;
+  e <- ended ;
+  flag1 = orb in_time e ;
+  match early with
+  | true =>
+    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
+    msgs = one_msg msg ;
+    send msgs
+  | false =>
+    match flag1 with
+    | true => 
+      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : late_to_bid_code} ;
+      msgs = one_msg msg ;
+      send msgs
+    | false =>
+      hb <- highestBid ;
+      
+      sufficientBid = builtin lt hb _amount ;
+      match sufficientBid with 
+      | false =>
+        msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : bid_too_low_code} ;
+        msgs = one_msg msg ;
+        send msgs
+      | true =>
+        accept ;
+        hbPrev <- highestBidder ;
+        match hbPrev with
+        | Some prevHighestBidder =>
+          pendingReturns [prevHighestBidder] := getPRForPrevHighestBidder ;
+      
+          bidder = Some {ByStr20} _sender ;
+          highestBidder := bidder ;
+          highestBid := _amount ;
+          e = {-eventname: "Bid" ; code : bid_accepted_code ; addr : _sender ; amount : _amount} ;
+          event e
+         | None =>
+           first_bidder = Some {ByStr20} _sender ;
+           highestBidder := first_bidder ;
+           highestBid := _amount ;
+           e = {-eventname: "Bid" ; code : first_bid_accepted_code ; addr : _sender ; amount : _amount} ;
+           event e 
+        end
+      
+      end
+   end
+  
+  end
+end  
+  
+
+transition Withdraw (lpv)
+  prs <- pendingReturns ;
+  pr = builtin get prs _sender ;
+  match pr with
+  | None =>
+    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : nothing_to_withdraw_code} ;
+    msgs = one_msg msg ;
+    send msgs
+  | Some v =>
+    delete pendingReturns[_sender] ;
+    e = {-eventname: "Withdraw Successful" ; addr : _sender} ;
+    event e ;
+    msgs = one_msg msg ;
+    send msgss
+  end
+  
+end
+
+
+transition AuctionEnd (lpv)
+  blk <-&BLOCKNUMBER ;
+  e <- ended ;
+  t1 = builtin badd auctionStart biddingTime ;
+  t3 = (negb e) ;
+  t4 = andb t2 t3 ;
+  match t4 with
+  | false =>
+    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : auction_is_still_on_code} ;
+    msgs = one_msg msg ;
+    send msgs
+  | true =>
+    ended := val ;
+    hb <- highestBid ;
+    e = {-eventname: "Auction ended" ; highest_bid : hb} ;
+    event e ;
+  
+    msgs = one_msg msg ;
+    send msgs
+  end
+  
+end
