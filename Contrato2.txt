@@ -50,23 +50,21 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
               msgs = one_msg msg ;
               send msgs
           end
-   
-        
-    | false =>
+     | false =>
        msg = {-tag: "" ;
                 -recipient: _sender ;
                 -amount: Uint128 0 ;
                 code : code_not_authorized} ;
        
         msgs = one_msg msg ;
-        send msgs
+        send msg
+  
     end
    
 end
 
 transition addBook (book_title : String , author : String , bookID : Uint32)
-
-    books <- bookInventory ; 
+    books <- bookInventory ;
     bookExist = builtin contains books bookID ;
     match bookExist with
     | true =>
@@ -129,7 +127,4 @@ transition updateBook(book_id : Uint32 , book_title : String , author : String)
 
 
 end
-
-
-
 

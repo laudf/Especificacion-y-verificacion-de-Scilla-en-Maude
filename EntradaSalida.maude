@@ -99,7 +99,15 @@ fmod PARSING is
   if T1' := parse(T1) .
 
  ***MAPS
+ ceq parse('put___[T1, T2, T3]) = 'put___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('_`[_`]:=_[T1, T2, T3]) = 'insertar___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
@@ -237,18 +245,35 @@ fmod PARSING is
  ceq parse('andb__[T1, T2]) = '_and_[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+ ceq parse('_.andb__[T1, T2, T3]) = '_and.__[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('orb__[T1, T2]) = '_or_[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+ ceq parse('_.orb__[T1, T2, T3]) = '_or.__[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('negb_[T1]) = 'negb_[T1']
   if T1' := parse(T1) .
+ ceq parse('_.negb_[T1, T2]) = 'negb.__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
  ceq parse('bool-to-string_[T1]) = 'bool-to-string_[T1']
   if T1' := parse(T1) .
+ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
  ceq parse('library_[T1]) = 'NombreLibreria_[T1']
   if T1' := parse(T1) .
  ceq parse('contract_[T1]) = 'NombreContrato_[T1']
   if T1' := parse(T1) .
+ ceq parse('import_as_[T1, T2]) = 'import__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
 
 
 
@@ -390,7 +415,16 @@ endm
 
 red metaParse(GRAMMAR, tokenize("If xxw\nThen 4 = 4 + w ;\nElse z = 4.5 ;\nFi"), anyType) .
 red metaParse(GRAMMAR, tokenize("scilla-version 0 (a : String , b : BNum , c : Uint32) cv | None => @ a Uint32 | None => @ a Uint32"), anyType) .
-red metaParse(GRAMMAR, tokenize("add s s"), anyType) .
+red metaParse(GRAMMAR, tokenize("type Unit = | Unit let zero = Uint128 0"), anyType) .
+red metaParse(GRAMMAR, tokenize("a = builtin eq a a ; match a with | true => e = {-eventname: \"setHello\" ; code : not_owner_code} ; event e end"), anyType) .
+red metaParse(GRAMMAR, tokenize("let a = fun (msg : Message) => let nil_msg = Nil {Message} in Cons {Message} msg nil_msg let code_success = Uint32 0"), anyType) .
+red metaParse(GRAMMAR, tokenize("transition addMember (name : String , addr : ByStr20 , memberType : Uint32) match is_authorized with | true => valid_type = let three = Uint32 3 in builtin lt memberType three ; match valid_type with | true => p = Pair {(String) (Uint32)} name memberType ; members[addr] := p ; msg = {-tag: \"\" ; -recipient: _sender ; -amount: Uint128 0 ; code : code_success} ; msgs = one_msg msg ; send msgs  | false =>  send msgs end end end"), anyType) .
+red metaParse(GRAMMAR, tokenize("transition setHello (msg : String) is_owner = builtin eq owner _sender ; match is_owner with | false => e = {-eventname: \"setHello\" ; code : not_owner_code} , event e | true => welcome_msg := msg , e = {-eventname: \"setHello\" ; code : set_hello_code} , event e end end"), anyType) .
+red metaParse(GRAMMAR, tokenize("is_authorized = builtin eq _sender owner "), anyType) .
+red metaParse(GRAMMAR, tokenize("match is_owner with | false => e = {-eventname: \"setHello\" ; code : not_owner_code} ; event e | true => welcome_msg := msg ; e = {-eventname: \"setHello\" ; code : set_hello_code} ; event e end"), anyType) .
+red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
+red metaParse(GRAMMAR, tokenize("fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
+red metaParse(GRAMMAR, tokenize("match result with | CodeIsSender => (Int32 -1) end"), anyType) .
 
 set print attribute on .
 

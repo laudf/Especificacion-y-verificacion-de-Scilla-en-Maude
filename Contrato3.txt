@@ -9,12 +9,7 @@ let one_msg =
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
 
-let check_update = 
-  fun (bs : Map ByStr20 Uint128) =>
-  fun (sender : ByStr20) =>
-  fun (amount : Uint128) =>
-    let c = builtin contains bs sender in
-    orb bc1 bc2 
+
    
 
 let blk_leq =
@@ -84,6 +79,7 @@ transition GetFunds (lpv)
     send msgs
   | true => 
     blk <-&BLOCKNUMBER ;
+    c1 = (negb in_time) ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;
     c3 = (negb c2) ;
@@ -94,8 +90,11 @@ transition GetFunds (lpv)
               code : cannot_get_funds} ;
       msgs = one_msg msg ;
       send msgs
-    | true => 
+    | true =>   
+      tt = true ;
       funded := tt ;
+      msg  = {-tag: "" ; -recipient: owner ; -amount: bal ; 
+              code : got_funds_code} ;
       msgs = one_msg msg ;
       send msgs
     end
@@ -138,6 +137,8 @@ transition ClaimBack (lpv)
       | Some v =>
         bs1 = builtin remove bs _sender ;
         backers := bs1 ;
+        msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; 
+                code : reclaimed_code} ;
         msgs = one_msg msg ;
         e = { -eventname: "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
         event e ;

@@ -1,0 +1,53 @@
+scilla-version 0
+
+import IntUtils
+library FungibleToken
+
+let one_msg = 
+  fun (msg : Message) => 
+  let nil_msg = Nil {Message} in
+  Cons {Message} msg nil_msg
+
+type Error =
+| CodeIsSender
+| CodeInsufficientFunds
+| CodeInsufficientAllowance
+
+let zero = Uint128 0
+
+type Unit =
+| Unit
+
+let get_val =
+  fun (some_val : Option Uint128) =>
+  match some_val with
+  | Some val => val
+  | None => zero
+  end
+
+
+
+contract FungibleToken
+(
+  contract_owner : ByStr20 ,
+  name : String ,
+  symbol : String ,
+  decimals : Uint32 ,
+  init_supply : Uint128
+)
+
+field balances : Map ByStr20 Uint128 
+  = let emp_map = Emp ByStr20 Uint128 in
+    builtin put emp_map contract_owner init_supply
+field allowances : Map ByStr20 (Map ByStr20 Uint128) 
+  = Emp ByStr20 (Map ByStr20 Uint128)
+
+transition IncreaseAllowance (spender : ByStr20 , amount : Uint128)
+ 
+  event e
+end
+
+
+
+
+

@@ -1,6 +1,6 @@
 scilla-version 0
 
-import BoolUtils
+import BoolUtils as BoolU
 
 library OpenAuction
 
@@ -49,7 +49,7 @@ transition Bid (lpv)
   after_end = let one = Uint128 1 
     in builtin badd endtime one ;
   e <- ended ;
-  flag1 = orb in_time e ;
+  flag1 = BoolU .orb in_time e ;
   match early with
   | true =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
@@ -75,6 +75,7 @@ transition Bid (lpv)
         hbPrev <- highestBidder ;
         match hbPrev with
         | Some prevHighestBidder =>
+          option_pendingReturnsForPrevHB <- pendingReturns[prevHighestBidder] ;
           pendingReturns [prevHighestBidder] := getPRForPrevHighestBidder ;
       
           bidder = Some {ByStr20} _sender ;
@@ -109,6 +110,7 @@ transition Withdraw (lpv)
     delete pendingReturns[_sender] ;
     e = {-eventname: "Withdraw Successful" ; addr : _sender} ;
     event e ;
+    msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; code : money_sent_code} ;
     msgs = one_msg msg ;
     send msgss
   end
@@ -120,19 +122,20 @@ transition AuctionEnd (lpv)
   blk <-&BLOCKNUMBER ;
   e <- ended ;
   t1 = builtin badd auctionStart biddingTime ;
-  t3 = (negb e) ;
-  t4 = andb t2 t3 ;
+  t3 = BoolU .negb e ;
+  t4 = BoolU .andb t2 t3 ;
   match t4 with
   | false =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : auction_is_still_on_code} ;
     msgs = one_msg msg ;
     send msgs
   | true =>
+    val = true ;
     ended := val ;
     hb <- highestBid ;
     e = {-eventname: "Auction ended" ; highest_bid : hb} ;
     event e ;
-  
+    msg  = {-tag: "" ; -recipient: beneficiary ; -amount: hb ; code : auction_end_code ; highest_bid : hb} ;
     msgs = one_msg msg ;
     send msgs
   end

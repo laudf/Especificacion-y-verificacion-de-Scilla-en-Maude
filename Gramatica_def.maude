@@ -59,12 +59,14 @@ fmod GRAMMAR is
   op Map__ : @TipoClave@ @TipoValor@ -> @Map@ [ctor prec 15] .
   ***Definición operación insertar.
 ---   ***Funcional
----   op put___ : String String String -> DeclaracionOp [ctor] .
+  op put___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 19] .
   ***In-place.
   op _[_]:=_ : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación obtener valor.
   ***Funcional
   op get__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
+  ***In-place
+  op _<-_[_] : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación contener.
   ***Funcional
   op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
@@ -91,7 +93,7 @@ fmod GRAMMAR is
   ***DATOS ALGEBRAICOS
   ***Declaración option
   subsort @TipoEntero@ @Map@ < @NombreTipo@ .
-  ops String ByStr32 ByStr20 BNum Bool Message : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
+  ops String ByStr32 ByStr20 BNum Bool Message Error : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
   op Option_ : @NombreTipo@ -> @Option@ [ctor prec 13] .  ***A lo mejor hay que hacer un tipo declaracionOption para diferenciarlo.
   ***Constructoras option
   op None{_} : @NombreTipo@ -> @Option@ [ctor prec 13] .
@@ -118,7 +120,7 @@ fmod GRAMMAR is
 
   ***PARÁMETROS INMUTABLES
   sort @TipoParamInm@ @ParamInm@ @ListaParamInm@ @ParametrosInm@ .
-  subsort @NombreTipo@ @Map@ < @TipoParamInm@ .
+  subsort @NombreTipo@ @Map@ @Option@ < @TipoParamInm@ .
   subsort @ParamInm@ < @ListaParamInm@ .
 
   ***ops ByStr20 BNum String ByStr32 Bool Message : -> @TipoParamInm@ [ctor] .
@@ -135,66 +137,71 @@ fmod GRAMMAR is
   ***CAMPOS MODIFICABLES
   sort @ValorCampo@ @Campo_mod@ @ListaCamposMod@ .
   ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
-  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ String Bool < @ValorCampo@ .
+  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ String Bool @Expresion@ < @ValorCampo@ .
   subsort @Campo_mod@ < @ListaCamposMod@ .
   op cv : -> @Campo_mod@ [ctor] .
-  op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 16] .
-  op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor assoc prec 17] .
+  op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 19] .
+ *** op field_=_ : @ParamInm@ @Token@ -> @Campo_mod@ [ctor prec 16] .
+  op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor assoc prec 20] .
 
   ***EXPRESIONES
   sort @TipoDato@ @Expresion@ @Operacion@ @ExpresionFuncion@ @ListaArgumentos@ @OperacionBuilt@ @ListaExpresiones@ @TipoOpcion@ @Opcion@
-       @ListaOpciones@ @Expresiones@ @ExpresionMatch@ @ListaArg@ .
+       @ListaOpciones@ @Expresiones@ @ExpresionMatch@ @ListaArg@ @ExpresionLet@ .
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
-  subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ < @TipoDato@ .
+  subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
   subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ < @Operacion@ .
   subsort @TipoEntero@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
-  subsort @Expresion@ @ExpresionMatch@ < @ListaExpresiones@ . 
-  ***subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
-  subsort @ListaDeclaraciones@ < @Expresiones@ .
+  subsort @ExpresionLet@ @ADTS@ < @ListaExpresiones@ . 
+ *** subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
+  subsort @ListaDeclaraciones@ @Entero@ < @Expresiones@ .
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
   subsort @Token@ < @ListaArg@ .
 
-  op let_=_ : @Token@ @TipoDato@ -> @Expresion@ [ctor prec 16]  .
-  op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 14] .
+  op let_=_ : @Token@ @TipoDato@ -> @ExpresionLet@ [ctor prec 20]  .
+  op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 19] .
   --- ***Falta añadir los mensajes
-  op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 15] .
-  ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 15] .
-  op _=__ : @Token@ @Token@ @Token@ -> @Expresion@ [ctor prec 15] .
+  op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 20] .
+  ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 19] .
+  op _=__ : @Token@ @Token@ @Token@ -> @Expresion@ [ctor prec 19] .
+  ***op _=__ : @Token@ @Token@ @NeTokenList@ -> @Expresion@ [ctor prec 20] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
-  op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 16] .
-  op @__ : @Token@ @ListaArgumentos@ -> @Expresion@ [ctor prec 16] .  
+  --- op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 20] .
+  --- op @__ : @Token@ @ListaArgumentos@ -> @Expresion@ [ctor prec 20] .  
 
   --- --- op [_] : String -> Argumento [ctor] .
   --- --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
   --- --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
-  op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 14] .
+  op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 19] .
 
-  op _,_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 20] .
+  ***op _;_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 21] .
   op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
+  ***op _=>_ : @Constructora@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
+  op |_=>_ : @TipoOpcion@ @Token@ -> @Opcion@ [ctor prec 20] .
   op ov : -> @ListaOpciones@ [ctor] .
   op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 20] .
   op match_with_end : @Token@ @ListaOpciones@ -> @ExpresionMatch@ [ctor prec 20] .
-  op __ : @ListaExpresiones@ @ListaExpresiones@ -> @ListaExpresiones@ [ctor assoc prec 21] .
+  op __ : @ListaExpresiones@ @ListaExpresiones@ -> @ListaExpresiones@ [ctor assoc prec 22] .
 
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool @DeclaracionOpBools@ < @Valor@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool @DeclaracionOpBools@ @ExpresionMatch@ < @Valor@ .
   subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ @Expresion@ < @ListaDeclaraciones@ .
+  ***subsort @Expresiones@ @DeclaracionOpMapI@ @Expresion@ < @ListaDeclaraciones@ .
 
-  op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 16] .
-  op _:=_ : @Token@ @Token@ -> @Declaracion@ [ctor prec 16] .
-  op _<-&BLOCKNUMBER : @Token@ -> @Declaracion@ [ctor prec 16] .
-  op _=_ : @Token@ @Valor@ -> @Declaracion@ [ctor prec 16] .
+  op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 19] .
+  op _:=_ : @Token@ @Token@ -> @Declaracion@ [ctor prec 19] .
+  op _<-&BLOCKNUMBER : @Token@ -> @Declaracion@ [ctor prec 19] .
+  op _=_ : @Token@ @Valor@ -> @Declaracion@ [ctor prec 19] .
   ***op __ : @Token@ @ListaArgumentos@ -> @Declaracion@ [ctor] .
-  op forall__ : @Token@ @Token@ -> @Declaracion@ [ctor prec 16] .
+  op forall__ : @Token@ @Token@ -> @Declaracion@ [ctor prec 19] .
   op accept : -> @Declaracion@ [ctor] .
-  op send_ : @Token@ -> @Declaracion@ [ctor prec 16] .
-  op event_ : @Token@ -> @Declaracion@ [ctor prec 16] .
+  op send_ : @Token@ -> @Declaracion@ [ctor prec 19] .
+  op event_ : @Token@ -> @Declaracion@ [ctor prec 19] .
 
   op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 20] .
 
@@ -218,6 +225,7 @@ fmod GRAMMAR is
   op -tag:_ : String -> @TagMensaje@ [ctor prec 12] .
   op -recipient:_ : @Token@ -> @EnvioMensaje@ [ctor prec 12] .
   op -amount:_ : @Entero@ -> @CantidadMensaje@ [ctor prec 12] .
+  op -amount:_ : @Token@ -> @CantidadMensaje@ [ctor prec 12] .
   ***op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
   op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
 
@@ -226,14 +234,27 @@ fmod GRAMMAR is
 
   ops andb__ orb__ : @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
   ops negb_ bool-to-string_ : @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
+  ops _.andb__ _.orb__ : @Token@ @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
+  ops _.negb_ _.bool-to-string_ : @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
+
+  ***ADTS
+  sort @ADTS@ @Constructora@ @Constructoras@ .
+  subsort @Constructora@ < @Constructoras@ .
+  op |_ : @Token@ -> @Constructora@ [ctor prec 15] .
+  --- ops String ByStr32 ByStr20 BNum Bool : -> ListaArgumentos [ctor] .
+  --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor assoc] .
+  --- op |_of_ : Qid ListaArgumentos -> Constructora [ctor] . 
+  op __ : @Constructoras@ @Constructoras@ -> @Constructoras@ [ctor assoc prec 16] .
+  op type_=_ : @Token@ @Constructoras@ -> @ADTS@ [ctor prec 17] .
   
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
   op library_ : @Token@ -> @NombreLibreria@ [ctor] .
   op contract_ : @Token@ -> @NombreContrato@ [ctor] .
-  op BoolUtils : -> @LibImportar@ [ctor] .
+  ops BoolUtils IntUtils : -> @LibImportar@ [ctor] .
   op iv : -> @Importacion@ [ctor] .
   op import_ : @LibImportar@ -> @Importacion@ [ctor] .
+  op import_as_ : @LibImportar@ @Token@ -> @Importacion@ [ctor] .
 
   op __ : @NombreLibreria@ @ListaExpresiones@ -> @Libreria@ [ctor] .
 
@@ -245,7 +266,7 @@ fmod GRAMMAR is
 
   
   op scilla-version_______ : Nat @Importacion@ @Libreria@ @NombreContrato@ @ListaParamInm@ @ListaCamposMod@ @ListaTransiciones@ -> @Contrato@ [ctor] .
-  ***op scilla-version__ : Nat @Mensaje@ -> @Contrato@ [ctor] .
+  ***op scilla-version___ : Nat @Importacion@ @Libreria@ -> @Contrato@ [ctor] .
 
 endfm
 
@@ -390,14 +411,14 @@ fmod datos_primitivos is
 ---   op Map__ : TipoClave TipoValor -> Map [ctor] .
 ---   ***Definición operación insertar.
 ---   ***Funcional
----   op put___ : String String String -> DeclaracionOp [ctor] .
+  op put___ : Qid Qid Qid -> DeclaracionOp [ctor] .
 ---   ***In-place.
   op insertar___ : Qid Qid Qid -> DeclaracionOpMapI [ctor] .
   ***Definición operación obtener valor.
   ***Funcional
   op get__ : Qid Qid -> DeclaracionOp [ctor] .
 ---   ***In-place
----   op _<-_[_] : String String String -> DeclaracionOpMapI [ctor] .
+  op obtener___ : Qid Qid Qid -> DeclaracionOpMapI [ctor] .
   ***Definición operación contener.
   ***Funcional
   op contains__ : Qid Qid -> DeclaracionOp [ctor] .
@@ -604,6 +625,25 @@ fmod transiciones is
   sort Transicion .
   
   op transicion___ : Qid ListaParamInm ListaDeclaraciones -> Transicion [ctor] .
+
+endfm
+
+
+fmod ADT is
+  ***pr datos_primitivos .
+  pr QID .
+
+  sort Constructora Constructoras ADTS Nombre ListaArgumentos .
+  --- subsort Constructora < Constructoras .
+  --- subsort String < Nombre .
+  --- subsort Nombre < ListaArgumentos .
+
+  op |_ : Qid -> Constructora [ctor] .
+  ops String ByStr32 ByStr20 BNum Bool : -> ListaArgumentos [ctor] .
+  op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor assoc] .
+  op |_of_ : Qid ListaArgumentos -> Constructora [ctor] . 
+  op __ : Constructoras Constructoras -> Constructoras [ctor assoc] .
+  op type_=_ : Nombre Constructoras -> ADTS [ctor] .
 
 endfm
 
