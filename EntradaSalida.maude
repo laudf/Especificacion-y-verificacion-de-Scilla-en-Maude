@@ -235,7 +235,11 @@ ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
      T3' := parse(T3) /\
      T4' := parse(T4) .
 
- ***TRANSICIONES
+ ***TRANSICIONES Y PROCEDIMIENTOS
+ ceq parse('procedure_`(_`)_end[T1, T2, T3]) = 'procedimiento___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
@@ -369,9 +373,9 @@ rl [newLine] :
    gotLine(example, FHIn, Text)
    < example : EXAMPLE | file: FHIn, read: Read, state: reading, Attrs >
 => if Text == ""
-   then < example : EXAMPLE | file: FHIn, read: preparse(Read), state: parsing, Attrs > 
+   then < example : EXAMPLE | file: FHIn, read: Read, state: parsing, Attrs > 
         closeFile(FHIn, example)
-   else < example : EXAMPLE | file: FHIn, read: (Read + Text), state: reading, Attrs >
+   else < example : EXAMPLE | file: FHIn, read: (Read + preparse(Text)), state: reading, Attrs >
         getLine(FHIn, example)
    fi .
 
@@ -425,6 +429,7 @@ red metaParse(GRAMMAR, tokenize("match is_owner with | false => e = {-eventname:
 red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
 red metaParse(GRAMMAR, tokenize("fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match result with | CodeIsSender => (Int32 -1) end"), anyType) .
+red metaParse(GRAMMAR, tokenize("after_end = (let one = Uint128 1 in builtin badd endtime one)"), anyType) .
 
 set print attribute on .
 

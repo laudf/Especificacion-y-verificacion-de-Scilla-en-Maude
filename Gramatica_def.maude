@@ -155,17 +155,17 @@ fmod GRAMMAR is
   subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
   subsort @ExpresionLet@ @ADTS@ < @ListaExpresiones@ . 
  *** subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
-  subsort @ListaDeclaraciones@ @Entero@ < @Expresiones@ .
+  subsort @ListaDeclaraciones@ @Entero@ @Expresion@ < @Expresiones@ .
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
   subsort @Token@ < @ListaArg@ .
 
   op let_=_ : @Token@ @TipoDato@ -> @ExpresionLet@ [ctor prec 20]  .
-  op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 19] .
+  op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 20] .
   --- ***Falta añadir los mensajes
   op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 20] .
   ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 19] .
-  op _=__ : @Token@ @Token@ @Token@ -> @Expresion@ [ctor prec 19] .
+  op _=_ : @Token@ @Bubble@ -> @Expresion@ [ctor prec 19] .
   ***op _=__ : @Token@ @Token@ @NeTokenList@ -> @Expresion@ [ctor prec 20] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
@@ -205,10 +205,11 @@ fmod GRAMMAR is
 
   op _;_ : @ListaDeclaraciones@ @ListaDeclaraciones@ -> @ListaDeclaraciones@ [ctor assoc prec 20] .
 
-  ***TRANSICIONES
-  sort @Transicion@ @ListaTransiciones@ .
-  subsort @Transicion@ < @ListaTransiciones@ .
+  ***TRANSICIONES Y PROCEDIMIENTOS
+  sort @Transicion@ @ListaTransiciones@ @Procedimiento@ .
+  subsort @Transicion@ @Procedimiento@ < @ListaTransiciones@ .
 
+  op procedure_(_)_end : @Token@ @ListaParamInm@ @ListaDeclaraciones@ -> @Procedimiento@ [ctor prec 23] .
   op transition_(_)_end : @Token@ @ListaParamInm@ @ListaDeclaraciones@ -> @Transicion@ [ctor prec 23] .
   op tv : -> @ListaTransiciones@ [ctor] .
   op __ : @ListaTransiciones@ @ListaTransiciones@ -> @ListaTransiciones@ [ctor assoc prec 24] .
@@ -246,6 +247,10 @@ fmod GRAMMAR is
   --- op |_of_ : Qid ListaArgumentos -> Constructora [ctor] . 
   op __ : @Constructoras@ @Constructoras@ -> @Constructoras@ [ctor assoc prec 16] .
   op type_=_ : @Token@ @Constructoras@ -> @ADTS@ [ctor prec 17] .
+
+  ***ERRORES
+  sort @Error@ .
+  op throw_ : @Token@ -> @Error@ [ctor] .
   
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
@@ -690,14 +695,15 @@ fmod META-SIGN is
                 op-hook('qidSymbol, '<Qids>, nil, 'Qid)))] .
         op 'bubble : 'QidList -> '@Bubble@
              [special(
-               (id-hook('Bubble, '1 '-1 '`( '`))
+               (id-hook('Bubble, '1 '-1)
                 op-hook('qidListSymbol, '__, 'QidList 'QidList, 'QidList)
                 op-hook('qidSymbol, '<Qids>, nil, 'Qid)
                 id-hook('Exclude, 'eq 'ceq 'rl 'crl 'mb 'cmb 'sd 'csd
                                   'var 'vars 'forall 'exists
                                   'sorts 'subsort 'subsorts 'op 'ops
-                                  'protecting 'pr 'including 'inc 'extending
-                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec!)))] .
+                                  'protecting 'pr 'including 'inc 'extending 
+                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec! 'builtin '`{ 'let 'Pair '`( '`) 'Some
+                                  '; 'andb 'true 'BoolU )))] .
         op 'neTokenList : 'QidList -> '@NeTokenList@
              [special(
                (id-hook('Bubble, '1 '-1 '`( '`))

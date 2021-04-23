@@ -1,152 +1,88 @@
 
-scilla_version 0
-
-import BoolUtils as BoolU
-
-library OpenAuction
-
-let blk_leq =
-  fun (blk1 : BNum) =>
-  fun (blk2 : BNum) =>
-    let bc1 = builtin blt blk1 blk2 in 
-    let bc2 = builtin eq blk1 blk2 in 
-    BoolU.orb bc1 bc2
-
-
-let one_msg = 
-  fun (msg : Message) => 
-    let nil_msg = Nil {Message} in
-    Cons {Message} msg nil_msg
-    
-    
-let late_to_bid_code = Int32 1
-let too_early_to_bid_code = Int32 2
-let bid_too_low_code = Int32 3
-let first_bid_accepted_code  = Int32 4
-let bid_accepted_code  = Int32 5
-let money_sent_code  = Int32 6
-let nothing_to_withdraw_code  = Int32 7
-let auction_is_still_on_code  = Int32 8
-let auction_end_code  = Int32 9
+| false =>
+              msg = {-tag: "" ;
+                    -recipient: _sender ;
+                    -amount: Uint128 0 ;
+                    code : code_invalid_params} ;
+              msgs = one_msg msg ;
+              send msgs
+          end
    
-    
-
-
-contract OpenAuction
-(auctionStart : BNum,
- biddingTime  : Uint128,
- beneficiary  : ByStr20
-)
-
-
-field ended : Bool = False
-field highestBidder  : Option ByStr20  = None {ByStr20}
-field highestBid     : Uint128 = Uint128 0
-field pendingReturns : Map ByStr20 Uint128 = Emp ByStr20 Uint128
-
-transition Bid ()
-  blk <- & BLOCKNUMBER;
-  endtime = builtin badd auctionStart biddingTime;
-  after_end = let one = Uint128 1 
-    in builtin badd endtime one;
-  e <- ended;
-  in_time = blk_leq after_end blk;
-  flag1 = BoolU.orb in_time e;
-  early = blk_leq blk auctionStart;
-match early with
-  | true =>
-    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
-    msgs = one_msg msg ;
-    send msgs
-  | false =>
-    match flag1 with
-    | true => 
-      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : late_to_bid_code} ;
-      msgs = one_msg msg ;
-      send msgs
+        
     | false =>
-      hb <- highestBid ;
-      
-      sufficientBid = builtin lt hb _amount ;
-      match sufficientBid with 
-      | false =>
-        msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : bid_too_low_code} ;
+       msg = {-tag: "" ;
+                -recipient: _sender ;
+                -amount: Uint128 0 ;
+                code : code_not_authorized} ;
+       
+        msgs = one_msg msg ;
+        send msg
+
+transition addBook (book_title : String , author : String , bookID : Uint32)
+books <- bookInventory ;
+bookExist = builtin contains books bookID ;
+    match bookExist with
+    | true =>
+        msg = {-tag: "" ;
+                    -recipient: _sender ;
+                    -amount: Uint128 0 ;
+                    code : code_bookid_exist} ;
         msgs = one_msg msg ;
         send msgs
-      | true =>
-        accept ;
-        hbPrev <- highestBidder ;
-         match hbPrev with
-        | Some prevHighestBidder =>
-          option_pendingReturnsForPrevHB <- pendingReturns[prevHighestBidder];
-          
-          getPRForPrevHighestBidder = match option_pendingReturnsForPrevHB with
-        | Some pendingReturnsForPrevHB =>
-       
-          builtin add hb pendingReturnsForPrevHB
-        | None => hb
-        end ;
-        
-       
-      pendingReturns [prevHighestBidder] := getPRForPrevHighestBidder ;
-      
-      bidder = Some {ByStr20} _sender ;
-      highestBidder := bidder ;
-      highestBid := _amount ;
-      e = {-eventname: "Bid" ; code : bid_accepted_code ; addr : _sender ; amount : _amount} ;
-      event e
-      | None =>
-        first_bidder = Some {ByStr20} _sender ;
-        highestBidder := first_bidder ;
-        highestBid := _amount ;
-        e = {-eventname: "Bid" ; code : first_bid_accepted_code ; addr : _sender ; amount: _amount} ;
-        event e
-      end
+    | false =>
+        new_book = Pair {(String) (String)} book_title author ;
+        bookInventory[bookID] := new_book ;
+
+        tmp = Some {Uint32} bookID ;
+        lastBookID := tmp ;
+
+        msg = {-tag: "" ; 
+                -recipient: _sender ; 
+                -amount: Uint128 0 ; 
+                code : code_success} ;
+
+        msgs = one_msg msg ;
+        send msgs 
     end
-  end
-end
-  
-end  
-  
 
-transition Withdraw ()
-  prs <- pendingReturns;
-  pr = builtin get prs _sender;
-  match pr with
-  | None =>
-    msg  = {_tag : ""; _recipient : _sender; _amount : Uint128 0; code : nothing_to_withdraw_code};
-    msgs = one_msg msg;
-    send msgs
- | Some v =>
-    delete pendingReturns[_sender] ;
-    e = {-eventname: "Withdraw Successful" ; addr : _sender} ;
-    event e ;
-    msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; code : money_sent_code} ;
-    msgs = one_msg msg ;
-    send msgs
-  end
+    
 end
 
+transition removeBook(book_id : Uint32)
 
-transition AuctionEnd ()
-  blk <- & BLOCKNUMBER;
-  e <- ended;
-  t1 = builtin badd auctionStart biddingTime;
-  t2 = blk_leq t1 blk;
-  t3 = BoolU.negb e;
-  t4 = BoolU.andb t2 t3;
-  match t4 with
-  | False =>
-    msg  = {_tag : ""; _recipient : _sender; _amount : Uint128 0; code : auction_is_still_on_code};
-    msgs = one_msg msg;
-    send msgs
- | true =>
-    ended := val ;
-    hb <- highestBid ;
-    e = {-eventname: "Auction ended" ; highest_bid : hb} ;
-    event e ;
-    msg  = {-tag: "" ; -recipient: beneficiary ; -amount: hb ; code : auction_end_code ; highest_bid : hb} ;
-    msgs = one_msg msg ;
-    send msgs
-  end
+    delete bookInventory[book_id]
+
 end
+
+transition updateBook(book_id : Uint32 , book_title : String , author : String)
+   
+    books <- bookInventory ;
+    exist = builtin contains books book_id ;
+    match exist with
+    | false =>
+        msg = {-tag: "" ; 
+                -recipient: _sender ; 
+                -amount: Uint128 0 ; 
+                code : code_book_not_found} ;
+        msgs = one_msg msg ;
+        send msgs
+    | true =>
+        new_book = Pair {(String) (String)} book_title author ;
+        bookInventory[book_id] := new_book ;
+
+        msg = {-tag: "" ; 
+                -recipient: _sender ; 
+                -amount: Uint128 0 ; 
+                code : code_success} ;
+        msgs = one_msg msg ;
+        send msgs
+    end
+
+   
+
+
+end
+
+
+
+

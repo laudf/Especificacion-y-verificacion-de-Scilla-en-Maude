@@ -5,7 +5,7 @@ fmod PREPARSE is
  var S : String .
 
  op preparse : String -> String .
- eq preparse("scilla_version") = "scilla-version" .
+ eq preparse("scilla_version" + S) = "scilla-version" + S .
 
  eq preparse(S) = S [owise] .
 endfm

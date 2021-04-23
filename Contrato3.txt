@@ -9,7 +9,17 @@ let one_msg =
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
 
-
+let check_update = 
+  fun (bs : Map ByStr20 Uint128) =>
+  fun (sender : ByStr20) =>
+  fun (amount : Uint128) =>
+    let c = builtin contains bs sender in
+    match c with 
+    | false => 
+      let bs1 = builtin put bs sender amount in
+      Some {Map ByStr20 Uint128} bs1
+    | true  => None {Map ByStr20 Uint128}
+    end
    
 
 let blk_leq =
@@ -40,9 +50,11 @@ field funded : Bool = false
 
 transition Donate (lpv)
   blk <-&BLOCKNUMBER ;
+  in_time = blk_leq blk max_block ;
   match in_time with 
   | true  => 
     bs  <- backers ;
+    res = check_update bs _sender _amount ;
     match res with
     | None => 
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
@@ -79,6 +91,7 @@ transition GetFunds (lpv)
     send msgs
   | true => 
     blk <-&BLOCKNUMBER ;
+    in_time = blk_leq blk max_block ;
     c1 = (negb in_time) ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;

@@ -9,7 +9,7 @@ let blk_leq =
   fun (blk2 : BNum) =>
     let bc1 = builtin blt blk1 blk2 in 
     let bc2 = builtin eq blk1 blk2 in 
-    orb bc1 bc2
+    BoolU .orb bc1 bc2
 
 
 let one_msg = 
@@ -46,10 +46,12 @@ field pendingReturns : Map ByStr20 Uint128 = Emp ByStr20 Uint128
 transition Bid (lpv)
   blk <-&BLOCKNUMBER ;
   endtime = builtin badd auctionStart biddingTime ;
-  after_end = let one = Uint128 1 
-    in builtin badd endtime one ;
+  after_end = (let one = Uint128 1 
+    in builtin badd endtime one) ;
   e <- ended ;
+  in_time = blk_leq after_end blk ;
   flag1 = BoolU .orb in_time e ;
+  early = blk_leq blk auctionStart ;
   match early with
   | true =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
@@ -76,6 +78,15 @@ transition Bid (lpv)
         match hbPrev with
         | Some prevHighestBidder =>
           option_pendingReturnsForPrevHB <- pendingReturns[prevHighestBidder] ;
+
+                    
+          getPRForPrevHighestBidder = (match option_pendingReturnsForPrevHB with
+            | Some pendingReturnsForPrevHB =>
+          
+              builtin add hb pendingReturnsForPrevHB
+            | None => hb
+      
+          end) ;
           pendingReturns [prevHighestBidder] := getPRForPrevHighestBidder ;
       
           bidder = Some {ByStr20} _sender ;
@@ -121,7 +132,8 @@ end
 transition AuctionEnd (lpv)
   blk <-&BLOCKNUMBER ;
   e <- ended ;
-  t1 = builtin badd auctionStart biddingTime ;
+  t1 = builtin badd auctionStart biddingTime ; 
+  t2 = blk_leq t1 blk ;
   t3 = BoolU .negb e ;
   t4 = BoolU .andb t2 t3 ;
   match t4 with

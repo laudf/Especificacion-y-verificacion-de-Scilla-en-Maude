@@ -42,6 +42,11 @@ field balances : Map ByStr20 Uint128
 field allowances : Map ByStr20 (Map ByStr20 Uint128) 
   = Emp ByStr20 (Map ByStr20 Uint128)
 
+procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amount : Uint128)
+  o_from_bal <- balances[from] ;
+  bal = get_val o_from_bal 
+end
+
 transition IncreaseAllowance (spender : ByStr20 , amount : Uint128)
  
   event e
