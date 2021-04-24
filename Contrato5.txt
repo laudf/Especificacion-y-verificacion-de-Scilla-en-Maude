@@ -8,6 +8,7 @@ let one_msg =
   let nil_msg = Nil {Message} in
   Cons {Message} msg nil_msg
 
+
 type Error =
 | CodeIsSender
 | CodeInsufficientFunds
@@ -37,14 +38,42 @@ contract FungibleToken
 )
 
 field balances : Map ByStr20 Uint128 
-  = let emp_map = Emp ByStr20 Uint128 in
-    builtin put emp_map contract_owner init_supply
+  = (let emp_map = Emp ByStr20 Uint128 in
+    builtin put emp_map contract_owner init_supply)
 field allowances : Map ByStr20 (Map ByStr20 Uint128) 
   = Emp ByStr20 (Map ByStr20 Uint128)
 
-procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amount : Uint128)
+procedure ThrowError(err : Error)
+  e = make_error err ;
+  throw e
+end
+
+procedure IsNotSender(address : ByStr20)
+  is_sender = builtin eq _sender address ;
+  match is_sender with
+  | true =>
+    err = CodeIsSender
+  | false =>
+  end
+end
+
+procedure AuthorizedMoveIfSufficientBalance(from : ByStr20, to : ByStr20, amount : Uint128)
   o_from_bal <- balances[from] ;
-  bal = get_val o_from_bal 
+  bal = get_val o_from_bal ;
+  can_do = uint128_le amount bal ;
+  match can_do with
+  | true =>
+    new_from_bal = builtin sub bal amount ;
+    balances[from] := new_from_bal ;
+    get_to_bal <- balances[to] ;
+    new_to_bal = (match get_to_bal with
+    | Some bal => builtin add bal amount
+    | None => amount
+    end) ;
+    balances[to] := new_to_bal
+  | false =>
+    err = CodeInsufficientFunds
+  end
 end
 
 transition IncreaseAllowance (spender : ByStr20 , amount : Uint128)

@@ -429,7 +429,8 @@ red metaParse(GRAMMAR, tokenize("match is_owner with | false => e = {-eventname:
 red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
 red metaParse(GRAMMAR, tokenize("fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match result with | CodeIsSender => (Int32 -1) end"), anyType) .
-red metaParse(GRAMMAR, tokenize("after_end = (let one = Uint128 1 in builtin badd endtime one)"), anyType) .
+red metaParse(GRAMMAR, tokenize("field allowances : Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)"), anyType) .
+red metaParse(GRAMMAR, tokenize("@ snd (ByStr32) (ByStr33)"), anyType) .
 
 set print attribute on .
 
