@@ -98,6 +98,16 @@ fmod PARSING is
  ceq parse('strlen_[T1]) = 'length_[T1']
   if T1' := parse(T1) .
 
+ ***HASHES
+ ceq parse('schnorr-verify___[T1, T2, T3]) = 'schnorr-verify___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+ ceq parse('ecdsa-verify___[T1, T2, T3]) = 'ecdsa-verify___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
+
  ***MAPS
  ceq parse('put___[T1, T2, T3]) = 'put___[T1', T2', T3']
   if T1' := parse(T1) /\
@@ -107,7 +117,7 @@ fmod PARSING is
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
-ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
+ ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
@@ -117,6 +127,10 @@ ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
  ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+ ceq parse('_<-exists_`[_`][T1, T2, T3]) = 'existe___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('remove__[T1, T2]) = 'remove__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
@@ -430,7 +444,11 @@ red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
 red metaParse(GRAMMAR, tokenize("fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match result with | CodeIsSender => (Int32 -1) end"), anyType) .
 red metaParse(GRAMMAR, tokenize("field allowances : Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)"), anyType) .
-red metaParse(GRAMMAR, tokenize("@ snd (ByStr32) (ByStr33)"), anyType) .
+red metaParse(GRAMMAR, tokenize("transition whoami(lpv) author <- author_name ; twitter <- twitter_id ; e = {-eventname: \"Whoami\" ; author_name : author ; twitter_id : twitter} ; event e end"), anyType) .
+red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sender = builtin eq _sender address ; match is_sender with | true => err = CodeIsSender | false => ev end end"), anyType) .
+red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
+red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
+red metaParse(GRAMMAR, tokenize("msg_to_recipient = { -tag: \"recipientAcceptMint\" ; -recipient: to ; -amount: Uint128 0 ; lcv } "), anyType) .
 
 set print attribute on .
 

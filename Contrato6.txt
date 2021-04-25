@@ -1,0 +1,201 @@
+scilla-version 0
+
+import BoolUtils
+library NonfungibleToken
+
+let one_msg = 
+  fun (msg : Message) => 
+  let nil_msg = Nil {Message} in
+  Cons {Message} msg nil_msg
+
+let zero = Uint256 0
+let one = Uint256 1
+let tt = true
+let ff = false
+
+let add_owner_count = 
+  fun (some_current_count : Option Uint256) =>
+    match some_current_count with
+    | Some current_count =>
+      builtin add current_count one
+    | None => one
+    end
+
+let sub_owner_count = 
+fun (some_current_count : Option Uint256) =>
+  match some_current_count with
+  | Some current_count =>
+    let is_zero = builtin eq current_count zero in
+    match is_zero with
+    | true => zero
+    | false => 
+        builtin sub current_count one
+    end
+  | None => zero
+  end
+
+let is_approved_or_owner =
+  fun (is_owner : Bool) =>
+  fun (is_approved : Bool) =>
+  fun (is_approved_for_all : Bool) =>
+    let is_owner_or_approved =  orb is_owner is_approved in
+    orb is_owner_or_approved is_approved_for_all
+
+type Error =
+  | CodeNotAuthorised
+  | CodeNotFound
+  | CodeTokenExists
+  | CodeUnexpectedError
+
+
+type Unit =
+| Unit
+
+
+
+contract NonfungibleToken
+(contract_owner : ByStr20 ,
+  name : String ,
+  symbol : String
+)
+
+field minters : Map ByStr20 Unit = Emp ByStr20 Unit
+field token_owners : Map Uint256 ByStr20 = Emp Uint256 ByStr20
+field owned_token_count : Map ByStr20 Uint256 = Emp ByStr20 Uint256
+field token_approvals : Map Uint256 ByStr20 = Emp Uint256 ByStr20
+field operator_approvals : Map ByStr20 (Map ByStr20 Bool)
+                            = Emp ByStr20 (Map ByStr20 Bool)
+field token_uris : Map Uint256 String = Emp Uint256 String
+field total_supply : Uint256 = Uint256 0
+
+procedure EmitError(err : Error)
+  e = make_error_event err ;
+  event e ;
+  throw
+end
+
+transition balanceOf(address : ByStr20)
+  some_bal <- owned_token_count[address] ;
+  balance = 
+    (match some_bal with
+    | Some bal => bal
+    | None => Uint256 0
+    end) ;
+  msg_to_sender = { -tag: "balanceOfCallBack" ; -recipient: _sender ; 
+                    -amount: Uint128 0 ; balance : balance} ;
+  msgs = one_msg msg_to_sender ;
+  send msgs
+end
+
+transition totalSupply(lpv)
+  current_supply <- total_supply ;
+  msg_to_sender = { -tag: "totalSupplyCallBack" ; -recipient: _sender ; -amount: Uint128 0 ;
+                   total_supply : current_supply} ;
+  msgs = one_msg msg_to_sender ;
+  send msgs
+end
+
+transition name(lpv)
+  msg_to_sender = { -tag: "nameCallBack" ; -recipient: _sender ; -amount: Uint128 0 ;
+                   name : name} ;
+  msgs = one_msg msg_to_sender ;
+  send msgs
+end
+
+transition symbol(lpv)
+  msg_to_sender = { -tag: "symbolCallBack" ; -recipient: _sender ; -amount: Uint128 0 ;
+                   symbol : symbol} ;
+  msgs = one_msg msg_to_sender ;
+  send msgs
+end
+
+transition getApproved(token_id : Uint256)
+  some_token_approval <- token_approvals[token_id] ;
+  match some_token_approval with
+  | Some addr => 
+    msg_to_sender = { -tag: "getApprovedCallBack" ; -recipient: _sender ; -amount: Uint128 0 ; 
+                      approved_addr : addr ; token_id : token_id} ;
+    msgs = one_msg msg_to_sender ;
+    send msgs
+  | None => throw
+  end
+end
+
+transition getTokenURI(token_id : Uint256)
+  some_token_uri <- token_uris[token_id] ;
+  match some_token_uri with
+  | Some token_uri =>
+    msg_to_sender = { -tag: "getTokenURICallBack" ; -recipient: _sender ; -amount: Uint128 0 ; 
+                      token_uri : token_uri} ;
+    msgs = one_msg msg_to_sender ;
+    send msgs
+  | None => throw
+  end
+end
+
+transition isOwner(token_id : Uint256 , address : ByStr20)
+  some_token_owner <- token_owners[token_id] ;
+  is_owner_bool = 
+    (match some_token_owner with
+    | Some addr => builtin eq addr address
+    | None => False
+    end) ;
+  msg_to_sender = { -tag: "isOwnerCallBack" ; -recipient: _sender ; -amount: Uint128 0 ;
+                    is_owner : is_owner_bool} ;
+  msgs = one_msg msg_to_sender ;
+  send msgs
+end
+
+transition configureMinter(minter : ByStr20)
+  is_owner = builtin eq contract_owner _sender ;
+  match is_owner with
+  | false =>
+    err = CodeNotAuthorised 
+  | true =>
+    some_minter <- minters[minter] ;
+    match some_minter with
+    | Some Unit => 
+      delete minters[minter] ;
+      e = {-eventname: "RemovedMinterSuccess" ; minter : minter} ;
+      event e
+    | None =>
+      minters[minter] := authorize ;
+      e = {-eventname: "AddMinterSuccess" ; minter : minter} ;
+      event e
+    end
+  end
+end
+
+transition mint(to : ByStr20 , token_id : Uint256 , token_uri : String)
+  token_exist <-exists token_owners[token_id] ;
+  match token_exist with
+  | true =>
+    err = CodeTokenExists
+  | false =>
+    is_contract_owner = builtin eq _sender contract_owner ;
+    is_minter <-exists minters[_sender] ;
+    is_authorised = orb is_contract_owner is_minter ;
+    match is_authorised with
+    | true =>
+      token_owners[token_id] := to ;
+      some_current_count <- owned_token_count[to] ;
+      new_count = add_owner_count some_current_count ;
+      owned_token_count[to] := new_count ;
+      token_uris[token_id] := token_uri ;
+      current_supply <- total_supply ;
+      new_supply = builtin add current_supply one ;
+      total_supply := new_supply ;
+      e = {-eventname: "MintSuccess" ; by : _sender ; recipient : to ;
+           token_id : token_id ; token_uri : token_uri} ;
+      event e ;
+      msg_to_recipient = { -tag: "recipientAcceptMint" ; -recipient: to ; -amount: Uint128 0 ; lcv } ;
+      msg_to_sender = { -tag: "mintCallBack" ; -recipient: _sender ; -amount: Uint128 0 ;
+                        recipient : to ; token_id : token_id ; token_uri : token_uri } ;
+      msgs = two_msgs msg_to_recipient msg_to_sender ;
+      send msgs
+    | false =>
+      err = CodeNotAuthorised
+    end
+    
+  end
+end

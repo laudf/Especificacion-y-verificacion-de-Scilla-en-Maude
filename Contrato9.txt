@@ -2,7 +2,7 @@ scilla-version 0
 
 import PairUtils
 
-library Schnorr
+library Ecdsa
 
 let one_msg = 
   fun (msg : Message) => 
@@ -12,7 +12,7 @@ let one_msg =
 let fst_f = @ fst (ByStr32) (ByStr33)
 let snd_f = @ snd (ByStr32) (ByStr33)
 
-contract Schnorr
+contract Ecdsa
 (lpv)
 
 field pub_key : Option (ByStr33) = None {ByStr33}
@@ -21,7 +21,7 @@ transition verify(msg : ByStr , sig : ByStr64)
   pubk_o <- pub_key ;
   match pubk_o with
   | Some pubk =>
-    sig = builtin schnorr-verify pubk msg sig ;
+    sig = builtin ecdsa-verify pubk msg sig ;
     match sig with
     | true =>
       m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "verification successful" } ;

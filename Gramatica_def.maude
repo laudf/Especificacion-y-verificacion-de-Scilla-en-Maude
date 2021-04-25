@@ -49,6 +49,10 @@ fmod GRAMMAR is
   ***Declaración de la operacion strlen (devuelve la longitud del string).
   op strlen_ : @Token@ -> @DeclaracionOp@ [ctor prec 14] .
 
+  ***HASHES
+  op schnorr-verify___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] . 
+  op ecdsa-verify___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
+
   ***MAPAS
   sort @TipoClave@ @TipoValor@ @MapVacio@ @Map@ @DeclaracionOpMapI@ .
   ***subsort @TipoEntero@ < @NombreTipo@ .
@@ -70,6 +74,8 @@ fmod GRAMMAR is
   ***Definición operación contener.
   ***Funcional
   op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
+  ***In-place
+  op _<-exists_[_] : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación eliminar.
   ***Funcional
   op remove__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
@@ -93,7 +99,7 @@ fmod GRAMMAR is
   ***DATOS ALGEBRAICOS
   ***Declaración option
   subsort @TipoEntero@ @Map@ < @NombreTipo@ .
-  ops String ByStr32 ByStr20 BNum Bool Message Error : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
+  ops String ByStr32 ByStr33 ByStr20 BNum Bool Message Error ByStr ByStr64 Unit : -> @NombreTipo@ [ctor] .  ***Falta meter los enteros
   op Option_ : @NombreTipo@ -> @Option@ [ctor prec 13] .  ***A lo mejor hay que hacer un tipo declaracionOption para diferenciarlo.
   ***Constructoras option
   op None{_} : @NombreTipo@ -> @Option@ [ctor prec 13] .
@@ -138,10 +144,11 @@ fmod GRAMMAR is
   sort @ValorCampo@ @Campo_mod@ @ListaCamposMod@ .
   ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
   subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ Bool @Expresion@ < @ValorCampo@ .
+  ***subsort Bool < @ValorCampo@ .
   subsort @Campo_mod@ < @ListaCamposMod@ .
   op cv : -> @Campo_mod@ [ctor] .
   op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 19] .
-  ***op field_=_ : @ParamInm@ @Bubble@ -> @Campo_mod@ [ctor prec 19] .
+  op field_=_ : @ParamInm@ @Bubble@ -> @Campo_mod@ [ctor prec 19] .
   op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor assoc prec 20] .
 
   ***EXPRESIONES
@@ -151,7 +158,7 @@ fmod GRAMMAR is
   subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
   subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ < @Operacion@ .
-  ***subsort @TipoEntero@ @NombreTipo@ < @ListaArgumentos@ .
+  subsort @TipoEntero@ @NombreTipo@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
   subsort @ExpresionLet@ @ADTS@ < @ListaExpresiones@ . 
  *** subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
@@ -171,18 +178,19 @@ fmod GRAMMAR is
   ***op _=__ : @Token@ @Token@ @NeTokenList@ -> @Expresion@ [ctor prec 20] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
-  ***op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 19] .
-  op @__ : @Token@ @Bubble@ -> @Expresion@ [ctor prec 20] .  
+  op __ : @ListaArgumentos@ @ListaArgumentos@ -> @ListaArgumentos@ [ctor assoc prec 19] .
+  op @__ : @Token@ @ListaArgumentos@ -> @Expresion@ [ctor prec 20] .  
 
   --- --- op [_] : String -> Argumento [ctor] .
   --- --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
   --- --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
   op builtin_ : @OperacionBuilt@ -> @Expresion@ [ctor prec 19] .
 
-  ***op _;_ : @Expresiones@ @Expresiones@ -> @Expresiones@ [ctor assoc prec 21] .
+  op ev : -> @Expresiones@ [ctor] .
   op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
   ***op _=>_ : @Constructora@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
-  op |_=>_ : @TipoOpcion@ @Token@ -> @Opcion@ [ctor prec 20] .
+  ***op |_=>_ : @Bubble@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
+  op |_=>_ : @TipoOpcion@ @Bubble@ -> @Opcion@ [ctor prec 20] .
   op ov : -> @ListaOpciones@ [ctor] .
   op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 20] .
   op match_with_end : @Token@ @ListaOpciones@ -> @ExpresionMatch@ [ctor prec 20] .
@@ -222,6 +230,8 @@ fmod GRAMMAR is
   ***Eventos
   op -eventname:_ : String -> @NombreEvento@ [ctor prec 12] .
   op _:_ : @Token@ @Token@ -> @CampoEvento@ [ctor prec 12] .
+  ***op _:_ : @Token@ String -> @CampoEvento@ [ctor prec 12] .
+  op lcv : -> @ListaCamposEvento@ [ctor] .
   op _;_ : @ListaCamposEvento@ @ListaCamposEvento@ -> @ListaCamposEvento@ [ctor assoc prec 13] .
   op {_;_} : @NombreEvento@ @ListaCamposEvento@ -> @Evento@ [ctor prec 14] .
   ***Mensajes
@@ -240,6 +250,8 @@ fmod GRAMMAR is
   ops _.andb__ _.orb__ : @Token@ @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
   ops _.negb_ _.bool-to-string_ : @Token@ @Token@ -> @DeclaracionOpBools@ [ctor prec 14] .
 
+
+
   ***ADTS
   sort @ADTS@ @Constructora@ @Constructoras@ .
   subsort @Constructora@ < @Constructoras@ .
@@ -252,7 +264,9 @@ fmod GRAMMAR is
 
   ***ERRORES
   sort @Error@ .
+  op throw : -> @Error@ [ctor] .
   op throw_ : @Token@ -> @Error@ [ctor prec 19] .
+
   
 
   sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
@@ -705,7 +719,8 @@ fmod META-SIGN is
                                   'sorts 'subsort 'subsorts 'op 'ops
                                   'protecting 'pr 'including 'inc 'extending 
                                   'ctor 'assoc 'comm '== '/\ 'spec* 'spec! 'builtin '`{ 'let 'Pair '`( '`) 'Some
-                                  '; 'andb 'true 'BoolU 'Uint32 'Uint128 'Nil 'throw)))] .
+                                  '; 'andb 'true 'BoolU 'Uint32 'Uint128 'Uint256 'Nil 'throw 'Emp 'field 'false
+                                  'ev '= '| 'Unit 'orb ':=)))] .
         op 'neTokenList : 'QidList -> '@NeTokenList@
              [special(
                (id-hook('Bubble, '1 '-1 '`( '`))
