@@ -448,7 +448,7 @@ red metaParse(GRAMMAR, tokenize("transition whoami(lpv) author <- author_name ; 
 red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sender = builtin eq _sender address ; match is_sender with | true => err = CodeIsSender | false => ev end end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
-red metaParse(GRAMMAR, tokenize("msg_to_recipient = { -tag: \"recipientAcceptMint\" ; -recipient: to ; -amount: Uint128 0 ; lcv } "), anyType) .
+red metaParse(GRAMMAR, tokenize("import (BoolUtils PairUtils ListUtils) "), anyType) .
 
 set print attribute on .
 

@@ -269,12 +269,15 @@ fmod GRAMMAR is
 
   
 
-  sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ .
+  sort @NombreLibreria@ @NombreContrato@ @Libreria@ @LibImportar@ @Importacion@ @ListaImportar@ .
+  subsort @LibImportar@ < @ListaImportar@ .
+
   op library_ : @Token@ -> @NombreLibreria@ [ctor] .
   op contract_ : @Token@ -> @NombreContrato@ [ctor] .
-  ops BoolUtils IntUtils PairUtils : -> @LibImportar@ [ctor] .
+  ops BoolUtils IntUtils PairUtils ListUtils : -> @LibImportar@ [ctor] .
   op iv : -> @Importacion@ [ctor] .
-  op import_ : @LibImportar@ -> @Importacion@ [ctor] .
+  op __ : @ListaImportar@ @ListaImportar@ -> @ListaImportar@ [ctor assoc] .
+  op import_ : @ListaImportar@ -> @Importacion@ [ctor] .
   op import_as_ : @LibImportar@ @Token@ -> @Importacion@ [ctor] .
 
   op __ : @NombreLibreria@ @ListaExpresiones@ -> @Libreria@ [ctor] .

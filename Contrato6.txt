@@ -1,6 +1,6 @@
 scilla-version 0
 
-import BoolUtils
+import (BoolUtils PairUtils ListUtils)
 library NonfungibleToken
 
 let one_msg = 
