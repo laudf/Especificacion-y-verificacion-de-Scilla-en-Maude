@@ -13,6 +13,17 @@ type Error =
 | CodeInsufficientFunds
 | CodeInsufficientAllowance
 
+let make_error =
+  fun (result : Error) =>
+    let result_code = 
+      (match result with
+      | CodeIsSender              => Int32 -1
+      | CodeInsufficientFunds     => Int32 -2
+      | CodeInsufficientAllowance => Int32 -3
+      end)
+    in
+    { -exception: "Error" ; code : result_code }
+
 let zero = Uint128 0
 
 type Unit =
@@ -20,10 +31,10 @@ type Unit =
 
 let get_val =
   fun (some_val : Option Uint128) =>
-  match some_val with
+  (match some_val with
   | Some val => val
   | None => zero
-  end
+  end)
 
 contract FungibleToken
 (
@@ -48,9 +59,77 @@ end
 
 procedure IsNotSender(address : ByStr20)
   is_sender = builtin eq _sender address ;
-  match is_sender with
+  (match is_sender with
   | true =>
     err = CodeIsSender 
   | false => ev 
-  end
+  end)
+end
+
+procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amount : Uint128)
+  o_from_bal <- balances[from] ;
+  bal = get_val o_from_bal ;
+  can_do = uint128_le amount bal ;
+  (match can_do with
+  | true =>
+    new_from_bal = builtin sub bal amount ;
+    balances[from] := new_from_bal ;
+    get_to_bal <- balances[to] ;
+    new_to_bal = (match get_to_bal with
+    | Some bal => builtin add bal amount
+    | None => amount
+    end) ;
+    balances[to] := new_to_bal
+  | false =>
+    err = CodeInsufficientFunds
+  end)
+end
+
+transition IncreaseAllowance(spender : ByStr20 , amount : Uint128)
+  some_current_allowance <- allowances[_sender][spender] ;
+  current_allowance = get_val some_current_allowance ;
+  new_allowance = builtin add current_allowance amount ;
+  allowances[_sender][spender] := new_allowance ;
+  e = {-eventname: "IncreasedAllowance" ; token_owner : _sender ; spender : spender ; new_allowance : new_allowance} ;
+  event e
+end
+
+transition DecreaseAllowance(spender : ByStr20 , amount : Uint128)
+  some_current_allowance <- allowances[_sender][spender] ;
+  current_allowance = get_val some_current_allowance ;
+  allowances[_sender][spender] := new_allowance ;
+  e = {-eventname: "DecreasedAllowance" ; token_owner : _sender ; spender : spender ; new_allowance : new_allowance} ;
+  event e
+end
+
+transition Transfer(to : ByStr20 , amount : Uint128)
+  e = {-eventname: "TransferSuccess" ; sender : _sender ; recipient : to ; amount : amount} ;
+  event e ;
+  msg_to_recipient = {-tag: "RecipientAcceptTransfer" ; -recipient: to ; -amount: zero ; 
+                      sender : _sender ; recipient : to ; amount : amount} ;
+  msg_to_sender = {-tag: "TransferSuccessCallBack" ; -recipient: _sender ; -amount: zero ; 
+                  sender : _sender ; recipient : to ; amount : amount} ;
+  msgs = two_msgs msg_to_recipient msg_to_sender ;
+  send msgs
+end
+
+transition TransferFrom(from : ByStr20 , to : ByStr20 , amount : Uint128)
+  o_spender_allowed <- allowances[from][_sender] ;
+  allowed = get_val o_spender_allowed ;
+  can_do = uint128_le amount allowed ;
+  (match can_do with
+  | true =>
+    e = {-eventname: "TransferFromSuccess" ; initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
+    event e ;
+    new_allowed = builtin sub allowed amount ;
+    allowances[from][_sender] := new_allowed ;
+    msg_to_recipient = {-tag: "RecipientAcceptTransferFrom" ; -recipient: to ; -amount: zero ; 
+                        initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
+    msg_to_sender = {-tag: "TransferFromSuccessCallBack" ; -recipient: _sender ; -amount: zero ; 
+                    initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
+    msgs = two_msgs msg_to_recipient msg_to_sender ;
+    send msgs
+  | false =>
+    err = CodeInsufficientAllowance
+  end)
 end

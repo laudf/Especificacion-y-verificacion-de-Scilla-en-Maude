@@ -109,34 +109,36 @@ fmod PARSING is
      T3' := parse(T3) .
 
  ***MAPS
+ ceq parse('`[_`][T1]) = 'posicion_[T1']
+  if T1' := parse(T1) .
  ceq parse('put___[T1, T2, T3]) = 'put___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
- ceq parse('_`[_`]:=_[T1, T2, T3]) = 'insertar___[T1', T2', T3']
+ ceq parse('__:=_[T1, T2, T3]) = 'insertar___[T1', T2', T3']
+  if T1' := parse(T1) /\
+     T2' := parseL(T2) /\
+     T3' := parse(T3) .
+ ceq parse('_<-__[T1, T2, T3]) = 'obtener___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('_<-_`[_`][T1, T2, T3]) = 'obtener___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
+     T3' := parseL(T3) .
  ceq parse('get__[T1, T2]) = 'get__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
- ceq parse('_<-exists_`[_`][T1, T2, T3]) = 'existe___[T1', T2', T3']
+ ceq parse('_<-exists__[T1, T2, T3]) = 'existe___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
-     T3' := parse(T3) .
+     T3' := parseL(T3) .
  ceq parse('remove__[T1, T2]) = 'remove__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
- ceq parse('delete_`[_`][T1, T2]) = 'delete__[T1', T2']
+ ceq parse('delete__[T1, T2]) = 'delete__[T1', T2']
   if T1' := parse(T1) /\
-     T2' := parse(T2) .
+     T2' := parseL(T2) .
 
  ***BNUM
  ceq parse('blt__[T1, T2]) = '_<_[T1', T2']
@@ -167,6 +169,9 @@ fmod PARSING is
      T2' := parse(T2) /\
      T3' := parse(T3) /\ 
      T4' := parse(T4) .
+ ceq parse('Pair__[T1, T2]) = 'Pair__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
  ***Naturales
  ceq parse('Succ_[T1]) = 'Sucesor_[T1']
   if T1' := parse(T1) .
@@ -284,6 +289,13 @@ fmod PARSING is
 ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
+
+ ***ADTS
+ ceq parse('|_[T1]) = '|_[T1']
+  if T1' := parse(T1) .
+ ceq parse('type_=_[T1, T2]) = 'tipo__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parseL(T2) .
 
  ceq parse('library_[T1]) = 'NombreLibreria_[T1']
   if T1' := parse(T1) .
@@ -448,7 +460,7 @@ red metaParse(GRAMMAR, tokenize("transition whoami(lpv) author <- author_name ; 
 red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sender = builtin eq _sender address ; match is_sender with | true => err = CodeIsSender | false => ev end end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
-red metaParse(GRAMMAR, tokenize("import (BoolUtils PairUtils ListUtils) "), anyType) .
+red metaParse(GRAMMAR, tokenize("Map ByStr20 Dummy"), anyType) .
 
 set print attribute on .
 

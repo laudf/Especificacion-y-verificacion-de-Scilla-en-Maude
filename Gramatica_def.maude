@@ -50,37 +50,43 @@ fmod GRAMMAR is
   op strlen_ : @Token@ -> @DeclaracionOp@ [ctor prec 14] .
 
   ***HASHES
+  op sha256hash_ : @Token@ -> @DeclaracionOp@ [ctor prec 14] .
   op schnorr-verify___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] . 
   op ecdsa-verify___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 14] .
 
   ***MAPAS
-  sort @TipoClave@ @TipoValor@ @MapVacio@ @Map@ @DeclaracionOpMapI@ .
+  sort @TipoClave@ @TipoValor@ @MapVacio@ @Map@ @DeclaracionOpMapI@ @posicion@ @ListaPosiciones@ .
   ***subsort @TipoEntero@ < @NombreTipo@ .
   subsort @NombreTipo@ < @TipoClave@ .
   subsort @NombreTipo@ @Par@  < @TipoValor@ .
+  subsort @posicion@ < @ListaPosiciones@ .
 
   op Emp__ : @TipoClave@ @TipoValor@ -> @MapVacio@ [ctor prec 15] .
+  op Emp__ : @TipoClave@ @Bubble@ -> @MapVacio@ [ctor prec 15] .
   op Map__ : @TipoClave@ @TipoValor@ -> @Map@ [ctor prec 15] .
+  op Map__ : @TipoClave@ @Bubble@ -> @Map@ [ctor prec 15] .
+  op [_] : @Token@ -> @posicion@ [ctor prec 18] .
+  op __ : @ListaPosiciones@ @ListaPosiciones@ -> @ListaPosiciones@ [ctor assoc prec 19] .
   ***Definición operación insertar.
 ---   ***Funcional
   op put___ : @Token@ @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 19] .
   ***In-place.
-  op _[_]:=_ : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
+  op __:=_ : @Token@ @ListaPosiciones@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación obtener valor.
   ***Funcional
   op get__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***In-place
-  op _<-_[_] : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
+  op _<-__ : @Token@ @Token@ @ListaPosiciones@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación contener.
   ***Funcional
   op contains__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***In-place
-  op _<-exists_[_] : @Token@ @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor prec 19] .
+  op _<-exists__ : @Token@ @Token@ @ListaPosiciones@ -> @DeclaracionOpMapI@ [ctor prec 19] .
   ***Definición operación eliminar.
   ***Funcional
   op remove__ : @Token@ @Token@ -> @DeclaracionOp@ [ctor prec 13] .
   ***In-place
-  op delete_[_] : @Token@ @Token@ -> @DeclaracionOpMapI@ [ctor] .
+  op delete__ : @Token@ @ListaPosiciones@ -> @DeclaracionOpMapI@ [ctor prec 19] .
 
   ***BNUM
   ***Definición número de bloques
@@ -132,6 +138,7 @@ fmod GRAMMAR is
   ***ops ByStr20 BNum String ByStr32 Bool Message : -> @TipoParamInm@ [ctor] .
   ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
   op _:_ : @Token@ @TipoParamInm@ -> @ParamInm@ [ctor prec 15] .
+  op _:_ : @Token@ @Bubble@ -> @ParamInm@ [ctor prec 15] .
   ***op vacio : -> ListaParamInm [ctor] .
   ***op _ : ParamInm -> ListaParamInm [ctor] .
   op lpv : -> @ListaParamInm@ [ctor] .
@@ -157,7 +164,7 @@ fmod GRAMMAR is
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
   subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
-  subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ < @Operacion@ .
+  subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ @Excepcion@ @Par@ < @Operacion@ .
   subsort @TipoEntero@ @NombreTipo@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
   subsort @ExpresionLet@ @ADTS@ < @ListaExpresiones@ . 
@@ -168,6 +175,7 @@ fmod GRAMMAR is
   subsort @Token@ < @ListaArg@ .
 
   op let_=_ : @Token@ @TipoDato@ -> @ExpresionLet@ [ctor prec 20]  .
+  op let_=_ : @Token@ @Bubble@ -> @ExpresionLet@ [ctor prec 20]  .
   op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 20] .
   ***op let_ : @Expresion@ -> @Expresion@ [ctor prec 20] .
   ***op let_in_ : @Expresion@ @Operacion@ -> @Expresion@ [ctor prec 20] .
@@ -189,11 +197,11 @@ fmod GRAMMAR is
   op ev : -> @Expresiones@ [ctor] .
   op |_=>_ : @TipoOpcion@ @Expresiones@ -> @Opcion@ [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
   ***op _=>_ : @Constructora@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
-  ***op |_=>_ : @Bubble@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
+  op |_=>_ : @Bubble@ @Expresiones@ -> @Opcion@ [ctor prec 20] .
   op |_=>_ : @TipoOpcion@ @Bubble@ -> @Opcion@ [ctor prec 20] .
   op ov : -> @ListaOpciones@ [ctor] .
-  op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor prec 20] .
-  op match_with_end : @Token@ @ListaOpciones@ -> @ExpresionMatch@ [ctor prec 20] .
+  op __ : @ListaOpciones@ @ListaOpciones@ -> @ListaOpciones@ [ctor assoc prec 21] .
+  op match_with_end : @Token@ @ListaOpciones@ -> @ExpresionMatch@ [ctor prec 21] .
   op __ : @ListaExpresiones@ @ListaExpresiones@ -> @ListaExpresiones@ [ctor assoc prec 22] .
 
   ***DECLARACIONES
@@ -225,7 +233,7 @@ fmod GRAMMAR is
   op __ : @ListaTransiciones@ @ListaTransiciones@ -> @ListaTransiciones@ [ctor assoc prec 24] .
 
   ***COMUNICACIONES
-  sort @NombreEvento@ @ListaCamposEvento@ @Evento@ @CampoEvento@ @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @Mensaje@ .
+  sort @NombreEvento@ @ListaCamposEvento@ @Evento@ @CampoEvento@ @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @Mensaje@ @NombreExcepcion@ @Excepcion@ .
   subsort @CampoEvento@ < @ListaCamposEvento@ .
   ***Eventos
   op -eventname:_ : String -> @NombreEvento@ [ctor prec 12] .
@@ -241,6 +249,9 @@ fmod GRAMMAR is
   op -amount:_ : @Token@ -> @CantidadMensaje@ [ctor prec 12] .
   ***op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
   op {_;_;_;_} : @TagMensaje@ @EnvioMensaje@ @CantidadMensaje@ @ListaCamposEvento@ -> @Mensaje@ [ctor prec 14] .
+
+  op -exception:_ : String -> @NombreExcepcion@ [ctor prec 12] .
+  op {_;_} : @NombreExcepcion@ @ListaCamposEvento@ -> @Excepcion@ [ctor prec 14] .
 
   ***LIBRERIA BOOLUTILS
   sort @DeclaracionOpBools@ .
@@ -723,7 +734,8 @@ fmod META-SIGN is
                                   'protecting 'pr 'including 'inc 'extending 
                                   'ctor 'assoc 'comm '== '/\ 'spec* 'spec! 'builtin '`{ 'let 'Pair '`( '`) 'Some
                                   '; 'andb 'true 'BoolU 'Uint32 'Uint128 'Uint256 'Nil 'throw 'Emp 'field 'false
-                                  'ev '= '| 'Unit 'orb ':=)))] .
+                                  'ev '= '| 'Unit 'orb ':= 'None 'Some 'fun 'Int32 'Int128 'match 'String 'ByStr32 'ByStr33 'ByStr20 
+                                  'BNum 'Bool 'Message 'Error 'ByStr 'ByStr64 'Unit )))] .
         op 'neTokenList : 'QidList -> '@NeTokenList@
              [special(
                (id-hook('Bubble, '1 '-1 '`( '`))

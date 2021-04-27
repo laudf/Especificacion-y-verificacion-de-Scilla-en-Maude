@@ -52,13 +52,13 @@ transition Bid (lpv)
   in_time = blk_leq after_end blk ;
   flag1 = BoolU .orb in_time e ;
   early = blk_leq blk auctionStart ;
-  match early with
+  (match early with
   | true =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
     msgs = one_msg msg ;
     send msgs
   | false =>
-    match flag1 with
+    (match flag1 with
     | true => 
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : late_to_bid_code} ;
       msgs = one_msg msg ;
@@ -67,7 +67,7 @@ transition Bid (lpv)
       hb <- highestBid ;
       
       sufficientBid = builtin lt hb _amount ;
-      match sufficientBid with 
+      (match sufficientBid with 
       | false =>
         msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : bid_too_low_code} ;
         msgs = one_msg msg ;
@@ -75,7 +75,7 @@ transition Bid (lpv)
       | true =>
         accept ;
         hbPrev <- highestBidder ;
-        match hbPrev with
+        (match hbPrev with
         | Some prevHighestBidder =>
           option_pendingReturnsForPrevHB <- pendingReturns[prevHighestBidder] ;
 
@@ -100,19 +100,19 @@ transition Bid (lpv)
            highestBid := _amount ;
            e = {-eventname: "Bid" ; code : first_bid_accepted_code ; addr : _sender ; amount : _amount} ;
            event e 
-        end
+        end)
       
-      end
-   end
+      end)
+   end)
   
-  end
+  end)
 end  
   
 
 transition Withdraw (lpv)
   prs <- pendingReturns ;
   pr = builtin get prs _sender ;
-  match pr with
+  (match pr with
   | None =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : nothing_to_withdraw_code} ;
     msgs = one_msg msg ;
@@ -124,7 +124,7 @@ transition Withdraw (lpv)
     msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; code : money_sent_code} ;
     msgs = one_msg msg ;
     send msgss
-  end
+  end)
   
 end
 
@@ -136,7 +136,7 @@ transition AuctionEnd (lpv)
   t2 = blk_leq t1 blk ;
   t3 = BoolU .negb e ;
   t4 = BoolU .andb t2 t3 ;
-  match t4 with
+  (match t4 with
   | false =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : auction_is_still_on_code} ;
     msgs = one_msg msg ;
@@ -150,6 +150,6 @@ transition AuctionEnd (lpv)
     msg  = {-tag: "" ; -recipient: beneficiary ; -amount: hb ; code : auction_end_code ; highest_bid : hb} ;
     msgs = one_msg msg ;
     send msgs
-  end
+  end)
   
 end

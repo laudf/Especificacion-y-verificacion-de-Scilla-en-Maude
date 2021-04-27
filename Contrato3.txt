@@ -14,12 +14,12 @@ let check_update =
   fun (sender : ByStr20) =>
   fun (amount : Uint128) =>
     let c = builtin contains bs sender in
-    match c with 
+    (match c with 
     | false => 
       let bs1 = builtin put bs sender amount in
       Some {Map ByStr20 Uint128} bs1
     | true  => None {Map ByStr20 Uint128}
-    end
+    end)
    
 
 let blk_leq =
@@ -51,11 +51,11 @@ field funded : Bool = false
 transition Donate (lpv)
   blk <-&BLOCKNUMBER ;
   in_time = blk_leq blk max_block ;
-  match in_time with 
+  (match in_time with 
   | true  => 
     bs  <- backers ;
     res = check_update bs _sender _amount ;
-    match res with
+    (match res with
     | None => 
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
               code : already_backed_code} ;
@@ -70,20 +70,20 @@ transition Donate (lpv)
       e = { -eventname: "DonationAccepted" ; donor : _sender ; amount : _amount } ;
       event e ;
       send msgs 
-    end  
+    end)  
 
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
             code : missed_deadline_code} ;
     msgs = one_msg msg ;
     send msgs
-  end 
+  end) 
  
 end
 
 transition GetFunds (lpv)
   is_owner = builtin eq owner _sender ;
-  match is_owner with
+  (match is_owner with
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
             code : not_owner_code} ;
@@ -97,7 +97,7 @@ transition GetFunds (lpv)
     c2 = builtin lt bal goal ;
     c3 = (negb c2) ;
     c4 = andb c1 c3 ;
-    match c4 with 
+    (match c4 with 
     | false =>  
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
               code : cannot_get_funds} ;
@@ -110,15 +110,15 @@ transition GetFunds (lpv)
               code : got_funds_code} ;
       msgs = one_msg msg ;
       send msgs
-    end
-  end
+    end)
+  end)
   
 end
 
 transition ClaimBack (lpv)
   blk <-&BLOCKNUMBER ;
   after_deadline = builtin blt max_block blk ;
-  match after_deadline with
+  (match after_deadline with
   | false =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
             code : too_early_code} ;
@@ -133,7 +133,7 @@ transition ClaimBack (lpv)
     c3 = (negb f) ;
     c4 = andb c1 c2 ;
     c5 = andb c3 c4 ;
-    match c5 with
+    (match c5 with
     | false =>
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
               code : cannot_reclaim_code} ;
@@ -141,7 +141,7 @@ transition ClaimBack (lpv)
       send msgs
     | true =>
       res = builtin get bs _sender ;
-      match res with
+      (match res with
       | None =>
         msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
                 code : cannot_reclaim_code} ;
@@ -157,8 +157,8 @@ transition ClaimBack (lpv)
         event e ;
         send msgs
      
-      end
-    end
+      end)
+    end)
    
-  end  
+  end) 
 end
