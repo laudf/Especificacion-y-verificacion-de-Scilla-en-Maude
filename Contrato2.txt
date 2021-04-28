@@ -40,14 +40,14 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
                     -recipient: _sender ; 
                     -amount: Uint128 0 ; 
                     code : code_success} ;
-             msgs = one_msg msg ;
+             msgs = {one_msg msg} ;
              send msgs 
           | false =>
               msg = {-tag: "" ;
                     -recipient: _sender ;
                     -amount: Uint128 0 ;
                     code : code_invalid_params} ;
-              msgs = one_msg msg ;
+              msgs = {one_msg msg} ;
               send msgs
           end)
      | false =>
@@ -56,7 +56,7 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
                 -amount: Uint128 0 ;
                 code : code_not_authorized} ;
        
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msg
   
     end)
@@ -72,7 +72,7 @@ transition addBook (book_title : String , author : String , bookID : Uint32)
                     -recipient: _sender ;
                     -amount: Uint128 0 ;
                     code : code_bookid_exist} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs
     | false =>
         new_book = Pair {(String) (String)} book_title author ;
@@ -86,7 +86,7 @@ transition addBook (book_title : String , author : String , bookID : Uint32)
                 -amount: Uint128 0 ; 
                 code : code_success} ;
 
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs 
     end)
 
@@ -109,7 +109,7 @@ transition updateBook(book_id : Uint32 , book_title : String , author : String)
                 -recipient: _sender ; 
                 -amount: Uint128 0 ; 
                 code : code_book_not_found} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs
     | true =>
         new_book = Pair {(String) (String)} book_title author ;
@@ -119,7 +119,7 @@ transition updateBook(book_id : Uint32 , book_title : String , author : String)
                 -recipient: _sender ; 
                 -amount: Uint128 0 ; 
                 code : code_success} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs
     end)
 

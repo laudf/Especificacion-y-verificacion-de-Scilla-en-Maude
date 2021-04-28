@@ -452,7 +452,6 @@ red metaParse(GRAMMAR, tokenize("transition addMember (name : String , addr : By
 red metaParse(GRAMMAR, tokenize("transition setHello (msg : String) is_owner = builtin eq owner _sender ; match is_owner with | false => e = {-eventname: \"setHello\" ; code : not_owner_code} , event e | true => welcome_msg := msg , e = {-eventname: \"setHello\" ; code : set_hello_code} , event e end end"), anyType) .
 red metaParse(GRAMMAR, tokenize("is_authorized = builtin eq _sender owner "), anyType) .
 red metaParse(GRAMMAR, tokenize("match is_owner with | false => e = {-eventname: \"setHello\" ; code : not_owner_code} ; event e | true => welcome_msg := msg ; e = {-eventname: \"setHello\" ; code : set_hello_code} ; event e end"), anyType) .
-red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
 red metaParse(GRAMMAR, tokenize("fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match result with | CodeIsSender => (Int32 -1) end"), anyType) .
 red metaParse(GRAMMAR, tokenize("field allowances : Map ByStr20 (Map ByStr20 Uint128) = Emp ByStr20 (Map ByStr20 Uint128)"), anyType) .
@@ -460,7 +459,8 @@ red metaParse(GRAMMAR, tokenize("transition whoami(lpv) author <- author_name ; 
 red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sender = builtin eq _sender address ; match is_sender with | true => err = CodeIsSender | false => ev end end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
-red metaParse(GRAMMAR, tokenize("pair_token_uri_list = (@ list_map String (Pair ByStr20 String))"), anyType) .
+red metaParse(GRAMMAR, tokenize("match is_owner with | false =>  e = {-eventname: \"setHello\" ; code : not_owner_code} ;  event e | true =>  welcome_msg := msg ;  e = {-eventname: \"setHello\" ; code : set_hello_code} ;   event e end"), anyType) .
+red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
 
 set print attribute on .
 

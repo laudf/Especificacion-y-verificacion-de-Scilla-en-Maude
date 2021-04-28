@@ -49,19 +49,19 @@ transition Bid (lpv)
   after_end = (let one = Uint128 1 
     in builtin badd endtime one) ;
   e <- ended ;
-  in_time = blk_leq after_end blk ;
+  in_time = {blk_leq after_end blk} ;
   flag1 = BoolU .orb in_time e ;
-  early = blk_leq blk auctionStart ;
+  early = {blk_leq blk auctionStart} ;
   (match early with
   | true =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : too_early_to_bid_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   | false =>
     (match flag1 with
     | true => 
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : late_to_bid_code} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       send msgs
     | false =>
       hb <- highestBid ;
@@ -70,7 +70,7 @@ transition Bid (lpv)
       (match sufficientBid with 
       | false =>
         msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : bid_too_low_code} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs
       | true =>
         accept ;
@@ -115,14 +115,14 @@ transition Withdraw (lpv)
   (match pr with
   | None =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : nothing_to_withdraw_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   | Some v =>
     delete pendingReturns[_sender] ;
     e = {-eventname: "Withdraw Successful" ; addr : _sender} ;
     event e ;
     msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; code : money_sent_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgss
   end)
   
@@ -133,13 +133,13 @@ transition AuctionEnd (lpv)
   blk <-&BLOCKNUMBER ;
   e <- ended ;
   t1 = builtin badd auctionStart biddingTime ; 
-  t2 = blk_leq t1 blk ;
+  t2 = {blk_leq t1 blk} ;
   t3 = BoolU .negb e ;
   t4 = BoolU .andb t2 t3 ;
   (match t4 with
   | false =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; code : auction_is_still_on_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   | true =>
     val = true ;
@@ -148,7 +148,7 @@ transition AuctionEnd (lpv)
     e = {-eventname: "Auction ended" ; highest_bid : hb} ;
     event e ;
     msg  = {-tag: "" ; -recipient: beneficiary ; -amount: hb ; code : auction_end_code ; highest_bid : hb} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   end)
   

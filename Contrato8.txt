@@ -25,16 +25,16 @@ transition verify(msg : ByStr , sig : ByStr64)
     (match sig with
     | true =>
       m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "verification successful" } ;
-      mone = one_msg m ;
+      mone = {one_msg m} ;
       send mone
     | false =>
       m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "verification failed" } ;
-      mone = one_msg m ;
+      mone = {one_msg m} ;
       send mone
     end)
   | None =>
     m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "no key error" } ;
-    mone = one_msg m ;
+    mone = {one_msg m} ;
     send mone
   end)
 end

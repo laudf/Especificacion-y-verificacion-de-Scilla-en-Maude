@@ -150,19 +150,19 @@ fmod GRAMMAR is
   ***CAMPOS MODIFICABLES
   sort @ValorCampo@ @Campo_mod@ @ListaCamposMod@ .
   ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
-  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ Bool @Expresion@ < @ValorCampo@ .
+  subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ @MapVacio@ Bool @Expresion@ String < @ValorCampo@ .
   ***subsort Bool < @ValorCampo@ .
   subsort @Campo_mod@ < @ListaCamposMod@ .
   op cv : -> @Campo_mod@ [ctor] .
   op field_=_ : @ParamInm@ @ValorCampo@ -> @Campo_mod@ [ctor prec 19] .
-  op field_=_ : @ParamInm@ @Bubble@ -> @Campo_mod@ [ctor prec 19] .
+  op field_=_ : @ParamInm@ @ExpresionAplicarF@ -> @Campo_mod@ [ctor prec 19] .
   op __ : @ListaCamposMod@ @ListaCamposMod@ -> @ListaCamposMod@ [ctor assoc prec 20] .
 
   ***EXPRESIONES
   sort @TipoDato@ @Expresion@ @Operacion@ @ExpresionFuncion@ @ListaArgumentos@ @OperacionBuilt@ @ListaExpresiones@ @TipoOpcion@ @Opcion@
        @ListaOpciones@ @Expresiones@ @ExpresionMatch@ @ListaArg@ @ExpresionLet@ @ExpresionAplicarF@ .
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
-  subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ < @TipoDato@ .
+  subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ @ExpresionAplicarF@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
   subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ @Excepcion@ @Par@ < @Operacion@ .
   subsort @TipoEntero@ @NombreTipo@ @Par@ < @ListaArgumentos@ .
@@ -173,16 +173,17 @@ fmod GRAMMAR is
   subsort @Option@ @Par@ Bool < @TipoOpcion@ .
   subsort @Opcion@ < @ListaOpciones@ .
   subsort @Token@ < @ListaArg@ .
+  ***subsort @Bubble@ < @ExpresionAplicarF@ .
 
   op let_=_ : @Token@ @TipoDato@ -> @ExpresionLet@ [ctor prec 20]  .
-  op let_=_ : @Token@ @Bubble@ -> @ExpresionLet@ [ctor prec 20]  .
+  ***op let_=_ : @Token@ @Bubble@ -> @ExpresionLet@ [ctor prec 20]  .
   op let_=_in_ : @Token@ @TipoDato@ @Operacion@ -> @Expresion@ [ctor prec 20] .
   ***op let_ : @Expresion@ -> @Expresion@ [ctor prec 20] .
   ***op let_in_ : @Expresion@ @Operacion@ -> @Expresion@ [ctor prec 20] .
   --- ***Falta añadir los mensajes
   op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 20] .
   ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 19] .
-  op _=_ :  @Token@ @Bubble@ -> @Expresion@ [ctor prec 19] .
+  op {_} :  @Bubble@ -> @ExpresionAplicarF@ [ctor prec 19] .
   ***op _=__ : @Token@ @Token@ @NeTokenList@ -> @Expresion@ [ctor prec 20] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
@@ -207,14 +208,15 @@ fmod GRAMMAR is
   ***DECLARACIONES
   sort @Declaracion@ @Valor@ @ListaDeclaraciones@ .
   ***@Entero@ String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
-  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool @DeclaracionOpBools@ @ExpresionMatch@ < @Valor@ .
-  subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ @Expresion@ @Error@ < @ListaDeclaraciones@ .
+  subsorts @Entero@ String @Option@ @Lista@ @Par@ @Natural@ @Evento@ @Expresion@ @Mensaje@ Bool @DeclaracionOpBools@ @ExpresionMatch@ @ExpresionAplicarF@ < @Valor@ .
+  subsort @Declaracion@ @ExpresionMatch@ @DeclaracionOpMapI@ @Expresion@ @Error@ @ExpresionAplicarF@ < @ListaDeclaraciones@ .
   ***subsort @Expresiones@ @DeclaracionOpMapI@ @Expresion@ < @ListaDeclaraciones@ .
 
   op _<-_ : @Token@ @Token@  -> @Declaracion@ [ctor prec 19] .
   op _:=_ : @Token@ @Token@ -> @Declaracion@ [ctor prec 19] .
   op _<-&BLOCKNUMBER : @Token@ -> @Declaracion@ [ctor prec 19] .
   op _=_ : @Token@ @Valor@ -> @Declaracion@ [ctor prec 19] .
+  ***op _=_ : @Token@ @Bubble@ -> @Declaracion@ [ctor prec 19] .
   ***op __ : @Token@ @ListaArgumentos@ -> @Declaracion@ [ctor] .
   op forall__ : @Token@ @Token@ -> @Declaracion@ [ctor prec 19] .
   op accept : -> @Declaracion@ [ctor] .
@@ -722,7 +724,8 @@ fmod META-SIGN is
         op 'token : 'Qid -> '@Token@
              [special(
                (id-hook('Bubble, '1 '1)
-                op-hook('qidSymbol, '<Qids>, nil, 'Qid)))] .
+                op-hook('qidSymbol, '<Qids>, nil, 'Qid)
+                id-hook('Exclude, '<-&BLOCKNUMBER)))] .
         op 'bubble : 'QidList -> '@Bubble@
              [special(
                (id-hook('Bubble, '1 '-1)
@@ -732,10 +735,11 @@ fmod META-SIGN is
                                   'var 'vars 'forall 'exists
                                   'sorts 'subsort 'subsorts 'op 'ops
                                   'protecting 'pr 'including 'inc 'extending 
-                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec! 'builtin '`{ 'let 'Pair '`( '`) 'Some
+                                  'ctor 'assoc 'comm '== '/\ 'spec* 'spec! 'builtin '`{ '`} 'let 'Pair '`( '`) 'Some
                                   '; 'andb 'true 'BoolU 'Uint32 'Uint128 'Uint256 'Nil 'throw 'Emp 'field 'false
-                                  'ev '= '| 'Unit 'orb ':= 'None 'Some 'fun 'Int32 'Int128 'match 'String 'ByStr32 'ByStr33 'ByStr20 
-                                  'BNum 'Bool 'Message 'Error 'ByStr 'ByStr64 'Unit )))] .
+                                  'ev '= '| 'Unit 'orb ':= 'None 'fun 'Int32 'Int128 'match 'String 'ByStr32 'ByStr33 'ByStr20 
+                                  'BNum 'Bool 'Message 'Error 'ByStr 'ByStr64 'Unit '<- 'event '@ 'send 'schnorr-verify 'ecdsa-verify
+                                  'add '<-exists 'lt 'contains 'delete 'put ' 'negb 'blt 'get 'remove 'badd 'accept 'sub)))] .
         op 'neTokenList : 'QidList -> '@NeTokenList@
              [special(
                (id-hook('Bubble, '1 '-1 '`( '`))

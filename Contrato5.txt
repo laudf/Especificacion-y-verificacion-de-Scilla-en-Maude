@@ -8,6 +8,12 @@ let one_msg =
   let nil_msg = Nil {Message} in
   Cons {Message} msg nil_msg
 
+let two_msgs =
+fun (msg1 : Message) =>
+fun (msg2 : Message) =>
+  let msgs_tmp = {one_msg msg2} in
+  Cons {Message} msg1 msgs_tmp
+
 type Error =
 | CodeIsSender
 | CodeInsufficientFunds
@@ -45,7 +51,7 @@ contract FungibleToken
   init_supply : Uint128
 )
 
-field total_supply : Uint128 = init_supply
+field total_supply : Uint128 = {init_supply}
 field balances : Map ByStr20 Uint128 
   = (let emp_map = Emp ByStr20 Uint128 in
     builtin put emp_map contract_owner init_supply)
@@ -53,7 +59,7 @@ field allowances : Map ByStr20 (Map ByStr20 Uint128)
   = Emp ByStr20 (Map ByStr20 Uint128)
 
 procedure ThrowError(err : Error)
-  e = make_error err ;
+  e = {make_error err} ;
   throw e
 end
 
@@ -61,15 +67,16 @@ procedure IsNotSender(address : ByStr20)
   is_sender = builtin eq _sender address ;
   (match is_sender with
   | true =>
-    err = CodeIsSender 
+    err = {CodeIsSender} ;
+    {ThrowError err} 
   | false => ev 
   end)
 end
 
 procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amount : Uint128)
   o_from_bal <- balances[from] ;
-  bal = get_val o_from_bal ;
-  can_do = uint128_le amount bal ;
+  bal = {get_val o_from_bal} ;
+  can_do = {uint128_le amount bal} ;
   (match can_do with
   | true =>
     new_from_bal = builtin sub bal amount ;
@@ -81,13 +88,15 @@ procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amou
     end) ;
     balances[to] := new_to_bal
   | false =>
-    err = CodeInsufficientFunds
+    err = {CodeInsufficientFunds} ;
+    {ThrowError err}
   end)
 end
 
 transition IncreaseAllowance(spender : ByStr20 , amount : Uint128)
+  {IsNotSender spender} ;
   some_current_allowance <- allowances[_sender][spender] ;
-  current_allowance = get_val some_current_allowance ;
+  current_allowance = {get_val some_current_allowance} ;
   new_allowance = builtin add current_allowance amount ;
   allowances[_sender][spender] := new_allowance ;
   e = {-eventname: "IncreasedAllowance" ; token_owner : _sender ; spender : spender ; new_allowance : new_allowance} ;
@@ -95,30 +104,39 @@ transition IncreaseAllowance(spender : ByStr20 , amount : Uint128)
 end
 
 transition DecreaseAllowance(spender : ByStr20 , amount : Uint128)
+  {IsNotSender spender} ;
   some_current_allowance <- allowances[_sender][spender] ;
-  current_allowance = get_val some_current_allowance ;
+  current_allowance = {get_val some_current_allowance} ;
+  new_allowance =
+    (let amount_le_allowance = {uint128_le amount current_allowance} in
+      (match amount_le_allowance with
+      | true => builtin sub current_allowance amount
+      | false => zero
+      end)) ;
   allowances[_sender][spender] := new_allowance ;
   e = {-eventname: "DecreasedAllowance" ; token_owner : _sender ; spender : spender ; new_allowance : new_allowance} ;
   event e
 end
 
 transition Transfer(to : ByStr20 , amount : Uint128)
+  {AuthorizedMoveIfSufficientBalance _sender to amount} ;
   e = {-eventname: "TransferSuccess" ; sender : _sender ; recipient : to ; amount : amount} ;
   event e ;
   msg_to_recipient = {-tag: "RecipientAcceptTransfer" ; -recipient: to ; -amount: zero ; 
                       sender : _sender ; recipient : to ; amount : amount} ;
   msg_to_sender = {-tag: "TransferSuccessCallBack" ; -recipient: _sender ; -amount: zero ; 
                   sender : _sender ; recipient : to ; amount : amount} ;
-  msgs = two_msgs msg_to_recipient msg_to_sender ;
+  msgs = {two_msgs msg_to_recipient msg_to_sender} ;
   send msgs
 end
 
 transition TransferFrom(from : ByStr20 , to : ByStr20 , amount : Uint128)
   o_spender_allowed <- allowances[from][_sender] ;
-  allowed = get_val o_spender_allowed ;
-  can_do = uint128_le amount allowed ;
+  allowed = {get_val o_spender_allowed} ;
+  can_do = {uint128_le amount allowed} ;
   (match can_do with
   | true =>
+    {AuthorizedMoveIfSufficientBalance from to amount} ;
     e = {-eventname: "TransferFromSuccess" ; initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
     event e ;
     new_allowed = builtin sub allowed amount ;
@@ -127,9 +145,10 @@ transition TransferFrom(from : ByStr20 , to : ByStr20 , amount : Uint128)
                         initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
     msg_to_sender = {-tag: "TransferFromSuccessCallBack" ; -recipient: _sender ; -amount: zero ; 
                     initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
-    msgs = two_msgs msg_to_recipient msg_to_sender ;
+    msgs = {two_msgs msg_to_recipient msg_to_sender} ;
     send msgs
   | false =>
-    err = CodeInsufficientAllowance
+    err = {CodeInsufficientAllowance} ;
+    {ThrowError err}
   end)
 end

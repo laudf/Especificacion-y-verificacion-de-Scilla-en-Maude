@@ -15,15 +15,16 @@ field welcome_msg : String = ""
 
 transition setHello (msg : String)
    is_owner = builtin eq owner _sender ;
-   match is_owner with
-  | false =>
+   (match is_owner with
+   | false =>
     e = {-eventname: "setHello" ; code : not_owner_code} ;
     event e
-  | true =>
+   | true =>
     welcome_msg := msg ;
     e = {-eventname: "setHello" ; code : set_hello_code} ;
     event e
-  end
+  end)
+
 end
 
 transition getHello (lpv)

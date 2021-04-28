@@ -50,23 +50,23 @@ field funded : Bool = false
 
 transition Donate (lpv)
   blk <-&BLOCKNUMBER ;
-  in_time = blk_leq blk max_block ;
+  in_time = {blk_leq blk max_block} ;
   (match in_time with 
   | true  => 
     bs  <- backers ;
-    res = check_update bs _sender _amount ;
+    res = {check_update bs _sender _amount} ;
     (match res with
     | None => 
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
               code : already_backed_code} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       send msgs  
     | Some bs1 =>
       backers := bs1 ;
       accept ;
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
               code : accepted_code} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       e = { -eventname: "DonationAccepted" ; donor : _sender ; amount : _amount } ;
       event e ;
       send msgs 
@@ -75,7 +75,7 @@ transition Donate (lpv)
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
             code : missed_deadline_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   end) 
  
@@ -87,11 +87,11 @@ transition GetFunds (lpv)
   | false => 
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
             code : not_owner_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   | true => 
     blk <-&BLOCKNUMBER ;
-    in_time = blk_leq blk max_block ;
+    in_time = {blk_leq blk max_block} ;
     c1 = (negb in_time) ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;
@@ -101,14 +101,14 @@ transition GetFunds (lpv)
     | false =>  
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
               code : cannot_get_funds} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       send msgs
     | true =>   
       tt = true ;
       funded := tt ;
       msg  = {-tag: "" ; -recipient: owner ; -amount: bal ; 
               code : got_funds_code} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       send msgs
     end)
   end)
@@ -122,7 +122,7 @@ transition ClaimBack (lpv)
   | false =>
     msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
             code : too_early_code} ;
-    msgs = one_msg msg ;
+    msgs = {one_msg msg} ;
     send msgs
   | true =>
     bs <- backers ;
@@ -137,7 +137,7 @@ transition ClaimBack (lpv)
     | false =>
       msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
               code : cannot_reclaim_code} ;
-      msgs = one_msg msg ;
+      msgs = {one_msg msg} ;
       send msgs
     | true =>
       res = builtin get bs _sender ;
@@ -145,14 +145,14 @@ transition ClaimBack (lpv)
       | None =>
         msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
                 code : cannot_reclaim_code} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         send msgs
       | Some v =>
         bs1 = builtin remove bs _sender ;
         backers := bs1 ;
         msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; 
                 code : reclaimed_code} ;
-        msgs = one_msg msg ;
+        msgs = {one_msg msg} ;
         e = { -eventname: "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
         event e ;
         send msgs
