@@ -165,7 +165,7 @@ fmod GRAMMAR is
   subsort @Entero@ String @BNum@ @Option@ @Lista@ @Par@ @Natural@ @ExpresionFuncion@ @Expresion@ @ExpresionMatch@ @MapVacio@ < @TipoDato@ .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
   subsort @Expresion@ @Lista@ @ExpresionFuncion@ @ExpresionMatch@ @Excepcion@ @Par@ < @Operacion@ .
-  subsort @TipoEntero@ @NombreTipo@ < @ListaArgumentos@ .
+  subsort @TipoEntero@ @NombreTipo@ @Par@ < @ListaArgumentos@ .
   subsort @DeclaracionOp@ @DeclaracionOpBools@  < @OperacionBuilt@ .
   subsort @ExpresionLet@ @ADTS@ < @ListaExpresiones@ . 
  *** subsort @Declaracion@ @ExpresionMatch@ < @Expresiones@ .
