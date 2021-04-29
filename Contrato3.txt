@@ -1,4 +1,4 @@
-scilla-version 0
+scilla_version 0
 
 import BoolUtils
 
@@ -15,10 +15,10 @@ let check_update =
   fun (amount : Uint128) =>
     let c = builtin contains bs sender in
     (match c with 
-    | false => 
+    | False => 
       let bs1 = builtin put bs sender amount in
       Some {Map ByStr20 Uint128} bs1
-    | true  => None {Map ByStr20 Uint128}
+    | True  => None {Map ByStr20 Uint128}
     end)
    
 
@@ -46,85 +46,85 @@ contract Crowdfunding
  goal      : Uint128)
 
 field backers : Map ByStr20 Uint128 = Emp ByStr20 Uint128
-field funded : Bool = false
+field funded : Bool = False
 
-transition Donate (lpv)
-  blk <-&BLOCKNUMBER ;
-  in_time = {blk_leq blk max_block} ;
+transition Donate ()
+  blk <- & BLOCKNUMBER ;
+  in_time = (blk_leq blk max_block) ;
   (match in_time with 
-  | true  => 
+  | True  => 
     bs  <- backers ;
-    res = {check_update bs _sender _amount} ;
+    res = (check_update bs _sender _amount) ;
     (match res with
     | None => 
-      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
+      msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
               code : already_backed_code} ;
-      msgs = {one_msg msg} ;
+      msgs = (one_msg msg) ;
       send msgs  
     | Some bs1 =>
       backers := bs1 ;
       accept ;
-      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
+      msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
               code : accepted_code} ;
-      msgs = {one_msg msg} ;
-      e = { -eventname: "DonationAccepted" ; donor : _sender ; amount : _amount } ;
+      msgs = (one_msg msg) ;
+      e = { _eventname : "DonationAccepted" ; donor : _sender ; amount : _amount } ;
       event e ;
       send msgs 
     end)  
 
-  | false => 
-    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; 
+  | False => 
+    msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
             code : missed_deadline_code} ;
-    msgs = {one_msg msg} ;
+    msgs = (one_msg msg) ;
     send msgs
   end) 
  
 end
 
-transition GetFunds (lpv)
+transition GetFunds ()
   is_owner = builtin eq owner _sender ;
   (match is_owner with
-  | false => 
-    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+  | False => 
+    msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
             code : not_owner_code} ;
-    msgs = {one_msg msg} ;
+    msgs = (one_msg msg) ;
     send msgs
-  | true => 
-    blk <-&BLOCKNUMBER ;
-    in_time = {blk_leq blk max_block} ;
+  | True => 
+    blk <- & BLOCKNUMBER ;
+    in_time = (blk_leq blk max_block) ;
     c1 = (negb in_time) ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;
     c3 = (negb c2) ;
     c4 = andb c1 c3 ;
     (match c4 with 
-    | false =>  
-      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+    | False =>  
+      msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
               code : cannot_get_funds} ;
-      msgs = {one_msg msg} ;
+      msgs = (one_msg msg) ;
       send msgs
-    | true =>   
-      tt = true ;
+    | True =>   
+      tt = True ;
       funded := tt ;
-      msg  = {-tag: "" ; -recipient: owner ; -amount: bal ; 
+      msg  = {_tag : "" ; _recipient : owner ; _amount : bal ; 
               code : got_funds_code} ;
-      msgs = {one_msg msg} ;
+      msgs = (one_msg msg) ;
       send msgs
     end)
   end)
   
 end
 
-transition ClaimBack (lpv)
-  blk <-&BLOCKNUMBER ;
+transition ClaimBack ()
+  blk <- & BLOCKNUMBER ;
   after_deadline = builtin blt max_block blk ;
   (match after_deadline with
-  | false =>
-    msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+  | False =>
+    msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
             code : too_early_code} ;
-    msgs = {one_msg msg} ;
+    msgs = (one_msg msg) ;
     send msgs
-  | true =>
+  | True =>
     bs <- backers ;
     bal <- _balance ;
     f <- funded ;
@@ -134,26 +134,26 @@ transition ClaimBack (lpv)
     c4 = andb c1 c2 ;
     c5 = andb c3 c4 ;
     (match c5 with
-    | false =>
-      msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+    | False =>
+      msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
               code : cannot_reclaim_code} ;
-      msgs = {one_msg msg} ;
+      msgs = (one_msg msg) ;
       send msgs
-    | true =>
+    | True =>
       res = builtin get bs _sender ;
       (match res with
       | None =>
-        msg  = {-tag: "" ; -recipient: _sender ; -amount: Uint128 0 ;
+        msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
                 code : cannot_reclaim_code} ;
-        msgs = {one_msg msg} ;
+        msgs = (one_msg msg) ;
         send msgs
       | Some v =>
         bs1 = builtin remove bs _sender ;
         backers := bs1 ;
-        msg  = {-tag: "" ; -recipient: _sender ; -amount: v ; 
+        msg  = {_tag : "" ; _recipient : _sender ; _amount : v ; 
                 code : reclaimed_code} ;
-        msgs = {one_msg msg} ;
-        e = { -eventname: "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
+        msgs = (one_msg msg) ;
+        e = { _eventname : "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
         event e ;
         send msgs
      

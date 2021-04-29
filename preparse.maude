@@ -2,10 +2,38 @@ fmod PREPARSE is
  pr CONVERSION .
  pr QID-LIST .
 
- var S : String .
+ var S S1 S2 S3 S4 : QidList .
+ var Q Q1 : Qid .
 
- op preparse : String -> String .
- eq preparse("scilla_version" + S) = "scilla-version" + S .
+ op preparse : QidList -> QidList .
+ eq preparse('scilla_version Q 'library S ) = 'scilla-version Q 'iv 'library preparse(S) .
+ eq preparse('scilla_version S) = 'scilla-version preparse(S) .
+ eq preparse(S '`( '`) S1) = preparse(S) '`( 'lpv '`) preparse(S1) .
+ ***eq preparse(S 'match S1 '| S2 '| S3 'end S4) = preparse(S) '`( 'match preparse(S1) '| preparse(S2) '| preparse(S3) 'end '`) preparse(S4) .
+
+ eq preparse(S 'True S1) = preparse(S) 'true preparse(S1) .
+ eq preparse(S 'False S1) = preparse(S) 'false preparse(S1) .
+ eq preparse(S '_eventname: Q '`} S1) = preparse(S) '-eventname: Q '; 'lcv '`} preparse(S1) .
+ eq preparse(S '_eventname ': Q '`} S1) = preparse(S) '-eventname: Q '; 'lcv '`} preparse(S1) .
+ eq preparse(S '_eventname: S1) = preparse(S) '-eventname: preparse(S1) .
+ eq preparse(S '<- 'exists S1) = preparse(S) '<-exists preparse(S1) .
+ eq preparse(S '_eventname ': S1) = preparse(S) '-eventname: preparse(S1) .
+ eq preparse(S '_tag: S1) = preparse(S) '-tag: preparse(S1) .
+ eq preparse(S '_tag ': S1) = preparse(S) '-tag: preparse(S1) .
+ eq preparse(S '_recipient: S1) = preparse(S) '-recipient: preparse(S1) .
+ eq preparse(S '_recipient ': S1) = preparse(S) '-recipient: preparse(S1) .
+ eq preparse(S '_amount: S1) = preparse(S) '-amount: preparse(S1) .
+ eq preparse(S '_amount ': S1) = preparse(S) '-amount: preparse(S1) .
+ eq preparse(S '_exception: S1) = preparse(S) '-exception: preparse(S1) .
+ eq preparse(S '_exception ': S1) = preparse(S) '-exception: preparse(S1) .
+ eq preparse(S '<- '& 'BLOCKNUMBER S1) = preparse(S) '<-&BLOCKNUMBER preparse(S1) .
+
+---  eq preparse(S '= S1 'let S2) = preparse(S) '`( preparse(S1) '`) 'let preparse(S2) .
+---  eq preparse(S '= S1 'in S2) = preparse(S) '`( preparse(S1) '`) 'in preparse(S2) .
+---  eq preparse(S '= S1 'transition S2) = preparse(S) '`( preparse(S1) '`) 'transition preparse(S2) .
+ ***eq preparse(S '= S1 '; S2) = preparse(S) '`( preparse(S1) '`) '; preparse(S2) .
+ 
+
 
  eq preparse(S) = S [owise] .
 endfm

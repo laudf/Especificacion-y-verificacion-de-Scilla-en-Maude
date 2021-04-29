@@ -1,4 +1,4 @@
-scilla-version 0
+scilla_version 0
 
 import PairUtils
 
@@ -13,7 +13,7 @@ let fst_f = @ fst (ByStr32) (ByStr33)
 let snd_f = @ snd (ByStr32) (ByStr33)
 
 contract Schnorr
-(lpv)
+()
 
 field pub_key : Option (ByStr33) = None {ByStr33}
 
@@ -23,18 +23,18 @@ transition verify(msg : ByStr , sig : ByStr64)
   | Some pubk =>
     sig = builtin schnorr-verify pubk msg sig ;
     (match sig with
-    | true =>
-      m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "verification successful" } ;
-      mone = {one_msg m} ;
+    | True =>
+      m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "verification successful" } ;
+      mone = (one_msg m) ;
       send mone
-    | false =>
-      m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "verification failed" } ;
-      mone = {one_msg m} ;
+    | False =>
+      m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "verification failed" } ;
+      mone = (one_msg m) ;
       send mone
     end)
   | None =>
-    m = { -tag: "" ; -recipient: _sender ; -amount: Uint128 0 ; status : "no key error" } ;
-    mone = {one_msg m} ;
+    m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "no key error" } ;
+    mone = (one_msg m) ;
     send mone
   end)
 end

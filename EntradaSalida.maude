@@ -333,7 +333,7 @@ mod MTP is
  vars Text Original Read Source : String .
  var  Attrs : AttributeSet .
  vars FHIn FHOut : Oid .
- var  QIL : QidList .
+ var  QIL QIL1 : QidList .
  vars T T' : Term .
  var  M : Module .
  vars N N' : Nat .
@@ -401,7 +401,7 @@ rl [newLine] :
 => if Text == ""
    then < example : EXAMPLE | file: FHIn, read: Read, state: parsing, Attrs > 
         closeFile(FHIn, example)
-   else < example : EXAMPLE | file: FHIn, read: (Read + preparse(Text)), state: reading, Attrs >
+   else < example : EXAMPLE | file: FHIn, read: (Read + Text), state: reading, Attrs >
         getLine(FHIn, example)
    fi .
 
@@ -411,8 +411,9 @@ crl [parsing] :
     write(stdout, example, "Parsed.\n")
  if Read =/= "" /\
     QIL := tokenize(Read) /\
-    {T, Ty} := metaParse(GRAMMAR, QIL, anyType) /\
-    T' := parse(T) [print T "\nParseado: " T'] .
+    QIL1 := preparse(QIL) /\
+    {T, Ty} := metaParse(GRAMMAR, QIL1, anyType) /\
+    T' := parse(T) [print QIL T "\nParseado: " T'] .
 
  ***                              ***
  ***          closedFile          ***
@@ -460,7 +461,8 @@ red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sen
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match is_owner with | false =>  e = {-eventname: \"setHello\" ; code : not_owner_code} ;  event e | true =>  welcome_msg := msg ;  e = {-eventname: \"setHello\" ; code : set_hello_code} ;   event e end"), anyType) .
-red metaParse(GRAMMAR, tokenize("field welcome_msg : String = \"\""), anyType) .
+red metaParse(GRAMMAR, tokenize("msgs = (one_msg msg)"), anyType) .
+red preparse('mone '= 'one_msg 'm ';) .
 
 set print attribute on .
 

@@ -183,7 +183,7 @@ fmod GRAMMAR is
   --- ***Falta añadir los mensajes
   op fun(_)=>_ : @ParamInm@ @Operacion@ -> @ExpresionFuncion@ [ctor prec 20] .
   ***op __ : @ListaArg@ @ListaArg@ -> @ListaArg@ [ctor assoc prec 19] .
-  op {_} :  @Bubble@ -> @ExpresionAplicarF@ [ctor prec 19] .
+  op `(_`) :  @Bubble@ -> @ExpresionAplicarF@ [ctor prec 19] .
   ***op _=__ : @Token@ @Token@ @NeTokenList@ -> @Expresion@ [ctor prec 20] .
   --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
   ***op String : -> @ListaArgumentos@ [ctor] .
