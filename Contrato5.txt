@@ -63,7 +63,7 @@ procedure ThrowError(err : Error)
   throw e
 end
 
-procedure IsNotSender(address : ByStr20)
+(procedure IsNotSender(address : ByStr20)
   is_sender = builtin eq _sender address ;
   (match is_sender with
   | True =>
@@ -71,7 +71,7 @@ procedure IsNotSender(address : ByStr20)
     (ThrowError err) 
   | False => ev 
   end)
-end
+end)
 
 procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amount : Uint128)
   o_from_bal <- balances[from] ;

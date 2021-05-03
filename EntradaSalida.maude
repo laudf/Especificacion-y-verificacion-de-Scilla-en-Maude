@@ -99,6 +99,8 @@ fmod PARSING is
   if T1' := parse(T1) .
 
  ***HASHES
+ ceq parse('sha256hash_[T1]) = 'sha256hash_[T1']
+  if T1' := parse(T1) .
  ceq parse('schnorr-verify___[T1, T2, T3]) = 'schnorr-verify___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
@@ -248,6 +250,8 @@ fmod PARSING is
      T2' := parse(T2) .
  ceq parse('-recipient:_[T1]) = 'dirEnvio_[T1']
   if T1' := parse(T1) .
+ ceq parse('-amount:_[T1]) = 'cantidadEnvio_[T1']
+  if T1' := parse(T1) .
  ceq parse('`{_;_;_;_`}[T1, T2, T3, T4]) = 'contenidoMensaje___[T1', T2', T3', T4']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
@@ -296,6 +300,10 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
  ceq parse('type_=_[T1, T2]) = 'tipo__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parseL(T2) .
+
+ ***Errores
+ ceq parse('throw[T1]) = 'throw_[T1']
+  if T1' := parse(T1) .
 
  ceq parse('library_[T1]) = 'NombreLibreria_[T1']
   if T1' := parse(T1) .
@@ -461,8 +469,10 @@ red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sen
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match is_owner with | false =>  e = {-eventname: \"setHello\" ; code : not_owner_code} ;  event e | true =>  welcome_msg := msg ;  e = {-eventname: \"setHello\" ; code : set_hello_code} ;   event e end"), anyType) .
-red metaParse(GRAMMAR, tokenize("msgs = (one_msg msg)"), anyType) .
+red metaParse(GRAMMAR, tokenize("add a a"), anyType) .
+***red metaParse(Sistema, tokenize("[a = b + c , mv]"))
 red preparse('mone '= 'one_msg 'm ';) .
+red metaRewrite(upModule('REGLAS, false), '`[_`,_'`]['_=_['a.Qid,_+_['b.Qid,'c.Qid]],'`[_=>_'`]['x.Qid,_+_['b.Qid,'c.Qid]]] , unbounded) .
 
 set print attribute on .
 

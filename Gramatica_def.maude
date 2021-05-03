@@ -307,6 +307,359 @@ fmod GRAMMAR is
 
 endfm
 
+fmod Programa is
+  pr QID .
+  pr QID-LIST .
+  pr INT .
+  sort DeclaracionOp TipoEntero Entero Contrato Igualdad .
+  subsort DeclaracionOp Entero < Expresion .
+
+  ***DATOS PRMITIVOS
+
+  ***ENTEROS
+  ***Declaración de entero (Nombre de su tipo y el valor), los uint los trato como naturales.
+  ops Uint32 Uint64 Uint128 Uint256 Int32 Int64 Int128 Int256 : -> TipoEntero [ctor] .
+  op __ : TipoEntero Int -> Entero [ctor prec 11] .
+  ***op __ : @TipoEnteroInt@ Num -> @EnteroInt@ [ctor] . 
+
+  ***Declaración de la operacion de igualdad.
+  op _==_ : Qid Qid -> DeclaracionOp [ctor comm prec 13] .
+  ***Declaración de la operación Suma.
+  op _+_ : Qid Qid -> DeclaracionOp [ctor comm prec 13] .
+  ***Declaración de la operación resta
+  op _-_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  ***Declaración de la operación de multiplicación.
+  op _*_ : Qid Qid -> DeclaracionOp [ctor comm prec 14] .
+  ***Declaración de la operación de división.
+  op _/_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  ***Declaración de la operación resto.
+  op _%_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  ***Declaración de la operación menor
+  op _<_ : Qid Qid -> DeclaracionOp [ctor prec 13] .
+  ***Declaración de la operación de exponente.
+  op _^_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  ***Declaración de la operación de raíz cuadrada.
+  op raiz_ : Qid -> DeclaracionOp [ctor prec 14] .
+
+  op cv : -> Contrato [ctor] .
+  op __ : Contrato Contrato -> Contrato [ctor id: cv] .
+  ***Declaración de la operación to_nat.
+  --- op to-nat_ : @Token@ -> @DeclaracionOp@ [ctor prec 14] .
+  --- ***Declaración de la operación to_(u)int32/64/128/256.
+  --- ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> @TipoOpto@ [ctor] .
+  --- op __ : @TipoOpto@ @Token@ -> @DeclaracionOp@ [ctor prec 14] . 
+
+  ***STRINGS
+  ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
+  ***Declaración de la operacion de concatenar dos strings.
+  op _++_ : Qid Qid -> DeclaracionOp [ctor comm prec 14] .
+  ***Declaración de la operación de substring (string posición_inicio longitud_substring).
+  op substr___ : Qid Qid Qid -> DeclaracionOp [ctor prec 14] .
+  ***op substr___ : @Token@ Nat Nat -> @DeclaracionOp@ [ctor] .
+  ***Declaración de la operacion to-string que convierte un elemento de tipo Intx/Uintx/BystrX/ByStr a string.
+  op to-string_ : Qid -> DeclaracionOp [ctor prec 14] .
+  ***Declaración de la operacion strlen (devuelve la longitud del string).
+  op length_ : Qid -> DeclaracionOp [ctor prec 14] .
+
+  ***HASHES
+  op sha256hash_ : Qid -> DeclaracionOp [ctor prec 14] .
+  op schnorr-verify___ : Qid Qid Qid -> DeclaracionOp [ctor prec 14] . 
+  op ecdsa-verify___ : Qid Qid Qid -> DeclaracionOp [ctor prec 14] .
+
+  ***MAPAS
+  sort TipoClave TipoValor MapVacio Map DeclaracionOpMapI posicion ListaPosiciones .
+  ***subsort @TipoEntero@ < @NombreTipo@ .
+  subsort NombreTipo < TipoClave .
+  subsort NombreTipo Par < TipoValor .
+  subsort posicion < ListaPosiciones .
+
+  op Emp__ : TipoClave TipoValor -> MapVacio [ctor prec 15] .
+  op Emp__ : TipoClave QidList -> MapVacio [ctor prec 15] .
+  op Map__ : TipoClave TipoValor -> Map [ctor prec 15] .
+  op Map__ : TipoClave QidList -> Map [ctor prec 15] .
+  op [_] : Qid -> posicion [ctor prec 18] .
+  op __ : ListaPosiciones ListaPosiciones -> ListaPosiciones [ctor assoc prec 19] .
+  ***Definición operación insertar.
+---   ***Funcional
+  op put___ : Qid Qid Qid -> DeclaracionOp [ctor prec 19] .
+  ***In-place.
+  op insertar___ : Qid ListaPosiciones Qid -> DeclaracionOpMapI [ctor prec 19] .
+  ***Definición operación obtener valor.
+  ***Funcional
+  op get__ : Qid Qid -> DeclaracionOp [ctor prec 13] .
+  ***In-place
+  op obtener___ : Qid Qid ListaPosiciones -> DeclaracionOpMapI [ctor prec 19] .
+  ***Definición operación contener.
+  ***Funcional
+  op contains__ : Qid Qid -> DeclaracionOp [ctor prec 13] .
+  ***In-place
+  op existe___ : Qid Qid ListaPosiciones -> DeclaracionOpMapI [ctor prec 19] .
+  ***Definición operación eliminar.
+  ***Funcional
+  op remove__ : Qid Qid -> DeclaracionOp [ctor prec 13] .
+  ***In-place
+  op delete__ : Qid ListaPosiciones -> DeclaracionOpMapI [ctor prec 19] .
+
+  ***BNUM
+  sort BNum .
+  ***Definición número de bloques
+  op BNum_ : Int -> BNum [ctor] .
+  ***Definción de operaciones
+  ***La operación eq ya está definida para los enteros.
+  ***Definición operación blt(menor o igual).
+  ***Se usa los de los enteros.
+  --- op blt__ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  --- ***Declaración operación badd (suma un Bnum con un UintX).
+  --- op badd__ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+  --- ***Declaración operación bsub(resta de dos Bnums).
+  --- op bsub__ : Qid Qid -> DeclaracionOp [ctor prec 14] .
+
+  ***DATOS ALGEBRAICOS
+  ***Declaración option
+  sort NombreTipo Option Lista Par Natural .
+  subsort TipoEntero Map < NombreTipo .
+  ops String ByStr32 ByStr33 ByStr20 BNum Bool Message Error ByStr ByStr64 Unit : -> NombreTipo [ctor] .  ***Falta meter los enteros
+  op Option_ : NombreTipo -> Option [ctor prec 13] .  ***A lo mejor hay que hacer un tipo declaracionOption para diferenciarlo.
+  ***Constructoras option
+  op None{_} : NombreTipo -> Option [ctor prec 13] .
+  op None : -> Option [ctor] .
+  op Some__ : NombreTipo Qid -> Option [ctor prec 13] . 
+  op Some_ : Qid -> Option [ctor prec 13] .
+
+  ***Declaración Lista
+  op List_ : NombreTipo -> Lista [ctor prec 13] .
+  ***Constructoras de las listas
+  op Nil{_} : NombreTipo -> Lista [ctor prec 13] .
+  op Cons___ : NombreTipo Qid Qid -> Lista [ctor prec 13] .
+
+  ***Declaración Pares
+  op Pair__ : NombreTipo NombreTipo -> Par [ctor prec 13] .
+  ***Constructora Pair
+  op Pair____ : NombreTipo NombreTipo Qid Qid -> Par [ctor prec 13] .
+
+  ***Declaración Nat
+  op Nat : -> Natural [ctor] .
+  ***Constructoras de Nat
+  op Zero : -> Natural [ctor] .
+  op Sucesor_ : Qid -> Natural [ctor prec 13] .
+
+  ***PARÁMETROS INMUTABLES
+  sort TipoParamInm ParamInm ListaParamInm ParametrosInm .
+  subsort NombreTipo Map Option < TipoParamInm .
+  subsort ParamInm < ListaParamInm .
+
+  ***ops ByStr20 BNum String ByStr32 Bool Message : -> @TipoParamInm@ [ctor] .
+  ***op _:_ : String TipoParamInm -> ParamInmSolo [ctor] .
+  op _:_ : Qid TipoParamInm -> ParamInm [ctor prec 15] .
+  op _:_ : Qid QidList -> ParamInm [ctor prec 15] .
+  ***op vacio : -> ListaParamInm [ctor] .
+  ***op _ : ParamInm -> ListaParamInm [ctor] .
+  op lpv : -> ListaParamInm [ctor] .
+  op (_,_) : ListaParamInm ListaParamInm -> ListaParamInm [ctor assoc prec 17] . 
+  ***op <> : -> ParametrosInm [ctor] .
+  ***op _ : @ListaParamInm@ -> @ParametrosInm@ [ctor] .
+  --- ***op [_with_=>] : ParametrosInm OperacionBooleana -> Restriccion [ctor] .
+
+  
+  ***CAMPOS MODIFICABLES
+  sort ValorCampo Campo_mod ListaCamposMod .
+  ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
+  subsort Entero Option Lista Par Natural MapVacio Bool Expresion String < ValorCampo .
+  ***subsort Bool < ValorCampo .
+  subsort Campo_mod < ListaCamposMod .
+  op cv : -> Campo_mod [ctor] .
+  op campo_=_ : ParamInm ValorCampo -> Campo_mod [ctor prec 19] .
+  op campo_=_ : ParamInm ExpresionAplicarF -> Campo_mod [ctor prec 19] .
+  op __ : ListaCamposMod ListaCamposMod -> ListaCamposMod [ctor assoc prec 20] .
+
+  ***EXPRESIONES
+  sort TipoDato Expresion Operacion ExpresionFuncion ListaArgumentos OperacionBuilt ListaExpresiones TipoOpcion Opcion
+       ListaOpciones Expresiones ExpresionMatch ListaArg ExpresionLet ExpresionAplicarF .
+  --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
+  subsort Entero String BNum Option Lista Par Natural ExpresionFuncion Expresion ExpresionMatch MapVacio ExpresionAplicarF < TipoDato .
+  --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
+  subsort Expresion Lista ExpresionFuncion ExpresionMatch Excepcion Par < Operacion .
+  subsort TipoEntero NombreTipo Par < ListaArgumentos .
+  subsort DeclaracionOp DeclaracionOpBools  < OperacionBuilt .
+  subsort ExpresionLet ADTS < ListaExpresiones . 
+ *** subsort Declaracion ExpresionMatch < Expresiones .
+  subsort ListaDeclaraciones Entero Expresion < Expresiones .
+  subsort Option Par Bool < TipoOpcion .
+  subsort Opcion < ListaOpciones .
+  subsort Qid < ListaArg .
+  ***subsort Bubble < ExpresionAplicarF .
+
+  op let__ : Qid TipoDato -> ExpresionLet [ctor prec 20]  .
+  ***op let_=_ : Token Bubble -> ExpresionLet [ctor prec 20]  .
+  op let__in_ : Qid TipoDato Operacion -> Expresion [ctor prec 20] .
+  ***op let_ : Expresion -> Expresion [ctor prec 20] .
+  ***op let_in_ : Expresion Operacion -> Expresion [ctor prec 20] .
+  --- ***Falta añadir los mensajes
+  op funcion__ : ParamInm Operacion -> ExpresionFuncion [ctor prec 20] .
+  ***op __ : ListaArg ListaArg -> ListaArg [ctor assoc prec 19] .
+  op `(_`) :  QidList -> ExpresionAplicarF [ctor prec 19] .
+  ***op _=__ : Token Token NeTokenList -> Expresion [ctor prec 20] .
+  --- --- op tfun'_=>_ : String Operacion -> Expresion [ctor] .
+  ***op String : -> ListaArgumentos [ctor] .
+  op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor assoc prec 19] .
+  op __ : Qid ListaArgumentos -> Expresion [ctor prec 20] .  
+
+  --- --- op [_] : String -> Argumento [ctor] .
+  --- --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor] .
+  --- --- ***op builtin__ : OperacionBuilt ListaArgumentos -> ExpresionBuilt [ctor] . ***No es exactamente string (hay que cambiarlo).
+  op builtin_ : OperacionBuilt -> Expresion [ctor prec 19] .
+
+  op ev : -> Expresiones [ctor] .
+  op opcionMatch__ : TipoOpcion Expresiones -> Opcion [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
+  ***op _=>_ : Constructora Expresiones -> Opcion [ctor prec 20] .
+  op opcionMatch__ : QidList Expresiones -> Opcion [ctor prec 20] .
+  op opcionMatch__ : TipoOpcion QidList -> Opcion [ctor prec 20] .
+  op ov : -> ListaOpciones [ctor] .
+  op __ : ListaOpciones ListaOpciones -> ListaOpciones [ctor assoc prec 21] .
+  op match__ : Qid ListaOpciones -> ExpresionMatch [ctor prec 21] .
+  op __ : ListaExpresiones ListaExpresiones -> ListaExpresiones [ctor assoc prec 22] .
+
+  ***DECLARACIONES
+  sort Declaracion Valor ListaDeclaraciones .
+  ***Entero String DeclaracionFuncion EventoMsg ExpresionBuilt Option Lista Par Natural DeclaracionOpBools DeclaracionOpInts
+  subsorts Entero String Option Lista Par Natural Evento Expresion Mensaje Bool DeclaracionOpBools ExpresionMatch ExpresionAplicarF < Valor .
+  subsort Declaracion ExpresionMatch DeclaracionOpMapI Expresion Error ExpresionAplicarF < ListaDeclaraciones .
+  ***subsort Expresiones DeclaracionOpMapI Expresion < ListaDeclaraciones .
+
+  op guardar__ : Qid Qid  -> Declaracion [ctor prec 19] .
+  op actualizar__ : Qid Qid -> Declaracion [ctor prec 19] .
+  op _<-&BLOCKNUMBER : Qid -> Declaracion [ctor prec 19] .
+  op _=_ : Qid Valor -> Declaracion [ctor prec 19] .
+  ***op _=_ : Token Bubble -> Declaracion [ctor prec 19] .
+  ***op __ : Token ListaArgumentos -> Declaracion [ctor] .
+  op forall__ : Qid Qid -> Declaracion [ctor prec 19] .
+  op accept : -> Declaracion [ctor] .
+  op enviar_ : Qid -> Declaracion [ctor prec 19] .
+  op evento_ : Qid -> Declaracion [ctor prec 19] .
+
+  op _;_ : ListaDeclaraciones ListaDeclaraciones -> ListaDeclaraciones [ctor assoc prec 20] .
+
+  ***TRANSICIONES Y PROCEDIMIENTOS
+  sort Transicion ListaTransiciones Procedimiento .
+  subsort Transicion Procedimiento < ListaTransiciones .
+
+  op procedimiento___ : Qid ListaParamInm ListaDeclaraciones -> Procedimiento [ctor prec 23] .
+  op transicion___ : Qid ListaParamInm ListaDeclaraciones -> Transicion [ctor prec 23] .
+  op tv : -> ListaTransiciones [ctor] .
+  op __ : ListaTransiciones ListaTransiciones -> ListaTransiciones [ctor assoc prec 24] .
+
+  ***COMUNICACIONES
+  sort NombreEvento ListaCamposEvento Evento CampoEvento TagMensaje EnvioMensaje CantidadMensaje Mensaje NombreExcepcion Excepcion .
+  subsort ParamInm < ListaCamposEvento .
+  ***Eventos
+  op -eventname:_ : String -> NombreEvento [ctor prec 12] .
+  ***op _:_ : Qid Qid -> CampoEvento [ctor prec 12] .
+  ***op _:_ : Qid String -> CampoEvento [ctor prec 12] .
+  op lcv : -> ListaCamposEvento [ctor] .
+  op _;_ : ListaCamposEvento ListaCamposEvento -> ListaCamposEvento [ctor assoc prec 13] .
+  op contenidoEvento__ : NombreEvento ListaCamposEvento -> Evento [ctor prec 14] .
+  ***Mensajes
+  op -tag:_ : String -> TagMensaje [ctor prec 12] .
+  op dirEnvio_ : Qid -> EnvioMensaje [ctor prec 12] .
+  op cantidadEnvio_ : Entero -> CantidadMensaje [ctor prec 12] .
+  op cantidadEnvio_ : Qid -> CantidadMensaje [ctor prec 12] .
+  ***op {_;_;_;_} : TagMensaje EnvioMensaje CantidadMensaje ListaCamposEvento -> Mensaje [ctor prec 14] .
+  op contenidoMensaje____ : TagMensaje EnvioMensaje CantidadMensaje ListaCamposEvento -> Mensaje [ctor prec 14] .
+
+  op -exception:_ : String -> NombreExcepcion [ctor prec 12] .
+  op {_;_} : NombreExcepcion ListaCamposEvento -> Excepcion [ctor prec 14] .
+
+  ***LIBRERIA BOOLUTILS
+  sort DeclaracionOpBools .
+
+  ops _and_ _or_ : Qid Qid -> DeclaracionOpBools [ctor prec 14] .
+  ops negb_ bool-to-string_ : Qid -> DeclaracionOpBools [ctor prec 14] .
+  ops _and.__ _or.__ : Qid Qid Qid -> DeclaracionOpBools [ctor prec 14] .
+  ops negb.__ bool-to-string.__ : Qid Qid -> DeclaracionOpBools [ctor prec 14] .
+
+
+
+  ***ADTS
+  sort ADTS Constructora Constructoras .
+  subsort Constructora < Constructoras .
+  op |_ : Qid -> Constructora [ctor prec 15] .
+  --- ops String ByStr32 ByStr20 BNum Bool : -> ListaArgumentos [ctor] .
+  --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor assoc] .
+  --- op |_of_ : Qid ListaArgumentos -> Constructora [ctor] . 
+  op __ : Constructoras Constructoras -> Constructoras [ctor assoc prec 16] .
+  op tipo__ : Qid Constructoras -> ADTS [ctor prec 17] .
+
+  ***ERRORES
+  sort Error .
+  op throw : -> Error [ctor] .
+  op throw_ : Qid -> Error [ctor prec 19] .
+
+  
+
+  sort NombreLibreria NombreContrato Libreria LibImportar Importacion ListaImportar .
+  subsort LibImportar < ListaImportar .
+
+  op NombreLibreria_ : Qid -> NombreLibreria [ctor] .
+  op NombreContrato_ : Qid -> NombreContrato [ctor] .
+  ops BoolUtils IntUtils PairUtils ListUtils : -> LibImportar [ctor] .
+  op iv : -> Importacion [ctor] .
+  op __ : ListaImportar ListaImportar -> ListaImportar [ctor assoc] .
+  op import_ : ListaImportar -> Importacion [ctor] .
+  op import__ : LibImportar Qid -> Importacion [ctor] .
+
+  op __ : NombreLibreria ListaExpresiones -> Libreria [ctor] .
+
+ 
+
+
+ 
+
+
+  
+  op Contrato_______ : Nat Importacion Libreria NombreContrato ListaParamInm ListaCamposMod ListaTransiciones -> Contrato [ctor] .
+
+
+endfm
+
+fmod MEMORIA is
+  pr Programa .
+  sort Memoria Variable Val Pareja . 
+  subsort Qid < Variable .
+  subsort DeclaracionOp Entero < Val .
+  subsort Pareja < Memoria .
+  
+  op [_=>_] : Variable Val -> Pareja [ctor] .
+  op mv : -> Memoria [ctor] .
+  op __ : Memoria Memoria -> Memoria [ctor assoc id: mv] .
+
+endfm
+
+fmod SISTEMA is
+  pr MEMORIA .
+  sort Sistema .
+
+  op [_,_] : Contrato Memoria -> Sistema [ctor] .
+  op init : -> Sistema .
+  ***eq init = ['S1 = Uint32 1 cv, mv] .
+
+endfm 
+
+mod REGLAS is 
+  pr SISTEMA .
+
+  var M : Memoria .
+  var x : Qid .
+  vars E E' : DeclaracionOp .
+  var C : Contrato .
+
+  ***rl[x = E C,M] => [C,M[x => E]] .
+
+
+endm
+
+--- rew init .
+--- search init =>* [cv , M:Memoria] .
+
 
 fmod datos_primitivos is 
   pr INT .
@@ -572,7 +925,7 @@ fmod expresiones is
   --- pr BoolUtils .
   --- pr IntUtils .
   --- sort TipoDato Expresion Operacion ListaEntradas EventoMsg Opcion ListaOpciones Argumento ListaArgumentos 
-  ---      ExpresionBuilt Expresiones ExpresionFuncion Expresion@ OperacionBuilt TipoOpcion ExpresionMatch .
+  ---      ExpresionBuilt Expresiones ExpresionFuncion Expresion OperacionBuilt TipoOpcion ExpresionMatch .
   --- subsorts Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion < TipoDato .
   --- subsorts ExpresionFuncion ExpresionBuilt EventoMsg Expresion@ ExpresionMatch < Expresion .
   --- subsort ParamInm < ListaEntradas .
