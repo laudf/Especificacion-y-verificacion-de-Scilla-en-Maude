@@ -6,7 +6,7 @@ fmod PARSING is
  pr META-LEVEL .
  pr CONVERSION .
  pr PREPARSE .
- pr datos_primitivos .
+ ***pr datos_primitivos .
 
 ---  sort ParsingRes .
 ---  op <_> : Term -> ParsingRes [ctor] .
@@ -185,13 +185,13 @@ fmod PARSING is
 ---  ceq parse(M, '_`,_[T1, T2]) = M2, 'ListaParamInm__[T1', T2']
 ---   if M1, T1' := parse(M, T1) /\
 ---      M2, T2' := parse(M1, T2) .
- eq parse('_`,_[TL]) = 'LParamInm__[parseL(TL)]  .
+ eq parse('_`,_[TL]) = '_`,_[parseL(TL)]  .
 
  ***CAMPOS MODIFICABLES
- ceq parse('field_=_[T1, T2]) = 'campo__[T1', T2'] 
+ ceq parse('field_=_[T1, T2]) = 'campo_=_[T1', T2'] 
   if T1'  := parse(T1) /\
      T2'  := parse(T2) .
- eq parse('__[TL]) = 'ListaCamposMod__[parseL(TL)] .
+ eq parse('__[TL]) = '__[parseL(TL)] .
 
  ***EXPRESIONES
  ceq parse('let_=_[T1, T2]) = 'let__[T1', T2'] 
@@ -242,10 +242,10 @@ fmod PARSING is
   if T1' := parse(T1) .
  ceq parse('event_[T1]) = 'evento_[T1']
   if T1' := parse(T1) .
- eq parse('_;_[TL]) = 'ListaDec__[parseL(TL)] .
+ eq parse('_;_[TL]) = '__[parseL(TL)] .
 
  ***COMUNICACIONES 
- ceq parse('`{_;_`}[T1, T2]) = 'contenidoEvento__[T1', T2']
+ ceq parse('`{_;_`}[T1, T2]) = '`{_;_`}[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('-recipient:_[T1]) = 'dirEnvio_[T1']
@@ -259,11 +259,11 @@ fmod PARSING is
      T4' := parse(T4) .
 
  ***TRANSICIONES Y PROCEDIMIENTOS
- ceq parse('procedure_`(_`)_end[T1, T2, T3]) = 'procedimiento___[T1', T2', T3']
+ ceq parse('procedure_`(_`)_end[T1, T2, T3]) = 'procedimiento___end[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
- ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___[T1', T2', T3']
+ ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___end[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
@@ -469,10 +469,40 @@ red metaParse(GRAMMAR, tokenize("procedure IsNotSender(address : ByStr20) is_sen
 red metaParse(GRAMMAR, tokenize("let get_val = fun (some_val : Option Uint128) => match some_val with | Some val => val | None => zero end"), anyType) .
 red metaParse(GRAMMAR, tokenize("let make_error_event = fun (result : Error) => let result_code =  match result with | CodeNotAuthorised    => Int32 -1 | CodeNotFound         => Int32 -2  | CodeTokenExists      => Int32 -3 | CodeUnexpectedError  => Int32 -4 end"), anyType) .
 red metaParse(GRAMMAR, tokenize("match is_owner with | false =>  e = {-eventname: \"setHello\" ; code : not_owner_code} ;  event e | true =>  welcome_msg := msg ;  e = {-eventname: \"setHello\" ; code : set_hello_code} ;   event e end"), anyType) .
-red metaParse(GRAMMAR, tokenize("add a a"), anyType) .
+red metaParse(GRAMMAR, tokenize("Uint32 1"), anyType) .
+red parse('__['Uint32.@TipoEntero@,'s_['0.Zero]]) .
 ***red metaParse(Sistema, tokenize("[a = b + c , mv]"))
 red preparse('mone '= 'one_msg 'm ';) .
-red metaRewrite(upModule('REGLAS, false), '`[_`,_'`]['_=_['a.Qid,_+_['b.Qid,'c.Qid]],'`[_=>_'`]['x.Qid,_+_['b.Qid,'c.Qid]]] , unbounded) .
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
+    '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
+    ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
+    '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
+    'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
+    '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+    '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
+    '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
+    ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
+    '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
+	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'_=_[
+    ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]]],
+    'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
+    '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+    '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
+    '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
+    ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
+    '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
+	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'__['_=_[''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]],'match__[''is_owner.Qid,
+    '__['opcionMatch__['false.Bool,'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,
+    ''not_owner_code.Qid]]],'evento_[''e.Qid]]],'opcionMatch__['true.Bool,'__['actualizar__[''welcome_msg.Qid,
+    ''msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,''set_hello_code.Qid]]],
+    'evento_[''e.Qid]]]]]]]],
+    'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
+    '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+    '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+--- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['_=_[
+---     ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]],'mv.Memoria,'mv.Memoria], unbounded) .
 
 set print attribute on .
 
