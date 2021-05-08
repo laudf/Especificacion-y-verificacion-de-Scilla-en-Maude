@@ -219,7 +219,7 @@ fmod PARSING is
  ceq parse('|_=>_[T1, T2]) = 'opcionMatch__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
- ceq parse('match_with_end[T1, T2]) = 'match__[T1', T2']
+ ceq parse('match_with_end[T1, T2]) = '`[_`,_`][T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
 

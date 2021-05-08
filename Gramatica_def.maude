@@ -628,7 +628,7 @@ fmod MEMORIA is
   pr Programa .
   sort Memoria Variable Val Pareja PilaMemoria ParejaFuncion letIn AmbitoAplicacion memoriaTransicion Opciones ListaT memoriaLetIn . 
   subsort Qid < Variable .
-  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento < Val .
+  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String < Val .
   subsort Pareja memoriaTransicion memoriaLetIn < Memoria .
   subsort Option < AmbitoAplicacion .
   ***subsort ListaDeclaraciones Pareja < ListaT .
@@ -639,19 +639,21 @@ fmod MEMORIA is
   op [_] : Declaracion -> Pareja [ctor] .
   op [_] : DeclaracionOp -> Pareja [ctor] .
   op [_] : Int -> Pareja [ctor] .
+  op [_] : ExpresionMatch -> Pareja [ctor] .
   op [_=>_,_] : Variable Val AmbitoAplicacion -> letIn [ctor] .
   op Funcion[_,_] : ParamInm Expresion -> ParejaFuncion [ctor] .
-  op Funcion[_,_] : ParamInm memoriaLetIn -> ParejaFuncion [ctor] .
+  op Funcion[_,_] : ParamInm Memoria -> ParejaFuncion [ctor] .
   
   op [_=>_] : Variable Val -> Pareja [ctor] .
   op [_=>_] : Variable Qid -> Pareja [ctor] .
   op [_=>_] : Variable ListaOpciones -> Pareja [ctor] .
   op [_=>_] : Variable Int -> Pareja [ctor] .
+  op [_=>_] : Variable Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable TipoDato Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Int Memoria -> Pareja [ctor] .
-  op [_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria -> memoriaTransicion [ctor] .
-  op [_,_,_] : Variable TipoDato Operacion -> memoriaLetIn [ctor] .
+  op [_,_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria Memoria -> memoriaTransicion [ctor] .
+  ***op [_,_,_] : Variable TipoDato Operacion -> memoriaLetIn [ctor] .
   ***op [_,_,_] : Variable ListaParamInm ListaT -> memoriaTransicion [ctor] .
   op mv : -> Memoria [ctor] .
   op __ : Memoria Memoria -> Memoria [ctor assoc id: mv] .
@@ -659,18 +661,42 @@ fmod MEMORIA is
   op pv : -> PilaMemoria [ctor] .
   op apila : Memoria PilaMemoria -> PilaMemoria [ctor] .
 
-  var x x2 : Qid .
+  vars x x2 : Qid .
   var TD : TipoDato .
   var Op : Operacion .
   var E : Expresion .
   var OPB : OperacionBuilt .
   var TE : TipoEntero .
   var IN : Int .
+  var V : Valor .
+  var S : String .
+  var LCE : ListaCamposEvento .
+  var PI : ParamInm .
+  vars M M1 M2 M3 M4 : Memoria .
+  var LPI : ListaParamInm .
+  var TPI : TipoParamInm .
+  var LOP : ListaOpciones .
+
   op almacenar : Expresion -> Memoria [ctor] .
+  op almacenar : Declaracion -> Memoria [ctor] .
+  op almacenar : ExpresionMatch -> Memoria [ctor] .
+
   eq almacenar(builtin OPB) = [OPB] .
   eq almacenar(guardar x x2) = [x => x2] .
+  eq almacenar(evento x) = ['evento => x] .
+  eq almacenar(lpv) = mv .
+  eq almacenar(x : TPI) = [x => TPI] .
+  eq almacenar(x : x2) = [x => x2] .
+  eq almacenar(PI ; LCE) = almacenar(PI) almacenar(LCE) .
+  eq almacenar({-eventname: S ; LCE}) = ['eventname => S] almacenar(LCE) .
+  eq almacenar(x = V) = [x => almacenar(V)] .
+  eq almacenar(match x LOP) = [x => LOP] .
   eq almacenar(let x TE IN in Op) = [x => IN , almacenar(Op)] .
   eq almacenar(let x TD in Op) = [x => TD , almacenar(Op)] .
+
+  op sustituir : Memoria Memoria -> Memoria [ctor] .
+  eq sustituir(M [x => V] M2, M3 [x2 => x] M4) = M3 [x2 => V] M4 .
+  eq sustituir(M, M1 [x => M2] M3) = M1 [x => sustituir(M, M2)] M3 .
 
 endfm
 
@@ -682,8 +708,8 @@ fmod SISTEMA is
   op init : -> Sistema .
   eq init = [Contrato 0 iv NombreLibreria 'HelloWorld let 'one_msg funcion 'msg : Message let 'nil_msg Nil{Message} in
    Cons Message 'msg 'nil_msg let 'S1 Uint32 1 let 'S2 Uint32 2 NombreContrato 'HelloWorld ('owner : ByStr20) 
-            campo 'welcome_msg : String = "" transicion ('getHello) (lpv) (guardar 'r  'welcome_msg   evento 'e 'e = {-eventname: "getHello" ; 'msg : 'r })
-             end transicion 'setHello ('msg : String) 'is_owner = builtin 'owner == '_sender end  , mv, mv] .
+            campo 'welcome_msg : String = "" transicion ('getHello) (lpv) (guardar 'r  'welcome_msg 'e = {-eventname: "getHello" ; ('msg : 'r) ; ('a : 'b)} evento 'e )
+             end transicion 'setHello ('msg : String) 'is_owner = builtin 'owner == '_sender end   , mv, mv] .
 
   --- eq init = [let 'S1 Uint32 1 in let 'b Uint32 2 in builtin 'S1 + 'b , mv, mv] .
 
@@ -692,7 +718,7 @@ endfm
 mod REGLAS is 
   pr SISTEMA .
 
-  var M M' M2 M3 M4 M5 : Memoria .
+  var M M' M2 M3 M4 M5 M6 M7 M8 : Memoria .
   var x x' x2 x3 : Qid .
   vars E E' : Entero .
   var C : Contrato .
@@ -722,6 +748,7 @@ mod REGLAS is
   var S : String .
   var LCE : ListaCamposEvento .
   var EXP : Expresion .
+  var EM : ExpresionMatch .
 
   ***Regla para guardar una variable de un let en la memoria
   rl[Contrato N I NL let x V LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => V], M'] .
@@ -729,40 +756,35 @@ mod REGLAS is
   rl[C ,M [x => TE IN] M2, M'] => [C ,M [x => IN] M2, M'] .
   ***Regla para guardar un campo en la memoria
   rl[Contrato N I NL LE NC LPI campo x : TP = V LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => V], M'] .
+  ***Regla para almacenar una funcion en la memoria.
   rl[C , [x => funcion PI Op]M , M'] => [C , [x => Funcion[PI, Op]]M , M'] .
-  ***rl[C , [x => Funcion[PI, let 'x TD in Op]]M , M'] => [C , [x => Funcion[PI, ['x, Op]]M , M'] .
-  ***rl[C , [x => funcion PI let x TD in Op]M , M'] => [C , [x => Funcion[PI, let x TD in Op]]M , M'] .
-  ***rl[C , [x => funcion PI let x TD in Op]M , M'] => [C , [x => Funcion[PI , [x => TD , Op]]]M , M'] .
-  ***rl[C , [x => funcion PI Op]M , M'] => [C , [x => apila([PI] [Op],pv)]M , M'] .
   ***Regla para guardar una transicion en la memoria (en este caso se guarda la regla entera)
   rl[Contrato N I NL LE NC LPI LCM T LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[T]] .
   ***Regla para guardar una transicion en la memoria (se divide la transicion en [nombre, entradas, cuerpo])
-  rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv]M'] .
- *** rl[C , M , M3[x, LPI, guardar x' x2 LD, M2]M'] => [C , M , M3[x, LPI, LD, M2[x' => x2] ]M'] .
-  ***Regla para almacenar la declaracion guardar en la memoria
-  rl[C , M , M3[x, LPI, D LD, M2]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(D) ]M'] .
-  ***Regla para almacenar la declaracion evento en la memoria
-  rl[C , M , M3[x, LPI, evento x' LD, M2]M'] => [C , M , M3[x, LPI, LD, M2['evento => x'] ]M'] .
+  rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv, mv]M'] .
+  ***Regla para almacenar las declaraciones en la memoria
+  rl[C , M , M3[x, LPI, D LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
+  
+  ***Regla para almacenar las entradas en la memoria
+  rl[C , M , M3[x, PI LPI, LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2, M4 almacenar(PI) ]M'] .
   ***Regla para quitar la expresion builtin y quedarte con la operacion real 
-  rl[C , M , M3[x, LPI, LD, M2[x' => builtin OPB]M4]M'] => [C , M , M3[x, LPI, LD, M2[x' => OPB]M4 ]M'] .
-  ***Regla para almacenar la declaracion = en la memoria
-  ***rl[C , M , M3[x, LPI, x' = {-eventname: S ; LCE} LD, M2]M'] => [C , M , M3[x, LPI, x' = {-eventname: S ; LCE} LD, M2[x' => [-eventname: => S]] ]M'] .
- *** rl[C , M , M3[x, LPI, x' = {PI ; LCE} LD, M2]M'] => [C , M , M3[x, LPI, x' = {LCE} LD, M2[x' => [-eventname: => S]] ]M'] .
-  rl[C , M , M3[x, LPI, x' = VL LD, M2]M'] => [C , M , M3[x, LPI, LD, M2[x' => VL] ]M'] .
-  ***rl[C , M , M3[x, LPI, LD, M2[x' => {-eventname: S ; LCE}]M4]M'] => [C , M , M3[x, LPI, LD, M2[x' => {-eventname: S ; LCE}, ['-eventname: => S]]M4 ]M'] .
-  ***rl[C , M , M3[x, LPI, LD, M2[x' => {-eventname: S ; x2 : x3 LCE}, M5]M4]M'] => [C , M , M3[x, LPI, LD, M2[x' => {-eventname: S ; LCE}, M5[x2 => x3]]M4 ]M'] .
-  --- rl[C , M , M3[x, LPI, D LD, M2]M'] => [C , M , M3[x, LPI, LD, M2[D] ]M'] .
-  --- rl[C , M , M3[x, LPI, LD, M2['x = VL]]M'] => [C , M , M3[x, LPI, LD, M2['x => VL]]M'] .
-  ***rl[C , M , M3[x, LPI, LD, M2]M'] => [C , M , M3[x, LPI, LD, M2['evento => x'] ]M'] .
+  rl[C , M , M3[x, LPI, LD, M2[x' => builtin OPB]M4, M5]M'] => [C , M , M3[x, LPI, LD, M2[x' => OPB]M4, M5 ]M'] .
+
 
   ***Regla para almacenar la expresion match en la memoria ([comprobacion = > cuerpo])
-  rl[C , M , M3[x, LPI, match x' LOP , M2]M'] => [C , M , M3[x, LPI, ldv, M2[x' => LOP] ]M'] .
+  rl[C , M , M3[x, LPI, EM LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2[EM], M4 ]M'] .
+  rl[C , M , M3[x, LPI, LD, M2[EM]M5, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(EM) M5, M4 ]M'] .
 
   ***Regla para sustituir valores globales e las transiciones
-  rl[C , M [x2 => V] M2 , M3[x, LPI, LD, M5[x' => x2]M4]M'] => [C , M [x2 => V] M2 , M3[x, LPI, LD, M5[x' => V]M4]M'] .
+  rl[C , M [x2 => V] M2 , M3[x, LPI, LD, M5[x' => x2]M4, M6]M'] => [C , M [x2 => V] M2 , M3[x, LPI, LD, M5[x' => V]M4, M6]M'] .
+  ***Raglas para sustituir valores locales.
+  rl[C , M , M3[x, LPI, LD, M2[x2 => V]M5[x' => M6[x3 => x2]M7]M4, M8]M'] => [C , M , M3[x, LPI, LD, M2[x2 => V]M5[x' => M6[x3 => V]M7]M4, M8]M'] .
+  rl[C , M , M3[x, LPI, LD, M2[x2 => M6]M5[x' => x2]M4, M7]M'] => [C , M , M3[x, LPI, LD, M2[x2 => M6]M5[x' => M6]M4, M7]M'] .
+
+
+
+  
   --- rl[let x V LE ,M, M'] => [LE,M[x => V], M'] .
-
-
   --- rl[let x V LE ,M, M'] => [LE ,M[x => V], M'] .
   --- rl[LE ,M[x => TE IN]M2, M'] => [LE ,M[x => IN]M2, M'] .
   --- rl[EXP LD, M, M'] => [LD, almacenar(EXP), M'] .
