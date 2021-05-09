@@ -179,7 +179,7 @@ fmod PARSING is
   if T1' := parse(T1) .
 
  ***PARÁMETROS INMUTABLES
- ceq parse('_:_[T1, T2]) = '_:_[T1', T2']
+ ceq parse('_:_[T1, T2]) = '_:_[T1', T2')]
   if T1' := parse(T1) /\
      T2' := parse(T2) .
 ---  ceq parse(M, '_`,_[T1, T2]) = M2, 'ListaParamInm__[T1', T2']
@@ -501,6 +501,7 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+    
 --- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['_=_[
 ---     ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]],'mv.Memoria,'mv.Memoria], unbounded) .
 
