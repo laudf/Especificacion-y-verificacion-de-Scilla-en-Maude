@@ -56,7 +56,7 @@ fmod PARSING is
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ***ENTEROS
- ceq parse('eq__[T1, T2]) = '_==_[T1', T2']
+ ceq parse('eq__[T1, T2]) = '_==._[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('add__[T1, T2]) = '_+_[T1', T2']
@@ -179,7 +179,7 @@ fmod PARSING is
   if T1' := parse(T1) .
 
  ***PARÁMETROS INMUTABLES
- ceq parse('_:_[T1, T2]) = '_:_[T1', T2')]
+ ceq parse('_:_[T1, T2]) = '_:_[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
 ---  ceq parse(M, '_`,_[T1, T2]) = M2, 'ListaParamInm__[T1', T2']
@@ -361,7 +361,7 @@ mod MTP is
  op terms:_ : TermList -> Attribute [ctor gather (&)] .
 
  sort State .
- ops idle reading parsing : -> State [ctor] .
+ ops idle reading parsing pedirInfo : -> State [ctor] .
 
  *** Run command
  op run : -> Configuration [ctor] .
@@ -415,13 +415,19 @@ rl [newLine] :
 
 crl [parsing] :
     < example : EXAMPLE | read: Read, state: parsing, Attrs >
- => < example : EXAMPLE | read: "", Attrs >
+ => < example : EXAMPLE | read: "", state: pedirInfo, Attrs >
     write(stdout, example, "Parsed.\n")
  if Read =/= "" /\
     QIL := tokenize(Read) /\
     QIL1 := preparse(QIL) /\
     {T, Ty} := metaParse(GRAMMAR, QIL1, anyType) /\
     T' := parse(T) [print QIL T "\nParseado: " T'] .
+
+rl [pedirParametros] :
+    < example : EXAMPLE | file: noFile, state: pedirInfo, read: "", Attrs >
+ => < example : EXAMPLE | read: "", state: idle, Attrs >
+    getLine(stdin, example, "Introduce los parametros>") .
+
 
  ***                              ***
  ***          closedFile          ***
@@ -493,7 +499,7 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
     '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
-	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'__['_=_[''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]],'match__[''is_owner.Qid,
+	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'__['_=_[''is_owner.Qid,'builtin_['_==._[''owner.Qid,''_sender.Qid]]],'match__[''is_owner.Qid,
     '__['opcionMatch__['false.Bool,'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,
     ''not_owner_code.Qid]]],'evento_[''e.Qid]]],'opcionMatch__['true.Bool,'__['actualizar__[''welcome_msg.Qid,
     ''msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,''set_hello_code.Qid]]],
@@ -501,6 +507,18 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+
+--- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
+---     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
+---     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
+---     '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
+--- 	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'match__[''is_owner.Qid,
+---     '__['opcionMatch__['false.Bool,'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,
+---     ''not_owner_code.Qid]]],'evento_[''e.Qid]]],'opcionMatch__['true.Bool,'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"setHello".String],'_:_[''code.Qid,''set_hello_code.Qid]]],
+---     'evento_[''e.Qid]]]]]],
+---     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
+---     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
     
 --- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['_=_[
 ---     ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]],'mv.Memoria,'mv.Memoria], unbounded) .
