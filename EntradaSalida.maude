@@ -49,6 +49,10 @@ fmod PARSING is
      S := string(Q) /\
      not (float(S) :: Float) /\
      not (rat(S, 10) :: Nat) .
+
+ ***eq parse('bubble[TL]) = TL .
+
+
  ceq parse('_=_;[T1, T2]) = '_=_;[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
@@ -208,9 +212,9 @@ fmod PARSING is
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) .
----  ceq parse(M, '__[T1, T2]) = M2, 'Funcion__[T1', T2']
----   if M1, T1' := parse(M, T1) /\
----      M2, T2' := parse(M1, T2) .
+ ceq parse('`(_`)[TL]) = 'aplicarF_[TL]
+  if TL := parseL(TL) .
+
  ceq parse('@__[T1, T2]) = '@__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
@@ -219,7 +223,7 @@ fmod PARSING is
  ceq parse('|_=>_[T1, T2]) = 'opcionMatch__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
- ceq parse('match_with_end[T1, T2]) = '`[_`,_`][T1', T2']
+ ceq parse('match_with_end[T1, T2]) = 'match__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
 
@@ -252,7 +256,7 @@ fmod PARSING is
   if T1' := parse(T1) .
  ceq parse('-amount:_[T1]) = 'cantidadEnvio_[T1']
   if T1' := parse(T1) .
- ceq parse('`{_;_;_;_`}[T1, T2, T3, T4]) = 'contenidoMensaje___[T1', T2', T3', T4']
+ ceq parse('`{_;_;_;_`}[T1, T2, T3, T4]) = '`{_;_;_;_`}[T1', T2', T3', T4']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
      T3' := parse(T3) /\
@@ -317,11 +321,11 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
 
 
  *** TODO: terminar
-
  eq parse(T) = T [owise] .
 
  op parseL : TermList -> TermList .
  eq parseL(empty) = empty .
+
  eq parseL((T, TL)) = parse(T), parseL(TL) .
 
  op downQid : Term -> [Qid] [memo] .
@@ -486,15 +490,15 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
-red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
-    '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
-    ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
-    '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
-	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'_=_[
-    ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]]],
-    'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
-    '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
-    '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+--- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
+---     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
+---     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
+---     '_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[''welcome_msg.Qid,'String.NombreTipo],'"".String],
+--- 	'__['transicion___end[''setHello.Qid,'_:_[''msg.Qid,'String.NombreTipo],'_=_[
+---     ''is_owner.Qid,'builtin_['_==_[''owner.Qid,''_sender.Qid]]]],
+---     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
+---     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
 red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
@@ -507,6 +511,33 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+
+--- red metaRewrite(upModule('REGLAS-EJECUTAR, true), '`[_`,_`]['__['`[_=>_`][''welcome_msg.Qid,'"".String],'`[_=>_`][''owner.Qid,'ByStr20.NombreTipo],
+---     '`[_=>_`][''not_owner_code.Qid,'s_['0.Zero]],'`[_=>_`][''set_hello_code.Qid,'s_^2['0.Zero]]],'__[
+---     '`[_`,_`,_`,_`,_`][''setHello.Qid,'lpv.ListaParamInm,'ldv.ListaDeclaraciones,'__['`[_=>_`][''is_owner.Qid,'_==._[
+---     ''_sender.Qid,''owner.Qid]],'`[_=>_`][''is_owner.Qid,'__['`[_=>_`]['false.Bool,'__['`[_=>_`][''e.Qid,'__['`[_=>_`][
+---     ''eventname.Qid,'"setHello".String],'`[_=>_`][''code.Qid,'s_['0.Zero]]]],'`[_=>_`][''evento.Qid,''e.Qid]]],
+---     '`[_=>_`]['true.Bool,'__['Actualizar`[_`,_`][''welcome_msg.Qid,''msg.Qid],'`[_=>_`][''e.Qid,'__['`[_=>_`][
+---     ''eventname.Qid,'"setHello".String],'`[_=>_`][''code.Qid,'s_^2['0.Zero]]]],'`[_=>_`][''evento.Qid,''e.Qid]]]]]],
+---     '__['`[_=>_`][''_amount.Qid,'Uint128.TipoEntero],'`[_=>_`][''_sender.Qid,'ByStr20.NombreTipo],'`[_=>_`][''msg.Qid,
+---     'String.NombreTipo]]],'`[_`,_`,_`,_`,_`][''getHello.Qid,'lpv.ListaParamInm,'ldv.ListaDeclaraciones,'__['`[_=>_`][
+---     ''r.Qid,'"".String],'`[_=>_`][''e.Qid,'__['`[_=>_`][''eventname.Qid,'"getHello".String],'`[_=>_`][''msg.Qid,
+---     '"".String]]],'`[_=>_`][''evento.Qid,'__['`[_=>_`][''eventname.Qid,'"getHello".String],'`[_=>_`][''msg.Qid,
+---     '"".String]]]],'__['`[_=>_`][''_amount.Qid,'Uint128.TipoEntero],'`[_=>_`][''_sender.Qid,'ByStr20.NombreTipo]]]]], unbounded) .
+
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'import_['PairUtils.LibImportar],'__['NombreLibreria_[''Schnorr.Qid],
+    'let__[
+    ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
+    'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]]],'NombreContrato_[''HelloWorld.Qid],
+    'lpv.ListaParamInm,'campo_=_['_:_[''pub_key.Qid,'Option_['ByStr33.NombreTipo]],'None`{_`}['ByStr33.NombreTipo]],
+    'transicion___end[''verify.Qid,'_`,_['_:_[''msg.Qid,'ByStr.NombreTipo],'_:_[''sig.Qid,'ByStr64.NombreTipo]],
+    '__['guardar__[''pubk_o.Qid,''pub_key.Qid],'match__[''pubk_o.Qid,'__['opcionMatch__['Some_[''pubk.Qid],'__['_=_[''sig.Qid,
+    'builtin_['schnorr-verify___[''pubk.Qid,''msg.Qid,''sig.Qid]]],'match__[''sig.Qid,'opcionMatch__['true.Bool,
+    '_=_[''m.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''status.Qid,''"verification successful".Qid]]]]]]],'opcionMatch__['None.Option,'__['_=_[''m.Qid,'`{_;_;_;_`}[
+    '-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[
+    ''status.Qid,''"no key error".Qid]]],'__['_=_[''mone.Qid,'aplicarF_['__[''one_msg.Qid,''m.Qid]]],'enviar_[
+    ''mone.Qid]]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
 
 --- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
 ---     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
