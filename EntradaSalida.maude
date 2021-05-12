@@ -499,6 +499,7 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
 ---     'transicion___end[''getHello.Qid,'lpv.ListaParamInm,
 ---     '__['guardar__[''r.Qid,''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
 ---     '"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[''e.Qid]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+***Contrato1
 red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],
@@ -524,7 +525,7 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
 ---     ''r.Qid,'"".String],'`[_=>_`][''e.Qid,'__['`[_=>_`][''eventname.Qid,'"getHello".String],'`[_=>_`][''msg.Qid,
 ---     '"".String]]],'`[_=>_`][''evento.Qid,'__['`[_=>_`][''eventname.Qid,'"getHello".String],'`[_=>_`][''msg.Qid,
 ---     '"".String]]]],'__['`[_=>_`][''_amount.Qid,'Uint128.TipoEntero],'`[_=>_`][''_sender.Qid,'ByStr20.NombreTipo]]]]], unbounded) .
-
+***Contrato8
 red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'import_['PairUtils.LibImportar],'__['NombreLibreria_[''Schnorr.Qid],
     'let__[
     ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
@@ -532,12 +533,94 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 
     'lpv.ListaParamInm,'campo_=_['_:_[''pub_key.Qid,'Option_['ByStr33.NombreTipo]],'None`{_`}['ByStr33.NombreTipo]],
     'transicion___end[''verify.Qid,'_`,_['_:_[''msg.Qid,'ByStr.NombreTipo],'_:_[''sig.Qid,'ByStr64.NombreTipo]],
     '__['guardar__[''pubk_o.Qid,''pub_key.Qid],'match__[''pubk_o.Qid,'__['opcionMatch__['Some_[''pubk.Qid],'__['_=_[''sig.Qid,
-    'builtin_['schnorr-verify___[''pubk.Qid,''msg.Qid,''sig.Qid]]],'match__[''sig.Qid,'opcionMatch__['true.Bool,
-    '_=_[''m.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
-    'Uint128.TipoEntero,'0.Zero]],'_:_[''status.Qid,''"verification successful".Qid]]]]]]],'opcionMatch__['None.Option,'__['_=_[''m.Qid,'`{_;_;_;_`}[
+    'builtin_['schnorr-verify___[''pubk.Qid,''msg.Qid,''sig.Qid]]],'match__[''sig.Qid,'__['opcionMatch__['true.Bool,
+    '__['_=_[''m.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''status.Qid,''"verification successful".Qid]]],'__['_=_[''mone.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''m.Qid]]],'enviar_[''mone.Qid]]]],'opcionMatch__['false.Bool,'__['_=_[''m.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,
+    '0.Zero]],'_:_[''status.Qid,''"verification failed".Qid]]],'__['_=_[''mone.Qid,'aplicarF_['__[''one_msg.Qid,
+    ''m.Qid]]],'enviar_[''mone.Qid]]]]]]]],'opcionMatch__['None.Option,'__['_=_[''m.Qid,'`{_;_;_;_`}[
     '-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[
     ''status.Qid,''"no key error".Qid]]],'__['_=_[''mone.Qid,'aplicarF_['__[''one_msg.Qid,''m.Qid]]],'enviar_[
     ''mone.Qid]]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+***Contrato10
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'iv.Importacion,'__['NombreLibreria_[''LoveZilliqa.Qid],
+    '__['let__[''one.Qid,'__[
+    'Uint256.TipoEntero,'s_['0.Zero]]],'let__[''tt.Qid,'true.Bool]]],'NombreContrato_[''LoveZilliqa.Qid],
+    '_`,_['_:_[''authorName.Qid,'String.NombreTipo],'_:_[''twitterID.Qid,'String.NombreTipo]],
+    '__['campo_=_['_:_[
+    ''author_name.Qid,'String.NombreTipo],'aplicarF_[''authorName.Qid]],'__['campo_=_['_:_[''twitter_id.Qid,
+    'String.NombreTipo],'aplicarF_[''twitterID.Qid]],'__['campo_=_['_:_[''upvote_counter.Qid,
+    'Uint256.TipoEntero],'__['Uint256.TipoEntero,'0.Zero]],'campo_=_['_:_[''vote_map.Qid,'Map__[
+    'ByStr20.NombreTipo,'Bool.NombreTipo]],'Emp__['ByStr20.NombreTipo,'Bool.NombreTipo]]]]],
+    '__['transicion___end[''upvote.Qid,'lpv.ListaParamInm,'__['existe___[''has_voted.Qid,''vote_map.Qid,'posicion_[
+    ''_sender.Qid]],'__['guardar__[''current_vote_count.Qid,''upvote_counter.Qid],'match__[''has_voted.Qid,
+    '__['opcionMatch__['true.Bool,'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"AlreadyVoted".String],'_:_[
+    ''current_upvote_count.Qid,''current_vote_count.Qid]]],'evento_[''e.Qid]]],'opcionMatch__['false.Bool,'__['_=_[
+    ''new_vote_count.Qid,'builtin_['_+_[''current_vote_count.Qid,''one.Qid]]],'__['insertar___[''vote_map.Qid,
+    'posicion_[''_sender.Qid],''tt.Qid],'__['actualizar__[''upvote_counter.Qid,''new_vote_count.Qid],'__['_=_[''e.Qid,
+    '`{_;_`}['-eventname:_['"Voted".String],'_:_[''shoutout.Qid,''"Zilliqa loves you!".Qid]]],'evento_[''e.Qid]]]]]]]]]]],
+    'transicion___end[''whoami.Qid,
+    'lpv.ListaParamInm,'__['guardar__[''author.Qid,''author_name.Qid],'__['guardar__[''twitter.Qid,''twitter_id.Qid],
+    '_=_[''e.Qid,'`{_;_`}['-eventname:_['"Whoami".String],'_:_[''author_name.Qid,''author.Qid]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+
+***Contrato2
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'iv.Importacion,'__['NombreLibreria_[''BookStore.Qid],
+    '__['let__[''one_msg.Qid,
+    'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}['Message.NombreTipo],'Cons___[
+    'Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''code_success.Qid,'__['Uint32.TipoEntero,'0.Zero]],
+    '__['let__[''code_book_not_found.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'__['let__[''code_not_authorized.Qid,
+    '__['Uint32.TipoEntero,'s_^2['0.Zero]]],'__['let__[''code_invalid_params.Qid,'__['Uint32.TipoEntero,'s_^3[
+    '0.Zero]]],'let__[''code_bookid_exist.Qid,'__['Uint32.TipoEntero,'s_^4['0.Zero]]]]]]]]],'NombreContrato_[''BookStore.Qid],
+    '_`,_['_:_[''owner.Qid,'ByStr20.NombreTipo],'_:_[''storeName.Qid,'String.NombreTipo]],'__[
+    'campo_=_['_:_[''members.Qid,'Map__['ByStr20.NombreTipo,'Pair__['String.NombreTipo,'Uint32.TipoEntero]]],
+    'Emp__['ByStr20.NombreTipo,'Pair__['String.NombreTipo,'Uint32.TipoEntero]]],'__['campo_=_['_:_[
+    ''welcome_msg.Qid,'Option_['String.NombreTipo]],'None`{_`}['String.NombreTipo]],'campo_=_['_:_[
+    ''bookInventory.Qid,'Map__['Uint32.TipoEntero,'Pair__['String.NombreTipo,'String.NombreTipo]]],'Emp__[
+    'Uint32.TipoEntero,'Pair__['String.NombreTipo,'String.NombreTipo]]]]],
+    
+    '__['transicion___end[''addMember.Qid,'_`,_['_:_[''name.Qid,'String.NombreTipo],'_`,_['_:_[''addr.Qid,'ByStr20.NombreTipo],'_:_[''memberType.Qid,
+    'Uint32.TipoEntero]]],'__['_=_[''is_authorized.Qid,'builtin_['_==._[''_sender.Qid,''owner.Qid]]],'match__[
+    ''is_authorized.Qid,'__['opcionMatch__['true.Bool,'__['_=_[''valid_type.Qid,'let__in_[''three.Qid,'__[
+    'Uint32.TipoEntero,'s_^3['0.Zero]],'builtin_['_<_[''memberType.Qid,''three.Qid]]]],'match__[''valid_type.Qid,'__[
+    'opcionMatch__['true.Bool,'__['_=_[''p.Qid,'Pair____['String.NombreTipo,'Uint32.TipoEntero,''name.Qid,
+    ''memberType.Qid]],'__['insertar___[''members.Qid,'posicion_[''addr.Qid],''p.Qid],'__['_=_[''msg.Qid,'`{_;_;_;_`}[
+    '-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,
+    ''code_success.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[
+    ''msgs.Qid]]]]]],'opcionMatch__['false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''code_invalid_params.Qid]]],
+    '__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]],'opcionMatch__[
+    'false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''code_not_authorized.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msg.Qid]]]]]]]],
+    
+    '__['transicion___end[''addBook.Qid,'_`,_['_:_[
+    ''book_title.Qid,'String.NombreTipo],'_`,_['_:_[''author.Qid,'String.NombreTipo],'_:_[''bookID.Qid,
+    'Uint32.TipoEntero]]],'__['guardar__[''books.Qid,''bookInventory.Qid],'__['_=_[''bookExist.Qid,'builtin_[
+    'contains__[''books.Qid,''bookID.Qid]]],'match__[''bookExist.Qid,'__['opcionMatch__['true.Bool,'__['_=_[''msg.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],
+    '_:_[''code.Qid,''code_bookid_exist.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],
+    'enviar_[''msgs.Qid]]]],'opcionMatch__['false.Bool,'__['_=_[''new_book.Qid,'Pair____['String.NombreTipo,
+    'String.NombreTipo,''book_title.Qid,''author.Qid]],'__['insertar___[''bookInventory.Qid,'posicion_[''bookID.Qid],
+    ''new_book.Qid],'__['_=_[''tmp.Qid,'Some__['Uint32.TipoEntero,''bookID.Qid]],'__['actualizar__[''lastBookID.Qid,
+    ''tmp.Qid],'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''code_success.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[
+    ''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]],
+    
+    '__['transicion___end[''removeBook.Qid,'_:_[
+    ''book_id.Qid,'Uint32.TipoEntero],'delete__[''bookInventory.Qid,'posicion_[''book_id.Qid]]],
+    
+    'transicion___end[
+    ''updateBook.Qid,'_`,_['_:_[''book_id.Qid,'Uint32.TipoEntero],'_`,_['_:_[''book_title.Qid,'String.NombreTipo],
+    '_:_[''author.Qid,'String.NombreTipo]]],'__['guardar__[''books.Qid,''bookInventory.Qid],'__['_=_[''exist.Qid,
+    'builtin_['contains__[''books.Qid,''book_id.Qid]]],'match__[''exist.Qid,'__['opcionMatch__['false.Bool,'__['_=_[
+    ''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,
+    '0.Zero]],'_:_[''code.Qid,''code_book_not_found.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,
+    ''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['_=_[''new_book.Qid,'Pair____[
+    'String.NombreTipo,'String.NombreTipo,''book_title.Qid,''author.Qid]],'__['insertar___[''bookInventory.Qid,
+    'posicion_[''book_id.Qid],''new_book.Qid],'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''code_success.Qid]]],'__['_=_[
+    ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
 
 --- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
 ---     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[

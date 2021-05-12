@@ -378,7 +378,7 @@ fmod Programa is
   op Emp__ : TipoClave QidList -> MapVacio [ctor prec 15] .
   op Map__ : TipoClave TipoValor -> Map [ctor prec 15] .
   op Map__ : TipoClave QidList -> Map [ctor prec 15] .
-  op [_] : Qid -> posicion [ctor prec 18] .
+  op posicion_ : Qid -> posicion [ctor prec 18] .
   op __ : ListaPosiciones ListaPosiciones -> ListaPosiciones [ctor assoc prec 19] .
   ***Definición operación insertar.
 ---   ***Funcional
@@ -466,7 +466,7 @@ fmod Programa is
   ***CAMPOS MODIFICABLES
   sort ValorCampo Campo_mod ListaCamposMod .
   ***subsort @Entero@ @Option@ @Lista@ @Par@ @Natural@ String Bool < @ValorCampo@ .
-  subsort Entero Option Lista Par Natural MapVacio Bool Expresion String < ValorCampo .
+  subsort Entero Option Lista Par Natural MapVacio Bool Expresion String  < ValorCampo .
   ***subsort Bool < ValorCampo .
   subsort Campo_mod < ListaCamposMod .
   op cv : -> Campo_mod [ctor] .
@@ -479,7 +479,7 @@ fmod Programa is
   sort TipoDato Expresion Operacion ExpresionFuncion ListaArgumentos OperacionBuilt ListaExpresiones TipoOpcion Opcion
        ListaOpciones Expresiones ExpresionMatch ListaArg ExpresionLet ExpresionAplicarF ExpresionArr .
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
-  subsort Entero String BNum Option Lista Par Natural ExpresionFuncion Expresion ExpresionMatch MapVacio ExpresionAplicarF < TipoDato .
+  subsort Entero String BNum Option Lista Par Natural ExpresionFuncion Expresion ExpresionMatch MapVacio ExpresionAplicarF Bool < TipoDato .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
   subsort Expresion Lista ExpresionFuncion ExpresionMatch Excepcion Par < Operacion .
   subsort TipoEntero NombreTipo Par < ListaArgumentos .
@@ -630,12 +630,12 @@ endfm
 fmod MEMORIA is
   pr Programa .
   sort Memoria Variable Val Pareja PilaMemoria ParejaFuncion letIn AmbitoAplicacion memoriaTransicion Opciones ListaT memoriaLetIn ParejaAct ParejaImportacion
-       ParejaAplicar . 
+       ParejaAplicar ParejaPar ParejaSome . 
   subsort Qid < Variable .
   subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool < Val .
   subsort Pareja < Memoria .
   subsort Option < AmbitoAplicacion .
-  subsort memoriaTransicion memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar < Pareja .
+  subsort memoriaTransicion memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar ParejaPar ParejaSome < Pareja .
   ***subsort ListaDeclaraciones Pareja < ListaT .
   ***subsort ListaDeclaraciones Pareja < Opciones .
   
@@ -652,6 +652,9 @@ fmod MEMORIA is
   op Actualizar[_,_] : Variable ValorCampo -> ParejaAct [ctor] .
   op Importaciones[_] : ListaImportar -> ParejaImportacion [ctor] .
   op AplicarF[_,_] : Variable QidList -> ParejaAplicar [ctor] .
+  op AplicarF[_] : Variable -> ParejaAplicar [ctor] .
+  op Par[_,_] : Qid Qid -> ParejaPar [ctor] .
+  op Some[_] : Qid -> ParejaSome [ctor] .
   
   op [_=>_] : Variable Val -> Pareja [ctor] .
   op [_=>_] : Variable Qid -> Pareja [ctor] .
@@ -665,6 +668,9 @@ fmod MEMORIA is
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable TipoDato Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Int Memoria -> Pareja [ctor] .
+  op Existe[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
+  op Insertar[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
+  op Eliminar[_,_] : Qid ListaPosiciones -> Pareja [ctor] .
   op [_,_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria Memoria -> memoriaTransicion [ctor] .
   op [_,_,_] : Variable Memoria Memoria -> memoriaTransicion [ctor] .
   ***op [_,_,_] : Variable TipoDato Operacion -> memoriaLetIn [ctor] .
@@ -697,6 +703,8 @@ fmod MEMORIA is
   var LD : ListaDeclaraciones .
   var VAL : Val .
   var xl : QidList .
+  var LP : ListaPosiciones .
+  vars NT NT1 : NombreTipo .
 
   op almacenar : Expresion -> Memoria [ctor] .
   op almacenar : Declaracion -> Memoria [ctor] .
@@ -704,25 +712,32 @@ fmod MEMORIA is
   op almacenar : ParamInm -> Memoria [ctor] .
 
   eq almacenar(lpv) = mv .
+  eq almacenar(lcv) = mv .
   eq almacenar(builtin OPB) = [OPB] .
   eq almacenar(guardar x x2) = [x => x2] .
+  eq almacenar(insertar x LP x2) = Insertar[x => x2, LP] .
   eq almacenar(evento x) = ['evento => x] .
   eq almacenar(enviar x) = ['enviar => x] .
+  eq almacenar(Pair NT NT1 x x1) = Par[x,x1] .
+  eq almacenar(Some NT x) = Some[x] .
   eq almacenar(x : TPI) = [x => TPI] .
   eq almacenar(x : x2) = [x => x2] .
   eq almacenar(PI , LPI) = almacenar(PI) almacenar(LPI) .
   eq almacenar(PI ; LCE) = almacenar(PI) almacenar(LCE) .
+  eq almacenar(aplicarF x) = AplicarF[x] .
   eq almacenar(aplicarF (x xl)) = AplicarF[x , xl] .
   eq almacenar({-tag: S ; dirEnvio x ; cantidadEnvio TE IN ; LCE}) = ['tag => S] ['dirEnvio => x] ['cantidadEnvio => IN] almacenar(LCE) .
   eq almacenar({-eventname: S ; LCE}) = ['eventname => S] almacenar(LCE) .
   eq almacenar(x = V) = [x => almacenar(V)] .
   eq almacenar(actualizar x x2) = Actualizar[x, x2] .
   eq almacenar(let x TE IN in Op) = [x => IN , almacenar(Op)] .
-  eq almacenar(let x TD in Op) = [x => TD , almacenar(Op)] .
+  ceq almacenar(let x TD in Op) = [x => TD , almacenar(Op)]
+      if not(esEntero(TD)) .
 
   op almacenarMatch : ExpresionMatch -> Memoria [ctor] .
   op almacenarMatch : Opcion -> Memoria [ctor] .
   eq almacenarMatch(ldv) = mv .
+  eq almacenarMatch(insertar x LP x2 LD) = Insertar[x => x2, LP] almacenarMatch(LD) .
   eq almacenarMatch(D LD) = almacenar(D) almacenarMatch(LD) .
   eq almacenarMatch(opcionMatch TOP EXPS) = [TOP => almacenarMatch(EXPS)] .
   eq almacenarMatch(OPC LOP) = almacenarMatch(OPC) almacenarMatch(LOP) .
@@ -817,19 +832,25 @@ mod REGLAS is
   var B : Bool .
   var LIMP : ListaImportar .
   vars VCP VCP1 : ValorCampo .
+  var APF : ExpresionAplicarF .
+  var LP : ListaPosiciones .
 
   ***Regla para guardar las importaciones
   rl[Contrato N import LIMP NL LE NC LPI LCM LT ,M, M'] => [Contrato N iv NL LE NC LPI LCM LT ,M Importaciones[LIMP], M'] .
   ***Regla para guardar una variable de un let en la memoria
-  rl[Contrato N I NL let x TE IN LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => IN], M'] .
   crl[Contrato N I NL let x V LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => V], M'] 
      if not(esEntero(V)) .
+  rl[Contrato N I NL let x TE IN LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => IN], M'] .
+  
   ***Regla para guardar los parametros inmutables en la memoria.
-  rl[Contrato N I NL LE NC PI LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M almacenar(PI), M'] .
+  crl[Contrato N I NL LE NC LPI LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M almacenar(LPI), M'] 
+    if not(LPI == lpv) .
   ***Regla para quitar el tipo del entero de la memoria
   ***rl[Contrato N I NL LE NC LPI campo x : TP = TE IN LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => IN], M'] .
   ***Regla para guardar un campo en la memoria
+  rl[Contrato N I NL LE NC LPI campo x : TP = APF LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => almacenar(APF)], M'] .
   rl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP], M'] .
+  
   ***Regla para almacenar una funcion en la memoria.
   rl[C , [x => funcion PI Op]M , M'] => [C , [x => Funcion[PI, Op]]M , M'] .
   ***Regla para guardar una transicion en la memoria (en este caso se guarda la regla entera)
@@ -838,6 +859,8 @@ mod REGLAS is
   rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv,  ['_amount => Uint128]['_sender => ByStr20]]M'] .
   ***Regla para almacenar las declaraciones en la memoria
   rl[C , M , M3[x, LPI, D LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
+  rl[C , M , M3[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
+  rl[C , M , M3[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
   
   ***Regla para almacenar las entradas en la memoria
   ***rl[C , M , M3[x, PI, LD, M2, M4]M'] => [C , M , M3[x, lpv, LD, M2, M4 almacenar(PI)]M'] .
