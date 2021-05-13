@@ -622,6 +622,134 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 
     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''code_success.Qid]]],'__['_=_[
     ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
 
+***Contrato3
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''Crowdfunding.Qid],
+    '__['let__[''one_msg.Qid,
+    'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}['Message.NombreTipo],'Cons___[
+    'Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],
+    
+    '__['let__[''check_update.Qid,
+    'funcion__['_:_[''bs.Qid,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]],'funcion__['_:_[''sender.Qid,
+    'ByStr20.NombreTipo],'funcion__['_:_[''amount.Qid,'Uint128.TipoEntero],'let__in_[''c.Qid,'builtin_['contains__[
+    ''bs.Qid,''sender.Qid]],'match__[''c.Qid,'__['opcionMatch__['false.Bool,'let__in_[''bs1.Qid,'builtin_['put___[
+    ''bs.Qid,''sender.Qid,''amount.Qid]],'Some__['Map__['ByStr20.NombreTipo,'Uint128.TipoEntero],''bs1.Qid]]],
+    'opcionMatch__['true.Bool,'None`{_`}['Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]]]]]]]]]],
+
+    '__['let__[
+    ''blk_leq.Qid,'funcion__['_:_[''blk1.Qid,'BNum.NombreTipo],'funcion__['_:_[''blk2.Qid,'BNum.NombreTipo],
+    'let__in_[''bc1.Qid,'builtin_['_<_[''blk1.Qid,''blk2.Qid]],'let__in_[''bc2.Qid,'builtin_['_==._[''blk1.Qid,
+    ''blk2.Qid]],'_or_[''bc1.Qid,''bc2.Qid]]]]]],
+   '__['let__[''accepted_code.Qid,'__['Int32.TipoEntero,'s_['0.Zero]]],
+	
+    '__['let__[''missed_deadline_code.Qid,'__['Int32.TipoEntero,'s_^2['0.Zero]]],
+	
+	'__['let__[
+    ''already_backed_code.Qid,'__['Int32.TipoEntero,'s_^3['0.Zero]]],'__['let__[''not_owner_code.Qid,'__[
+    'Int32.TipoEntero,'s_^4['0.Zero]]],'__['let__[''too_early_code.Qid,'__['Int32.TipoEntero,'s_^5['0.Zero]]],'__[
+    'let__[''got_funds_code.Qid,'__['Int32.TipoEntero,'s_^6['0.Zero]]],'__['let__[''cannot_get_funds.Qid,'__[
+    'Int32.TipoEntero,'s_^7['0.Zero]]],'__['let__[''cannot_reclaim_code.Qid,'__['Int32.TipoEntero,'s_^8['0.Zero]]],
+    'let__[''reclaimed_code.Qid,'__['Int32.TipoEntero,'s_^9['0.Zero]]]]]]]]]]]]]]],
+
+    
+    'NombreContrato_[''Crowdfunding.Qid],
+    '_`,_['_:_[''owner.Qid,'ByStr20.NombreTipo],'_`,_['_:_[''max_block.Qid,'BNum.NombreTipo],
+    '_:_[''goal.Qid,'Uint128.TipoEntero]]],
+    
+    '__['campo_=_['_:_[''backers.Qid,'Map__['ByStr20.NombreTipo,
+    'Uint128.TipoEntero]],'Emp__['ByStr20.NombreTipo,'Uint128.TipoEntero]],'campo_=_['_:_[''funded.Qid,
+    'Bool.NombreTipo],'false.Bool]],
+    
+    '__['transicion___end[''Donate.Qid,'lpv.ListaParamInm,'__['_<-&BLOCKNUMBER[
+    ''blk.Qid],'_=_[''in_time.Qid,'aplicarF_['__[''blk_leq.Qid,''blk.Qid,''max_block.Qid]]],'match__[
+    ''in_time.Qid,'__['opcionMatch__['true.Bool,'__['guardar__[''bs.Qid,''backers.Qid],'__['_=_[''res.Qid,'aplicarF_[
+    '__[''check_update.Qid,''bs.Qid,''_sender.Qid,''_amount.Qid]]],'match__[''res.Qid,'__['opcionMatch__[
+    'None.Option,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''already_backed_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['Some_[''bs1.Qid],'__['actualizar__[
+    ''backers.Qid,''bs1.Qid],'__['accept.Declaracion,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''accepted_code.Qid]]],'__['_=_[
+    ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+    '"DonationAccepted".String],'_:_[''donor.Qid,''_sender.Qid]]],'__['evento_[
+    ''e.Qid],'enviar_[''msgs.Qid]]]]]]]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_[
+    '"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,
+    ''missed_deadline_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[
+    ''msgs.Qid]]]]]]]],
+    
+    '__['transicion___end[''GetFunds.Qid,'lpv.ListaParamInm,'__['_=_[''is_owner.Qid,'builtin_[
+    '_==._[''owner.Qid,''_sender.Qid]]],'match__[''is_owner.Qid,'__['opcionMatch__['false.Bool,'__['_=_[''msg.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],
+    '_:_[''code.Qid,''not_owner_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],
+    'enviar_[''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['_<-&BLOCKNUMBER[''blk.Qid],'__['_=_[''in_time.Qid,
+    'aplicarF_['__[''blk_leq.Qid,''blk.Qid,''max_block.Qid]]],'__['_=_[''c1.Qid,'negb_[''in_time.Qid]],'__[
+    'guardar__[''bal.Qid,''_balance.Qid],'__['_=_[''c2.Qid,'builtin_['_<_[''bal.Qid,''goal.Qid]]],'__['_=_[''c3.Qid,
+    'negb_[''c2.Qid]],'__['_=_[''c4.Qid,'_and_[''c1.Qid,''c3.Qid]],'match__[''c4.Qid,'__['opcionMatch__['false.Bool,
+    '__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''cannot_get_funds.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['_=_[''tt.Qid,'true.Bool],
+    '__['actualizar__[''funded.Qid,''tt.Qid],'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''owner.Qid],'cantidadEnvio_[''bal.Qid],'_:_[''code.Qid,''got_funds_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]]]]],
+    
+    'transicion___end[''ClaimBack.Qid,'lpv.ListaParamInm,'__['delete__[''bookInventory.Qid,'posicion_[''book_id.Qid]],
+    'delete__[''bookInventory.Qid,'posicion_[''book_id.Qid]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+
+***Contrato4
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero, 'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''OpenAuction.Qid],
+    '__['let__[''blk_leq.Qid,'funcion__['_:_[''blk1.Qid,'BNum.NombreTipo],'funcion__['_:_[
+    ''blk2.Qid,'BNum.NombreTipo],'let__in_[''bc1.Qid,'builtin_['_<_[''blk1.Qid,''blk2.Qid]],'let__in_[''bc2.Qid,
+    'builtin_['_==._[''blk1.Qid,''blk2.Qid]],'_or.__[''BoolU.Qid,''bc1.Qid,''bc2.Qid]]]]]],'__['let__[''one_msg.Qid,
+    'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}['Message.NombreTipo],'Cons___[
+    'Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],
+    '__['let__[''late_to_bid_code.Qid,'__['Int32.TipoEntero,'s_[
+    '0.Zero]]],'__['let__[''too_early_to_bid_code.Qid,'__['Int32.TipoEntero,'s_^2['0.Zero]]],'__['let__[
+    ''bid_too_low_code.Qid,'__['Int32.TipoEntero,'s_^3['0.Zero]]],'__['let__[''first_bid_accepted_code.Qid,'__[
+    'Int32.TipoEntero,'s_^4['0.Zero]]],'__['let__[''bid_accepted_code.Qid,'__['Int32.TipoEntero,'s_^5['0.Zero]]],
+    '__['let__[''money_sent_code.Qid,'__['Int32.TipoEntero,'s_^6['0.Zero]]],'__['let__[
+    ''nothing_to_withdraw_code.Qid,'__['Int32.TipoEntero,'s_^7['0.Zero]]],'__['let__[''auction_is_still_on_code.Qid,
+    '__['Int32.TipoEntero,'s_^8['0.Zero]]],'let__[''auction_end_code.Qid,'__['Int32.TipoEntero,'s_^9[
+    '0.Zero]]]]]]]]]]]]]],
+    
+    'NombreContrato_[''OpenAuction.Qid],
+    '_`,_['_:_[''auctionStart.Qid,'BNum.NombreTipo],'_`,_[
+    '_:_[''biddingTime.Qid,'Uint128.TipoEntero],'_:_[''beneficiary.Qid,'ByStr20.NombreTipo]]],
+    
+    '__['campo_=_['_:_[
+    ''ended.Qid,'Bool.NombreTipo],'false.Bool],'__['campo_=_['_:_[''highestBidder.Qid,'Option_[
+    'ByStr20.NombreTipo]],'None`{_`}['ByStr20.NombreTipo]],'__['campo_=_['_:_[''highestBid.Qid,
+    'Uint128.TipoEntero],'__['Uint128.TipoEntero,'0.Zero]],'campo_=_['_:_[''pendingReturns.Qid,'Map__[
+    'ByStr20.NombreTipo,'Uint128.TipoEntero]],'Emp__['ByStr20.NombreTipo,'Uint128.TipoEntero]]]]],
+    
+    '__['transicion___end[''Bid.Qid,'lpv.ListaParamInm,'__['_<-&BLOCKNUMBER[''blk.Qid],'__['_=_[''endtime.Qid,'builtin_[
+    '_+_[''auctionStart.Qid,''biddingTime.Qid]]],'__['_=_[''after_end.Qid,'let__in_[''one.Qid,'__[
+    'Uint128.TipoEntero,'s_['0.Zero]],'builtin_['_+_[''endtime.Qid,''one.Qid]]]],'__['guardar__[''e.Qid,''ended.Qid],
+    '_=_[''in_time.Qid,'aplicarF_['__[''blk_leq.Qid,''after_end.Qid,''blk.Qid]]]]]]]],
+    
+    '__['transicion___end[''Withdraw.Qid,'lpv.ListaParamInm,'__['guardar__[''prs.Qid,''pendingReturns.Qid],'__['_=_[
+    ''pr.Qid,'builtin_['get__[''prs.Qid,''_sender.Qid]]],'match__[''pr.Qid,'__['opcionMatch__['None.Option,'__['_=_[
+    ''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,
+    '0.Zero]],'_:_[''code.Qid,''nothing_to_withdraw_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[
+    ''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['Some_[''v.Qid],'__['delete__[
+    ''pendingReturns.Qid,'posicion_[''_sender.Qid]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+    '"Withdraw Successful".String],'_:_[''addr.Qid,''_sender.Qid]]],'__['evento_[''e.Qid],'__['_=_[''msg.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_[''v.Qid],'_:_[''code.Qid,
+    ''money_sent_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[
+    ''msgss.Qid]]]]]]]]]]]],
+    
+    
+    'transicion___end[''AuctionEnd.Qid,'lpv.ListaParamInm,'__['_<-&BLOCKNUMBER[''blk.Qid],
+    '__['guardar__[''e.Qid,''ended.Qid],'__['_=_[''t1.Qid,'builtin_['_+_[''auctionStart.Qid,''biddingTime.Qid]]],'__[
+    '_=_[''t2.Qid,'aplicarF_['__[''blk_leq.Qid,''t1.Qid,''blk.Qid]]],'match__[''t4.Qid,'__['opcionMatch__[
+    'false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''auction_is_still_on_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['_=_[''val.Qid,
+    'true.Bool],'__['actualizar__[''ended.Qid,''val.Qid],'__['guardar__[''hb.Qid,''highestBid.Qid],'__['_=_[''e.Qid,
+    '`{_;_`}['-eventname:_['"Auction ended".String],'_:_[''highest_bid.Qid,''hb.Qid]]],'__['evento_[''e.Qid],'__['_=_[
+    ''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''beneficiary.Qid],'cantidadEnvio_[''hb.Qid],'_:_[
+    ''code.Qid,''auction_end_code.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[
+    ''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]]]],'mv.Memoria,'mv.Memoria], unbounded) .
+
+
+
 --- red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],
 ---     '__['let__[''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[
 ---     ''set_hello_code.Qid,'__['Uint32.TipoEntero,'s_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],

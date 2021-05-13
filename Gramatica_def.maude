@@ -481,12 +481,12 @@ fmod Programa is
   --- ***Entero String Bool ExpresionBuilt Map ByStr32 ByStr20 BNum Option Lista Par Natural Expresion
   subsort Entero String BNum Option Lista Par Natural ExpresionFuncion Expresion ExpresionMatch MapVacio ExpresionAplicarF Bool < TipoDato .
   --- --- subsort Expresion DeclaracionOpBools DeclaracionOpInts < Operacion .
-  subsort Expresion Lista ExpresionFuncion ExpresionMatch Excepcion Par < Operacion .
+  subsort Expresion Lista ExpresionFuncion ExpresionMatch Excepcion Par Option DeclaracionOpBools < Operacion .
   subsort TipoEntero NombreTipo Par < ListaArgumentos .
   subsort DeclaracionOp DeclaracionOpBools  < OperacionBuilt .
   subsort ExpresionLet ADTS < ListaExpresiones . 
  *** subsort Declaracion ExpresionMatch < Expresiones .
-  subsort ListaDeclaraciones Entero < Expresiones .
+  subsort ListaDeclaraciones Entero Option < Expresiones .
   subsort Option Par Bool < TipoOpcion .
   subsort Opcion < ListaOpciones .
   subsort Qid < ListaArg .
@@ -645,6 +645,7 @@ fmod MEMORIA is
   op [_] : DeclaracionOp -> Pareja [ctor] .
   op [_] : Int -> Pareja [ctor] .
   op [_] : ExpresionMatch -> Pareja [ctor] .
+  op [_] : Bool -> Pareja [ctor] .
   op [_=>_,_] : Variable Val AmbitoAplicacion -> letIn [ctor] .
   op Funcion[_,_] : ParamInm Expresion -> ParejaFuncion [ctor] .
   op Funcion[_,_] : ParamInm Memoria -> ParejaFuncion [ctor] .
@@ -671,6 +672,7 @@ fmod MEMORIA is
   op Existe[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
   op Insertar[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
   op Eliminar[_,_] : Qid ListaPosiciones -> Pareja [ctor] .
+  op NumBloque[_] : Qid -> Pareja [ctor] .
   op [_,_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria Memoria -> memoriaTransicion [ctor] .
   op [_,_,_] : Variable Memoria Memoria -> memoriaTransicion [ctor] .
   ***op [_,_,_] : Variable TipoDato Operacion -> memoriaLetIn [ctor] .
@@ -710,16 +712,21 @@ fmod MEMORIA is
   op almacenar : Declaracion -> Memoria [ctor] .
   op almacenar : ExpresionMatch -> Memoria [ctor] .
   op almacenar : ParamInm -> Memoria [ctor] .
+  op almacenar : Bool -> Memoria [ctor] .
 
   eq almacenar(lpv) = mv .
   eq almacenar(lcv) = mv .
+  eq almacenar(true) = [true] .
   eq almacenar(builtin OPB) = [OPB] .
   eq almacenar(guardar x x2) = [x => x2] .
   eq almacenar(insertar x LP x2) = Insertar[x => x2, LP] .
   eq almacenar(evento x) = ['evento => x] .
   eq almacenar(enviar x) = ['enviar => x] .
+  eq almacenar(accept) = [accept] .
+  eq almacenar(OPB) = [OPB] .
   eq almacenar(Pair NT NT1 x x1) = Par[x,x1] .
   eq almacenar(Some NT x) = Some[x] .
+  eq almacenar(x <-&BLOCKNUMBER) = NumBloque[x] .
   eq almacenar(x : TPI) = [x => TPI] .
   eq almacenar(x : x2) = [x => x2] .
   eq almacenar(PI , LPI) = almacenar(PI) almacenar(LPI) .
@@ -727,6 +734,7 @@ fmod MEMORIA is
   eq almacenar(aplicarF x) = AplicarF[x] .
   eq almacenar(aplicarF (x xl)) = AplicarF[x , xl] .
   eq almacenar({-tag: S ; dirEnvio x ; cantidadEnvio TE IN ; LCE}) = ['tag => S] ['dirEnvio => x] ['cantidadEnvio => IN] almacenar(LCE) .
+  eq almacenar({-tag: S ; dirEnvio x ; cantidadEnvio x1 ; LCE}) = ['tag => S] ['dirEnvio => x] ['cantidadEnvio => x1] almacenar(LCE) .
   eq almacenar({-eventname: S ; LCE}) = ['eventname => S] almacenar(LCE) .
   eq almacenar(x = V) = [x => almacenar(V)] .
   eq almacenar(actualizar x x2) = Actualizar[x, x2] .
@@ -738,6 +746,7 @@ fmod MEMORIA is
   op almacenarMatch : Opcion -> Memoria [ctor] .
   eq almacenarMatch(ldv) = mv .
   eq almacenarMatch(insertar x LP x2 LD) = Insertar[x => x2, LP] almacenarMatch(LD) .
+  eq almacenarMatch(delete x LP LD) = Eliminar[x, LP] almacenarMatch(LD) .
   eq almacenarMatch(D LD) = almacenar(D) almacenarMatch(LD) .
   eq almacenarMatch(opcionMatch TOP EXPS) = [TOP => almacenarMatch(EXPS)] .
   eq almacenarMatch(OPC LOP) = almacenarMatch(OPC) almacenarMatch(LOP) .
@@ -852,7 +861,7 @@ mod REGLAS is
   rl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP], M'] .
   
   ***Regla para almacenar una funcion en la memoria.
-  rl[C , [x => funcion PI Op]M , M'] => [C , [x => Funcion[PI, Op]]M , M'] .
+  rl[C , [x => funcion PI Op]M , M'] => [C , [x => Funcion[PI, almacenar(Op)]]M , M'] .
   ***Regla para guardar una transicion en la memoria (en este caso se guarda la regla entera)
   rl[Contrato N I NL LE NC LPI LCM T LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[T]] .
   ***Regla para guardar una transicion en la memoria (se divide la transicion en [nombre, entradas, cuerpo])
