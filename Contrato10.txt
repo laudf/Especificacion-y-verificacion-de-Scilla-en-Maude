@@ -17,7 +17,7 @@ field vote_map : Map ByStr20 Bool = Emp ByStr20 Bool
 transition upvote()
   has_voted <- exists vote_map[_sender] ;
   current_vote_count <- upvote_counter ;
-  (match has_voted with
+  match has_voted with
   | True =>
     e = {_eventname : "AlreadyVoted" ; current_upvote_count : current_vote_count} ;
     event e
@@ -27,7 +27,7 @@ transition upvote()
     upvote_counter := new_vote_count ;
     e = {_eventname : "Voted" ; shoutout : "Zilliqa loves you!" ; new_vote_count : new_vote_count} ;
     event e
-  end)
+  end
 end
 
 transition whoami()

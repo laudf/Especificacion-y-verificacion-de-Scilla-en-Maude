@@ -19,10 +19,10 @@ field pub_key : Option (ByStr33) = None {ByStr33}
 
 transition verify(msg : ByStr , sig : ByStr64)
   pubk_o <- pub_key ;
-  (match pubk_o with
+  match pubk_o with
   | Some pubk =>
     sig = builtin ecdsa-verify pubk msg sig ;
-    (match sig with
+    match sig with
     | True =>
       m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "verification successful" } ;
       mone = (one_msg m) ;
@@ -31,10 +31,10 @@ transition verify(msg : ByStr , sig : ByStr64)
       m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "verification failed" } ;
       mone = (one_msg m) ;
       send mone
-    end)
+    end
   | None =>
     m = { _tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; status : "no key error" } ;
     mone = (one_msg m) ;
     send mone
-  end)
+  end
 end

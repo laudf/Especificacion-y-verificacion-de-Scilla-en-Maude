@@ -26,11 +26,11 @@ field bookInventory : Map Uint32 (Pair (String) (String))
 
 transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
     is_authorized = builtin eq _sender owner ;
-    (match is_authorized with
+    match is_authorized with
     | True => 
         valid_type = (let three = Uint32 3 in
                         builtin lt memberType three) ;
-         (match valid_type with
+         match valid_type with
           | True =>
              p = Pair {(String) (Uint32)} name memberType ;
              members[addr] := p ;
@@ -48,7 +48,7 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
                     code : code_invalid_params} ;
               msgs = (one_msg msg) ;
               send msgs
-          end)
+          end
      | False =>
        msg = {_tag : "" ;
                 _recipient : _sender ;
@@ -58,14 +58,14 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
         msgs = (one_msg msg) ;
         send msg
   
-    end)
+    end
    
 end
 
 transition addBook (book_title : String , author : String , bookID : Uint32)
     books <- bookInventory ;
     bookExist = builtin contains books bookID ;
-    (match bookExist with
+    match bookExist with
     | True =>
         msg = {_tag : "" ;
                     _recipient : _sender ;
@@ -87,7 +87,7 @@ transition addBook (book_title : String , author : String , bookID : Uint32)
 
         msgs = (one_msg msg) ;
         send msgs 
-    end)
+    end
 
     
 end
@@ -102,7 +102,7 @@ transition updateBook(book_id : Uint32 , book_title : String , author : String)
    
     books <- bookInventory ;
     exist = builtin contains books book_id ;
-    (match exist with
+    match exist with
     | False =>
         msg = {_tag : "" ; 
                 _recipient : _sender ; 
@@ -120,7 +120,7 @@ transition updateBook(book_id : Uint32 , book_title : String , author : String)
                 code : code_success} ;
         msgs = (one_msg msg) ;
         send msgs
-    end)
+    end
 
    
 

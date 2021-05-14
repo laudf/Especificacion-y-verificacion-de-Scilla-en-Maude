@@ -52,13 +52,13 @@ transition Bid ()
   in_time = (blk_leq after_end blk) ;
   flag1 = BoolU .orb in_time e ;
   early = (blk_leq blk auctionStart) ;
-  (match early with
+  match early with
   | True =>
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; code : too_early_to_bid_code} ;
     msgs = (one_msg msg) ;
     send msgs
   | False =>
-    (match flag1 with
+    match flag1 with
     | True => 
       msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; code : late_to_bid_code} ;
       msgs = (one_msg msg) ;
@@ -67,7 +67,7 @@ transition Bid ()
       hb <- highestBid ;
       
       sufficientBid = builtin lt hb _amount ;
-      (match sufficientBid with 
+      match sufficientBid with 
       | False =>
         msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; code : bid_too_low_code} ;
         msgs = (one_msg msg) ;
@@ -75,18 +75,18 @@ transition Bid ()
       | True =>
         accept ;
         hbPrev <- highestBidder ;
-        (match hbPrev with
+        match hbPrev with
         | Some prevHighestBidder =>
           option_pendingReturnsForPrevHB <- pendingReturns[prevHighestBidder] ;
 
                     
-          getPRForPrevHighestBidder = (match option_pendingReturnsForPrevHB with
+          getPRForPrevHighestBidder = match option_pendingReturnsForPrevHB with
             | Some pendingReturnsForPrevHB =>
           
               builtin add hb pendingReturnsForPrevHB
             | None => hb
       
-          end) ;
+          end ;
           pendingReturns [prevHighestBidder] := getPRForPrevHighestBidder ;
       
           bidder = Some {ByStr20} _sender ;
@@ -100,19 +100,19 @@ transition Bid ()
            highestBid := _amount ;
            e = {_eventname : "Bid" ; code : first_bid_accepted_code ; addr : _sender ; amount : _amount} ;
            event e 
-        end)
+        end
       
-      end)
-   end)
+      end
+   end
   
-  end)
+  end
 end  
   
 
 transition Withdraw ()
   prs <- pendingReturns ;
   pr = builtin get prs _sender ;
-  (match pr with
+  match pr with
   | None =>
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; code : nothing_to_withdraw_code} ;
     msgs = (one_msg msg) ;
@@ -124,7 +124,7 @@ transition Withdraw ()
     msg  = {_tag : "" ; _recipient : _sender ; _amount : v ; code : money_sent_code} ;
     msgs = (one_msg msg) ;
     send msgss
-  end)
+  end
   
 end
 
@@ -136,7 +136,7 @@ transition AuctionEnd ()
   t2 = (blk_leq t1 blk) ;
   t3 = BoolU .negb e ;
   t4 = BoolU .andb t2 t3 ;
-  (match t4 with
+  match t4 with
   | False =>
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; code : auction_is_still_on_code} ;
     msgs = (one_msg msg) ;
@@ -150,6 +150,6 @@ transition AuctionEnd ()
     msg  = {_tag : "" ; _recipient : beneficiary ; _amount : hb ; code : auction_end_code ; highest_bid : hb} ;
     msgs = (one_msg msg) ;
     send msgs
-  end)
+  end
   
 end
