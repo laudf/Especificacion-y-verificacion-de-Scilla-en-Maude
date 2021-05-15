@@ -16,8 +16,10 @@ fmod PARSING is
  var  Ct : Constant .
  var  S : String .
  var  F : Float .
- var  Q : Qid .
+ vars Q Q' : Qid .
  var  I : Int .
+ vars St St' St'' St''' : String .
+ vars  N N' : Nat .
 
  op parse : Term -> Term .
  ***eq parse(T) = parse(upModule('campos_modificables, true), T) .
@@ -318,7 +320,15 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
      T2' := parse(T2) .
 
 
-
+ ceq parse(T) = Q'
+    if St := string(T) /\
+    N := find(St, "@", 0) /\ 
+    St' := substr(St, 0, N) /\
+    St'' := substr(St, N + 1, length(St)) /\
+    N' := find(St'', "@", 0) /\
+    St''' := substr(St'', 0, N') /\
+    Q' := qid(St' + St''') .
+   
 
  *** TODO: terminar
  eq parse(T) = T [owise] .

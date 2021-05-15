@@ -918,7 +918,6 @@ endm
 ***Modulo reglas para ejecutar transiciones
 mod REGLAS-EJECUTAR is
   pr SISTEMA .
-  pr MAP {Par, Par} .
 
   vars x x1 x2 x3 x4 x5 : Qid .
   var NT : NombreTipo .
