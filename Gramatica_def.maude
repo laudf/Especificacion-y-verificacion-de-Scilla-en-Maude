@@ -326,7 +326,7 @@ fmod Programa is
   op _==._ : Qid Qid -> DeclaracionOp [ctor comm prec 13] .
   op _==._ : Int Int -> DeclaracionOp [ctor comm prec 13] .
   ***Declaración de la operación Suma.
-  op _+_ : Qid Qid -> DeclaracionOp [ctor comm prec 13] .
+  op _+._ : Qid Qid -> DeclaracionOp [ctor comm prec 13] .
   ***Declaración de la operación resta
   op _-_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
   ***Declaración de la operación de multiplicación.
@@ -336,7 +336,7 @@ fmod Programa is
   ***Declaración de la operación resto.
   op _%_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
   ***Declaración de la operación menor
-  op _<_ : Qid Qid -> DeclaracionOp [ctor prec 13] .
+  op _<._ : Qid Qid -> DeclaracionOp [ctor prec 13] .
   ***Declaración de la operación de exponente.
   op _^_ : Qid Qid -> DeclaracionOp [ctor prec 14] .
   ***Declaración de la operación de raíz cuadrada.
@@ -372,11 +372,12 @@ fmod Programa is
   op ecdsa-verify___ : Qid Qid Qid -> DeclaracionOp [ctor prec 14] .
 
   ***MAPAS
-  sort TipoClave TipoValor MapVacio Map DeclaracionOpMapI posicion ListaPosiciones .
+  sort TipoClave TipoValor MapVacio Map DeclaracionOpMapI posicion ListaPosiciones Clave .
   ***subsort @TipoEntero@ < @NombreTipo@ .
   subsort NombreTipo < TipoClave .
   subsort NombreTipo Par < TipoValor .
   subsort posicion < ListaPosiciones .
+  subsort Bool Par < Clave .
 
   op Emp__ : TipoClave TipoValor -> MapVacio [ctor prec 15] .
   op Emp__ : TipoClave QidList -> MapVacio [ctor prec 15] .
@@ -631,12 +632,17 @@ fmod Programa is
 
 endfm
 
+
+
 fmod MEMORIA is
   pr Programa .
+  pr MAP{Nat, Bool} .
+  ***pr MAP{Nat, Par} .
+
   sort Memoria Variable Val Pareja PilaMemoria ParejaFuncion letIn AmbitoAplicacion memoriaTransicion Opciones ListaT memoriaLetIn ParejaAct ParejaImportacion
        ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons . 
   subsort Qid < Variable .
-  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool Lista < Val .
+  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool Lista MapVacio < Val .
   subsort Pareja < Memoria .
   subsort Option < AmbitoAplicacion .
   subsort memoriaTransicion memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons < Pareja .
@@ -670,8 +676,11 @@ fmod MEMORIA is
   op [_=>_] : Variable Memoria -> Pareja [ctor] .
   op [_=>_] : TipoOpcion Memoria -> Pareja [ctor] .
   op [_=>_] : TipoOpcion ListaDeclaraciones -> Pareja [ctor] .
+  op soloOpcion[_=>_] : TipoOpcion Memoria -> Pareja [ctor] .
   op [_=>_] : Variable TipoParamInm -> Pareja [ctor] .
   op [_=>_] : Variable ValorCampo -> Pareja [ctor] .
+  ***op [_=>_] : Variable Map{Nat, Par} -> Pareja [ctor] .
+  op [_=>_] : Variable Map{Nat, Bool} -> Pareja [ctor] .
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable TipoDato Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Int Memoria -> Pareja [ctor] .
@@ -713,6 +722,7 @@ fmod MEMORIA is
   var xl : QidList .
   var LP : ListaPosiciones .
   vars NT NT1 : NombreTipo .
+
 
   op esEntero : Val -> Bool [ctor] .
   eq esEntero(TE IN) = true .
@@ -770,6 +780,7 @@ fmod MEMORIA is
   eq sustituir(M [x => M5] M2, M3 [x2 => x] M4) = M3 [x2 => M5] M4 .
   eq sustituir(M, M1 [x => M2] M3) = M1 [x => sustituir(M, M2)] M3 .
   eq sustituir(M, M1 [TOP => M2] M3) = M1 [TOP => sustituir(M, M2)] sustituir(M,M3) .
+  ***eq sustituir(M, soloOpcion[TOP => M2]) = [TOP => sustituir(M, M2)] .
   eq sustituir(M, M2) = M2 [owise] .
 
   op sustituirMismoNivel : Memoria -> Memoria [ctor] .
@@ -784,15 +795,19 @@ fmod MEMORIA is
   op tenerModificar : Memoria -> Bool [ctor] .
   eq tenerModificar(M[x => x2]M1) = true  .
   ***eq tenerModificar(M[TOP => M2]M1) = tenerModificar(M2) .
+  ***eq tenerModificar(soloOpcion[TOP => M2]) = tenerModificar(M2) .
   eq tenerModificar(M[x => M2]M1) = tenerModificar(M2) .
   eq tenerModificar(M) = false [owise] .
 
   op tenerModificar2 : Memoria -> Bool [ctor] .
   eq tenerModificar2(M[x => x2]M1) = true  .
+  eq tenerModificar2(M[x => M2]M1) = tenerModificar(M2) .
+  ***eq tenerModificar2(soloOpcion[TOP => M2]) = tenerModificar(M2) .
   eq tenerModificar2(M[TOP => M2]M1) = tenerModificar(M2) .
  *** eq tenerModificar2(M[x => M2]M1) = tenerModificar(M2) .
   eq tenerModificar2(M) = false [owise] .
-
+  
+  
   
 
 endfm
@@ -815,8 +830,8 @@ endfm
 ***Modulo de reglas para almacenar en la memoria
 mod REGLAS is 
   pr SISTEMA .
-
-  var M M' M2 M3 M4 M5 M6 M7 M8 M10 M11 : Memoria .
+  
+  var M M' M1 M2 M3 M4 M5 M6 M7 M8 M10 M11 : Memoria .
   var x x' x2 x3 : Qid .
   vars E E' : Entero .
   var C : Contrato .
@@ -853,6 +868,7 @@ mod REGLAS is
   var APF : ExpresionAplicarF .
   var LP : ListaPosiciones .
   vars NT NT1 : NombreTipo .
+  var TV : TipoValor .
 
   ***Regla para guardar las importaciones
   rl[Contrato N import LIMP NL LE NC LPI LCM LT ,M, M'] => [Contrato N iv NL LE NC LPI LCM LT ,M Importaciones[LIMP], M'] .
@@ -869,8 +885,10 @@ mod REGLAS is
   ***Regla para guardar un campo en la memoria
   rl[Contrato N I NL LE NC LPI campo x : TP = APF LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => almacenar(APF)], M'] .
   rl[Contrato N I NL LE NC LPI campo x : TP = None{NT} LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => None], M'] .
-  --- crl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP], M'] 
-  ---    if not(TP == Option NT) .
+  rl[Contrato N I NL LE NC LPI campo x : TE = TE IN LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => IN], M'] .
+  crl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP], M'] 
+     if not(esEntero(VCP)) .
+  rl[C,M [x => Emp NT TV]M1, M'] => [C,M[x => empty]M1, M'] .
   
   
   ***Regla para almacenar una funcion en la memoria.
@@ -915,9 +933,15 @@ mod REGLAS is
 
 endm
 
+view Clave from TRIV to Programa is 
+  sort Elt to Par .
+endv
+
 ***Modulo reglas para ejecutar transiciones
 mod REGLAS-EJECUTAR is
   pr SISTEMA .
+  ***pr MAP{Nat, Par} .
+  pr MAP{Nat, Bool} .
 
   vars x x1 x2 x3 x4 x5 : Qid .
   var NT : NombreTipo .
@@ -934,16 +958,25 @@ mod REGLAS-EJECUTAR is
   var TOP : TipoOpcion .
   var QL : QidList .
   vars L L1 : Lista .
+  ***var MP : Map{Nat,Par} .
+  var MP : Map{Nat,Bool} .
+  var N : Nat .
  
   rl [M, M1 [x, LPI, LD, M4, M5]M7] => [M, M1 [x, M4, M5]M7] .
   rl [M[x => NT]M1, M2] => [M[x => 1]M1, M2] .
   rl [M, M1 [x, M4, M5 ['_amount => TE] M6]M7] => [M, M1 [x, M4, M5 ['_amount => 100] M6]M7] .
-  rl [M, M1 [x, M4, M5 ['_sender => NT] M6]M7] => [M, M1 [x, M4, M5 ['_sender => 2] M6]M7] .
+  rl [M, M1 [x, M4, M5 ['_sender => NT] M6]M7] => [M, M1 [x, M4, M5 ['_sender => 1] M6]M7] .
   rl [M, M1 [x, M4, M5 [x1 => NT] M6]M7] => [M, M1 [x, M4, M5 [x1 => "Hola"] M6]M7] .
 
+  ***Reglas para sustituir variables globales (campos)
+  rl[M [x => V] M1 [x2 => AplicarF[x]] M2 , M3] => [M [x => V] M1 [x2 => V] M2 , M3] .
+  rl[M [x2 => AplicarF[x]] M1 [x => V] M2 , M3] => [M [x2 => V] M1 [x => V] M2 , M3] .
+
   ***Regla para sustituir valores globales en las transiciones (de forma directa, es decir, teniendo directamente un terminal)
-  --- rl[C , M , M3[x, LPI, LD, M4[x' => x2]M5, M6]M'] => [C , M , M3[x, LPI, LD, sustituir(M, M4[x' => x2]M5), M6]M'] .
-  rl[M [x2 => V] M7 , [x, [x1 => x2] M5, M6]] => [M [x2 => V] M7 , [x,  [x1 => V] M5, M6]] .
+  rl[M [x2 => IN] M7 , [x, M1[x1 => x2] M5, M6]] => [M [x2 => IN] M7 , [x,  M1[x1 => IN] M5, M6]] .
+  crl[M [x2 => V] M7 , [x, M1[x1 => x2] M5, M6]] => [M [x2 => V] M7 , [x,  M1[x1 => V] M5, M6]] 
+     if not(esEntero(V)) .
+
   ***Regla para sustituir valores globales en las transiciones (de forma directa)
   --- crl[C , M , M3[x, LPI, LD, M4[x' => M7]M5, M6]M'] => [C , M , M3[x, LPI, LD, M4[x' => sustituir(M,M7)]M5, M6]M'] 
   ---    if tenerModificar2(M7) .
@@ -953,6 +986,8 @@ mod REGLAS-EJECUTAR is
   --- crl[C , M , M3[x, LPI, LD, M2[x2 => IN] M5, M8]M'] => [C , M , M3[x, LPI, LD, M2 [x2 => IN] sustituir(M2[x2 => IN], M5), M8]M'] 
   ---   if tenerModificar(M5) .
   crl[M , [x, M2[x2 => V] M5, M6]] => [M , [x,   M2 [x2 => V] sustituir([x2 => V], M5), M6]] 
+     if tenerModificar(M5) .
+  crl[M , [x, M2[x2 => IN] M5, M6]] => [M , [x,   M2 [x2 => IN] sustituir([x2 => IN], M5), M6]] 
      if tenerModificar(M5) .
   crl[M , [x, M2[x2 => M6] M5, M7]] => [M , [x,   M2 [x2 => M6] sustituir(M2[x2 => M6], M5), M7]] 
      if tenerModificar(M5) /\ not(tenerModificar(M6))  .
@@ -969,18 +1004,49 @@ mod REGLAS-EJECUTAR is
   op ejecutar : OperacionBuilt -> TipoEjecutar [ctor] .
   eq ejecutar(IN ==. IN1) = (IN == IN1) .
   eq ejecutar(OPB) = OPB [owise] .
-  rl[M[x4 => IN]M1 , M3[x, M2[x2 => x3 ==. x4] M5, M8[x3 => IN1] M4]M'] => [M[x4 => IN]M1 , M3[x, M2[x2 => IN1 ==. IN] M5, M8[x3 => IN1] M4]M'] .
-  rl[M , M3[x, M2[x2 => IN ==. IN1] M5, M4]M'] => [M , M3[x, M2[x2 => IN == IN1] M5, M4]M'] .
-  rl[M , M3[x, M2[x2 => TOP] M5 [x2 => M6 [TOP => M7] M8] M1, M4]M'] => [M , M3[x, [x2 => [TOP => M7]] M1, M4]M'] .
+
+  op opcionCorrecta : Memoria -> Memoria [ctor] .
+  eq opcionCorrecta(M2[x2 => TOP] M5 [x2 => M6 [TOP => M7] M8] M1) = M2[x2 => TOP] M5 [x2 => soloOpcion[TOP => M7]] M1 .
+  eq opcionCorrecta(M2[x2 => soloOpcion[TOP => M7]] M1) = M2[x2 => soloOpcion[TOP => opcionCorrecta(M7)]] M1 .
+
+  op hayOpcion : Memoria -> Bool [ctor] .
+  eq hayOpcion(M1[TOP => M]M2) = true .
+  eq hayOpcion(soloOpcion[TOP => M7]) = hayOpcion(M7) .
+  eq hayOpcion(M [x => M1] M2) = hayOpcion(M1) [print M1] .
+  eq hayOpcion(M) = false [owise] .
+
+  rl[M[x4 => IN]M1 , [x, M2[x2 => [x3 ==. x4]] M3, M4[x3 => IN1] M5]] => [M[x4 => IN]M1 , [x, M2[x2 => IN1 == IN] M3, M4[x3 => IN1] M5]] .
+  ***rl[M , M3[x, M2[x2 => IN ==. IN1] M5, M4]M'] => [M , M3[x, M2[x2 => IN == IN1] M5, M4]M'] .
+  ***Regla para quedarte con la opción que te interesa del match
+---   crl[M , [x, M2[x2 => soloOpcion[TOP => M7]] M1, M4]] => [M , [x, M2[x2 => soloOpcion[TOP => opcionCorrecta(M7)]] M1, M4]] 
+---      if hayOpcion(M7) .
+  crl[M , [x, M2, M4]] => [M , [x, opcionCorrecta(M2), M4]] 
+    if hayOpcion(M2) .
+  ***Ragla para ejecutar la declaracion actualizar
   rl[M , M3[x, [x2 => [B => Actualizar[x3, x4] M7]] M1, M4 [x4 => VCP]M5]M'] => [M , M3[x, [x2 => [B => Actualizar[x3, VCP] M7]] M1, M4 [x4 => VCP]M5]M'] .
   rl[M [x3 => VCP1] M2 , M3[x, [x2 => [B => Actualizar[x3, VCP] M7]] M1, M4]M'] => [M[x3 => VCP] M2  , M3[x, [x2 => [B => M7]] M1, M4]M'] .
   ***Regla para sustituir la declaracion evento
-  rl[M, M1[x, [x2 => [TOP => M2[x3 => M3]['evento => x3] M4]] M5, M6]M'] => [M, M1[x, [x2 => [TOP => M2[x3 => M3]['evento => M3] M4]] M5, M6]M'] .
+  rl[M, [x, M1[x2 => soloOpcion[TOP => M2[x3 => M3]['evento => x3] M4]] M5, M6]] => [M, [x, M1[x2 => soloOpcion[TOP => M2[x3 => M3]['evento => M3] M4]] M5, M6]] .
   ***Regla para sustituir la declaracion enviar
-  rl[M, M1[x, [x2 => [TOP => M2[x3 => M3]['enviar => x3] M4]] M5, M6]M'] => [M, M1[x, [x2 => [TOP => M2[x3 => M3]['enviar => M3] M4]] M5, M6]M'] .
+  rl[M, [x, M1[x2 => soloOpcion[TOP => M2[x3 => M3]M4['enviar => x3] M5]] M6, M7]] => [M, M1[x, [x2 => soloOpcion[TOP => M2[x3 => M3]M4['enviar => M3] M5]] M6, M7]] .
   ***Regla para ejecutar una funcion 
-  rl[M[x => Funcion[[x5 => NT],M1]]M2, [x1, M3[x2 => [TOP => M4[x3 => M5]M6[x4 => AplicarF[x,x3]] M7]] M8, M9]] => [M[x4 => Funcion[[x5 => NT],M1]]M2, [x, M3[x2 => [TOP => M4[x3 => M5]M6[x4 => Funcion[[x5 => M5],M1]] M7]] M8, M9]] .
-  rl[M, [x, M1[x1 => [TOP => M2[x3 => Funcion[[x4 => M5],M8]] M4]] M6, M7]] => [M, [x, M1[x1 => [TOP => M2[x3 =>  M5] M4]] M6, M7]] .
+  rl[M[x => Funcion[[x5 => NT],M1]]M2, [x1, M3[x2 => soloOpcion[TOP => M4[x3 => M5]M6[x4 => AplicarF[x,x3]] M7]] M8, M9]] => [M[x4 => Funcion[[x5 => NT],M1]]M2, [x, M3[x2 => soloOpcion[TOP => M4[x3 => M5]M6[x4 => Funcion[[x5 => M5],M1]] M7]] M8, M9]] .
+  rl[M, [x, M1[x1 => soloOpcion[TOP => M2[x3 => Funcion[[x4 => M5],M8]] M4]] M6, M7]] => [M, [x, M1[x1 => soloOpcion[TOP => M2[x3 =>  M5] M4]] M6, M7]] .
+  ***Regla para ejecutar la operacion existe
+  rl[M [x => MP] M1, [x1, M2 Existe[x2 => x,posicion x3]M3, M4[x3 => N]M5]] => [M [x => MP] M1, [x1, M2 [x2 => $hasMapping(MP, N)]M3, M4[x3 => N]M5]] .
+  ***Reglas para ejecutar la operacion suma (dentro de un match)
+  rl[M[x5 => IN]M1 , [x, M2 [x4 => IN1] M3 [x2 => soloOpcion[TOP => M4[x3 => [x4 +. x5]]M5]] M6, M7]] => [M[x5 => IN]M1 , [x, M2 [x4 => IN1] M3 [x2 => soloOpcion[TOP => M4[x3 => IN1 + IN]M5]] M6, M7]] .
+  ***Regla para ejecutar la operacion insertar dentro de un match
+   rl[M[x4 => V] M1 [x3 => MP]M2 , [x, M3 [x2 => soloOpcion[TOP => M4 Insertar[x3 => x4, posicion x5]M5]] M6, M7[x5 => N]]] => [M[x4 => V] M1 [x3 => insert(N, V, MP)]M2 , [x, M3 [x2 => soloOpcion[TOP => M4 M5]] M6, M7[x5 => N]]] .
+  ***Regla para ejecutar la declaracion actualizar dentro de un match
+  rl[M [x3 => IN] M1 , [x, M2[x2 => soloOpcion[TOP => M3 [x4 => IN1] M4 Actualizar[x3, x4] M5]] M6, M7]] => [M [x3 => IN1] M1 , [x, M2[x2 => soloOpcion[TOP => M3 [x4 => IN1] M4  M5]] M6, M7]] .
+  ***Regla para ejecutar la expresion let in dentro de un match
+  rl[M, [x, M2[x2 => soloOpcion[TOP => M3 [x1 => [x4 => IN, [x5 <. x4]]] M4 ]] M6, M7[x5 => IN1]M8]] => [M, [x, M2[x2 => soloOpcion[TOP => M3 [x1 => IN1 < IN] M4 ]] M6, M7[x5 => IN1]M8]] .
+  ***Reglas para sustutuir la variables de un evento o mensaje
+  rl[M[x4 => IN1]M2, [x, M1[x2 => soloOpcion[TOP => M3 [x3 => M4 [x5 => x4]M5] M6]] M7, M8]] => [M[x4 => IN1]M2, [x, M1[x2 => soloOpcion[TOP => M3 [x3 => M4 [x5 => IN1]M5] M6]] M7, M8]] .
+  rl[M, [x, M1[x4 => IN1]M2[x2 => soloOpcion[TOP => M3 [x3 => M4 [x5 => x4]M5] M6]] M7, M8]] => [M, [x, M1[x4 => IN1]M2[x2 => soloOpcion[TOP => M3 [x3 => M4 [x5 => IN1]M5] M6]] M7, M8]] .
+  rl[M, [x, M1[x2 => soloOpcion[TOP => M2 [x4 => IN1] M3 [x3 => M4 [x5 => x4]M5] M6]] M7, M8]] => [M, [x, M1[x2 => soloOpcion[TOP => M2 [x4 => IN1] M3 [x3 => M4 [x5 => IN1]M5] M6]] M7, M8]] .
+
 endm
 
 rew init .
