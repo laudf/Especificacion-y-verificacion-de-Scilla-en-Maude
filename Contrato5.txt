@@ -22,11 +22,11 @@ type Error =
 let make_error =
   fun (result : Error) =>
     let result_code = 
-      (match result with
+      match result with
       | CodeIsSender              => Int32 -1
       | CodeInsufficientFunds     => Int32 -2
       | CodeInsufficientAllowance => Int32 -3
-      end)
+      end
     in
     { _exception : "Error" ; code : result_code }
 
@@ -37,10 +37,10 @@ type Unit =
 
 let get_val =
   fun (some_val : Option Uint128) =>
-  (match some_val with
+  match some_val with
   | Some val => val
   | None => zero
-  end)
+  end
 
 contract FungibleToken
 (
@@ -77,20 +77,20 @@ procedure AuthorizedMoveIfSufficientBalance(from : ByStr20 , to : ByStr20 , amou
   o_from_bal <- balances[from] ;
   bal = (get_val o_from_bal) ;
   can_do = (uint128_le amount bal) ;
-  (match can_do with
+  match can_do with
   | True =>
     new_from_bal = builtin sub bal amount ;
     balances[from] := new_from_bal ;
     get_to_bal <- balances[to] ;
-    new_to_bal = (match get_to_bal with
+    new_to_bal = match get_to_bal with
     | Some bal => builtin add bal amount
     | None => amount
-    end) ;
+    end ;
     balances[to] := new_to_bal
   | False =>
     err = (CodeInsufficientFunds) ;
     (ThrowError err)
-  end)
+  end
 end
 
 transition IncreaseAllowance(spender : ByStr20 , amount : Uint128)
@@ -109,10 +109,10 @@ transition DecreaseAllowance(spender : ByStr20 , amount : Uint128)
   current_allowance = (get_val some_current_allowance) ;
   new_allowance =
     (let amount_le_allowance = (uint128_le amount current_allowance) in
-      (match amount_le_allowance with
+      match amount_le_allowance with
       | True => builtin sub current_allowance amount
       | False => zero
-      end)) ;
+      end) ;
   allowances[_sender][spender] := new_allowance ;
   e = {_eventname : "DecreasedAllowance" ; token_owner : _sender ; spender : spender ; new_allowance : new_allowance} ;
   event e
@@ -134,7 +134,7 @@ transition TransferFrom(from : ByStr20 , to : ByStr20 , amount : Uint128)
   o_spender_allowed <- allowances[from][_sender] ;
   allowed = (get_val o_spender_allowed) ;
   can_do = (uint128_le amount allowed) ;
-  (match can_do with
+  match can_do with
   | True =>
     (AuthorizedMoveIfSufficientBalance from to amount) ;
     e = {_eventname : "TransferFromSuccess" ; initiator : _sender ; sender : from ; recipient : to ; amount : amount} ;
@@ -150,5 +150,10 @@ transition TransferFrom(from : ByStr20 , to : ByStr20 , amount : Uint128)
   | False =>
     err = (CodeInsufficientAllowance) ;
     (ThrowError err)
-  end)
+  end
 end
+
+
+
+
+

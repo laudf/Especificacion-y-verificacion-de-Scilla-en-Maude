@@ -11,6 +11,7 @@ fmod PREPARSE is
  eq preparse(S '`( '`) S1) = preparse(S) '`( 'lpv '`) preparse(S1) .
  ***eq preparse(S 'match S1 '| S2 '| S3 'end S4) = preparse(S) '`( 'match preparse(S1) '| preparse(S2) '| preparse(S3) 'end '`) preparse(S4) .
  eq preparse(S 'transition S1) = preparse(S) '`( 'transition preparse(S1) .
+ eq preparse(S 'procedure S1) = preparse(S) '`( 'procedure preparse(S1) .
  eq preparse(S 'match S1) = preparse(S) '`( 'match preparse(S1) .
  eq preparse(S 'end S1) = preparse(S) 'end '`) preparse(S1) .
  eq preparse(S 'True S1) = preparse(S) 'true preparse(S1) .

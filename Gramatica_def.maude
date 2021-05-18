@@ -597,7 +597,8 @@ fmod Programa is
   --- ops String ByStr32 ByStr20 BNum Bool : -> ListaArgumentos [ctor] .
   --- op __ : ListaArgumentos ListaArgumentos -> ListaArgumentos [ctor assoc] .
   --- op |_of_ : Qid ListaArgumentos -> Constructora [ctor] . 
-  op __ : Constructoras Constructoras -> Constructoras [ctor assoc prec 16] .
+  op consv : -> Constructoras [ctor] .
+  op __ : Constructoras Constructoras -> Constructoras [ctor assoc prec 16 id: consv] .
   op tipo__ : Qid Constructoras -> ADTS [ctor prec 17] .
 
   ***ERRORES
@@ -640,17 +641,18 @@ fmod MEMORIA is
   ***pr MAP{Nat, Par} .
 
   sort Memoria Variable Val Pareja PilaMemoria ParejaFuncion letIn AmbitoAplicacion memoriaTransicion Opciones ListaT memoriaLetIn ParejaAct ParejaImportacion
-       ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun . 
+       ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun ParejaTipo memoriaProcedimiento . 
   subsort Qid < Variable .
   subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool Lista MapVacio < Val .
   subsort Pareja < Memoria .
   subsort Option < AmbitoAplicacion .
-  subsort memoriaTransicion memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun < Pareja .
+  subsort memoriaTransicion memoriaProcedimiento memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun ParejaTipo < Pareja .
   ***subsort ListaDeclaraciones Pareja < ListaT .
   ***subsort ListaDeclaraciones Pareja < Opciones .
   
   ***op [_] : Val -> Pareja [ctor] .
   op [_] : Transicion -> Pareja [ctor] .
+  op [_] : Procedimiento -> Pareja [ctor] .
   op [_] : Declaracion -> Pareja [ctor] .
   op [_] : DeclaracionOp -> Pareja [ctor] .
   op [_] : DeclaracionOpBools -> Pareja [ctor] .
@@ -671,6 +673,8 @@ fmod MEMORIA is
   op Nil[_] : NombreTipo -> ParejaNil [ctor] .
   op Cons[_,_] : Qid Qid -> ParejaCons [ctor] .
   op Funcion[_,_] : Memoria Memoria -> ParejaFun [ctor] .
+  op Tipo[_,_] : Variable Constructoras -> ParejaTipo [ctor] .
+  op Tipo[_,_] : Variable QidList -> ParejaTipo [ctor] .
   
   op [_=>_] : Variable Val -> Pareja [ctor] .
   op [_=>_] : Variable Qid -> Pareja [ctor] .
@@ -686,12 +690,15 @@ fmod MEMORIA is
   op [_=>_] : Variable Map{Nat, Bool} -> Pareja [ctor] .
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable TipoDato Memoria -> Pareja [ctor] .
+  ***op [_=>_,_] : Variable Memoria Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Int Memoria -> Pareja [ctor] .
   op Existe[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
   op Insertar[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
+  op Obtener[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
   op Eliminar[_,_] : Qid ListaPosiciones -> Pareja [ctor] .
   op NumBloque[_] : Qid -> Pareja [ctor] .
   op [_,_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria Memoria -> memoriaTransicion [ctor] .
+  op Proc[_,_,_,_,_] : Variable ListaParamInm ListaDeclaraciones Memoria Memoria -> memoriaProcedimiento [ctor] .
   op [_,_,_] : Variable Memoria Memoria -> memoriaTransicion [ctor] .
   ***op [_,_,_] : Variable TipoDato Operacion -> memoriaLetIn [ctor] .
   ***op [_,_,_] : Variable ListaParamInm ListaT -> memoriaTransicion [ctor] .
@@ -725,6 +732,8 @@ fmod MEMORIA is
   var xl : QidList .
   var LP : ListaPosiciones .
   vars NT NT1 : NombreTipo .
+  var CONS : Constructoras .
+  var CON : Constructora .
 
 
   op esEntero : Val -> Bool [ctor] .
@@ -745,6 +754,7 @@ fmod MEMORIA is
   eq almacenar(insertar x LP x2) = Insertar[x => x2, LP] .
   eq almacenar(evento x) = ['evento => x] .
   eq almacenar(enviar x) = ['enviar => x] .
+  eq almacenar(throw x) = ['throw => x] .
   eq almacenar(accept) = [accept] .
   eq almacenar(OPB) = [OPB] .
   eq almacenar(Pair NT NT1 x x1) = Par[x,x1] .
@@ -764,6 +774,7 @@ fmod MEMORIA is
   eq almacenar({-eventname: S ; LCE}) = ['eventname => S] almacenar(LCE) .
   eq almacenar(x = V) = [x => almacenar(V)] .
   eq almacenar(actualizar x x2) = Actualizar[x, x2] .
+  eq almacenar(match x LOP) = almacenarMatch(match x LOP) .
   eq almacenar(let x TE IN in Op) = [x => IN , almacenar(Op)] .
   ceq almacenar(let x TD in Op) = [x => TD , almacenar(Op)] 
       if not(esEntero(TD)) .
@@ -772,7 +783,9 @@ fmod MEMORIA is
   op almacenarMatch : Opcion -> Memoria [ctor] .
   eq almacenarMatch(ldv) = mv .
   eq almacenarMatch(insertar x LP x2 LD) = Insertar[x => x2, LP] almacenarMatch(LD) .
+  eq almacenarMatch(obtener x x2 LP LD) = Obtener[x => x2, LP] almacenarMatch(LD) .
   eq almacenarMatch(delete x LP LD) = Eliminar[x, LP] almacenarMatch(LD) .
+  eq almacenarMatch(builtin OPB LD) = [OPB] almacenarMatch(LD) .
   eq almacenarMatch(D LD) = almacenar(D) almacenarMatch(LD) .
   eq almacenarMatch(opcionMatch TOP EXPS) = [TOP => almacenarMatch(EXPS)] .
   eq almacenarMatch(OPC LOP) = almacenarMatch(OPC) almacenarMatch(LOP) .
@@ -810,6 +823,12 @@ fmod MEMORIA is
   eq tenerModificar2(M[TOP => M2]M1) = tenerModificar(M2) .
  *** eq tenerModificar2(M[x => M2]M1) = tenerModificar(M2) .
   eq tenerModificar2(M) = false [owise] .
+
+  op almacenarTipo : Constructoras -> QidList [ctor] .
+  eq almacenarTipo(consv) = nil .
+  eq almacenarTipo(| x CONS) = x almacenarTipo(CONS) .
+
+
   
   
   
@@ -873,6 +892,10 @@ mod REGLAS is
   var LP : ListaPosiciones .
   vars NT NT1 : NombreTipo .
   var TV : TipoValor .
+  var CONS : Constructoras .
+  var QL : QidList .
+  var CON : Constructora .
+  var PROC : Procedimiento .
 
   ***Regla para guardar las importaciones
   rl[Contrato N import LIMP NL LE NC LPI LCM LT ,M, M'] => [Contrato N iv NL LE NC LPI LCM LT ,M Importaciones[LIMP], M'] .
@@ -880,6 +903,8 @@ mod REGLAS is
   rl[Contrato N I NL let x TE IN LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => IN], M'] [print "entra1"] .
   crl[Contrato N I NL let x V LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => V], M'] 
      if not(esEntero(V)) [print "entra"].
+  ***Reglas para almacenar los tipos en la memoria
+  rl[Contrato N I NL tipo x CONS LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M Tipo[x, almacenarTipo(CONS)], M'] .
   
   
   ***Regla para guardar los parametros inmutables en la memoria.
@@ -902,14 +927,26 @@ mod REGLAS is
   rl[Contrato N I NL LE NC LPI LCM T LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[T]] .
   ***Regla para guardar una transicion en la memoria (se divide la transicion en [nombre, entradas, cuerpo])
   rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv,  ['_amount => Uint128]['_sender => ByStr20]]M'] .
+  ***Regla para guardar un procedimiento en la memoria (en este caso se guarda la regla entera)
+  rl[Contrato N I NL LE NC LPI LCM PROC LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[PROC]] .
+  ***Regla para guardar un procedimiento en la memoria
+  rl[C , M , M2 [procedimiento x LPI LD end] M'] => [C , M , M2 Proc[x, LPI, LD, mv, mv]M'] .
   ***Regla para almacenar las declaraciones en la memoria
   rl[C , M , M3[x, LPI, D LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
   rl[C , M , M3[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
   rl[C , M , M3[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
+
+  rl[C , M , M3 Proc[x, LPI, D LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, throw x2 LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 ['throw => x2], M4 ]M'] .
   
   ***Regla para almacenar las entradas en la memoria
   ***rl[C , M , M3[x, PI, LD, M2, M4]M'] => [C , M , M3[x, lpv, LD, M2, M4 almacenar(PI)]M'] .
   crl[C , M , M3[x, LPI, LD, M2, M4]M'] => [C , M , M3[x, lpv, LD, M2, M4 almacenar(LPI)]M'] 
+     if not(LPI == lpv) .
+    
+  crl[C , M , M3 Proc[x, LPI, LD, M2, M4]M'] => [C , M , M3 Proc[x, lpv, LD, M2, M4 almacenar(LPI)]M'] 
      if not(LPI == lpv) .
 
 
@@ -917,6 +954,9 @@ mod REGLAS is
   ***Regla para almacenar la expresion match en la memoria ([comprobacion = > cuerpo])
   rl[C , M , M3[x, LPI, EM LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2[EM], M4 ]M'] .
   rl[C , M , M3[x, LPI, LD, M2[EM]M5, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenarMatch(EM) M5, M4 ]M'] .
+
+  rl[C , M , M3 Proc[x, LPI, EM LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2[EM], M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, LD, M2[EM]M5, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenarMatch(EM) M5, M4 ]M'] .
 
   ***Regla para sustituir valores globales e las transiciones
   --- crl[C , M , M3[x, LPI, LD, M7, M6]M'] => [C , M , M3[x, LPI, LD, sustituir(M, M7), M6]M'] 
