@@ -175,12 +175,18 @@ fmod PARSING is
 
  ***DATOS ALGEBRAICOS
  ***Option
+ ceq parse('None`{_`}[T1]) = 'None`{_`}[T1']
+  if T1' := parse(T1) .
  ceq parse('Some`{_`}_[T1, T2]) = 'Some__[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
  ceq parse('Some_[T1]) = 'Some_[T1']
   if T1' := parse(T1) .
+ ceq parse('Option_[T1]) = 'Option_[T1']
+  if T1' := parse(T1) .
  ***Listas
+ ceq parse('Nil`{_`}[T1]) = 'Nil`{_`}[T1']
+  if T1' := parse(T1) .
  ceq parse('Cons`{_`}__[T1, T2, T3]) = 'Cons___[T1', T2', T3']
   if T1' := parse(T1) /\
      T2' := parse(T2) /\
@@ -333,9 +339,8 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
   if T1' := parse(T1) .
  ceq parse('contract_[T1]) = 'NombreContrato_[T1']
   if T1' := parse(T1) .
- ceq parse('import_as_[T1, T2]) = 'import__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
+ ceq parse('import_[T1]) = 'import_[T1']
+  if T1' := parse(T1) .
 
 
  ceq parse(T) = Q'
@@ -1075,6 +1080,144 @@ red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'
     ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[
     ''CodeInsufficientAllowance.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]]]]]]]]]]]    
 ,'mv.Memoria,'mv.Memoria], unbounded) .
+
+***Contrato7
+red metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`]['Contrato_______['0.Zero,'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''ZilGame.Qid],
+
+'__['let__[
+    ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
+    'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],
+
+    '__['let__[''no_msg.Qid,'Nil`{_`}['Message.NombreTipo]],
+
+    '__['let__[''hash_dist.Qid,'funcion__['_:_[''h0.Qid,'ByStr32.NombreTipo],'funcion__['_:_[
+    ''h1.Qid,'ByStr32.NombreTipo],'let__in_[''h00.Qid,'builtin_['__['to-uint256.TipoOpto,''h0.Qid]],'let__in_[
+    ''h11.Qid,'builtin_['__['to-uint256.TipoOpto,''h1.Qid]],'let__in_[''lt.Qid,'builtin_['_<._[''h00.Qid,''h11.Qid]],
+    'match__[''lt.Qid,'__['opcionMatch__['false.Bool,'builtin_['_-_[''h00.Qid,''h11.Qid]]],'opcionMatch__['true.Bool,
+    'builtin_['_-_[''h11.Qid,''h00.Qid]]]]]]]]]]],
+
+    '__['let__[''update_hash.Qid,'funcion__['_:_[''oh.Qid,'Option_[
+    'ByStr32.NombreTipo]],'funcion__['_:_[''h.Qid,'ByStr32.NombreTipo],'match__[''oh.Qid,'__['opcionMatch__['Some_[
+    ''x.Qid],'Some__['ByStr32.NombreTipo,''x.Qid]],'opcionMatch__['None.Option,'Some__['ByStr32.NombreTipo,
+    ''h.Qid]]]]]]],
+
+    '__['let__[''update_timer.Qid,'funcion__['_:_[''tm.Qid,'Option_['BNum.NombreTipo]],'funcion__['_:_[
+    ''b.Qid,'BNum.NombreTipo],'match__[''tm.Qid,'__['opcionMatch__['Some_[''x.Qid],'Some__['BNum.NombreTipo,''x.Qid]],
+    'opcionMatch__['None.Option,'let__in_[''window.Qid,'__['Uint32.TipoEntero,'s_^11['0.Zero]],'let__in_[''b1.Qid,
+    'builtin_['_+._[''b.Qid,''window.Qid]],'Some__['BNum.NombreTipo,''b1.Qid]]]]]]]]],
+
+    '__['let__[''can_play.Qid,
+    'funcion__['_:_[''tm.Qid,'Option_['BNum.NombreTipo]],'funcion__['_:_[''b.Qid,'BNum.NombreTipo],'match__[''tm.Qid,
+    '__['opcionMatch__['None.Option,'true.Bool],'opcionMatch__['Some_[''b1.Qid],'builtin_['_<._[''b.Qid,
+    ''b1.Qid]]]]]]]],
+
+    '__['let__[''time_to_claim.Qid,'funcion__['_:_[''tm.Qid,'Option_['BNum.NombreTipo]],'funcion__[
+    '_:_[''b.Qid,'BNum.NombreTipo],'match__[''tm.Qid,'__['opcionMatch__['None.Option,'false.Bool],'opcionMatch__[
+    'Some_[''b1.Qid],'let__in_[''c1.Qid,'builtin_['_<._[''b.Qid,''b1.Qid]],'negb_[''c1.Qid]]]]]]]],
+
+    '__['let__[
+    ''check_validity.Qid,'funcion__['_:_[''a.Qid,'ByStr20.NombreTipo],'funcion__['_:_[''solution.Qid,
+    'Int128.TipoEntero],'funcion__['_:_[''pa.Qid,'ByStr20.NombreTipo],'funcion__['_:_[''pb.Qid,'ByStr20.NombreTipo],
+    'funcion__['_:_[''guess_a.Qid,'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''guess_b.Qid,'Option_[
+    'ByStr32.NombreTipo]],'let__in_[''ca.Qid,'builtin_['_==._[''pa.Qid,''a.Qid]],'let__in_[''cb.Qid,'builtin_['_==._[
+    ''pb.Qid,''a.Qid]],'let__in_[''xa.Qid,'Pair____['Bool.NombreTipo,'Option_['ByStr32.NombreTipo],''ca.Qid,
+    ''guess_a.Qid],'let__in_[''xb.Qid,'Pair____['Bool.NombreTipo,'Option_['ByStr32.NombreTipo],''cb.Qid,''guess_b.Qid],
+    'match__[''xa.Qid,'__['opcionMatch__['Pair__['true.Bool,'Some_[''g.Qid]],'let__in_[''h.Qid,'builtin_['sha256hash_[
+    ''solution.Qid]],'builtin_['_==._[''h.Qid,''g.Qid]]]],'opcionMatch__[''_.Qid,'match__[''xb.Qid,'__[
+    'opcionMatch__['Pair__['true.Bool,'Some_[''g.Qid]],'let__in_[''h.Qid,'builtin_['sha256hash_[''solution.Qid]],
+    'builtin_['_==._[''h.Qid,''g.Qid]]]],'opcionMatch__[''_.Qid,'false.Bool]]]]]]]]]]]]]]]]],
+
+    '__['let__[
+    ''can_withdraw.Qid,'funcion__['_:_[''tm.Qid,'BNum.NombreTipo],'funcion__['_:_[''b.Qid,'BNum.NombreTipo],'let__in_[
+    ''window.Qid,'__['Uint32.TipoEntero,'s_^30['0.Zero]],'let__in_[''deadline.Qid,'builtin_['_+._[''tm.Qid,
+    ''window.Qid]],'builtin_['_<._[''deadline.Qid,''b.Qid]]]]]]],
+
+    '__['let__[''determine_winner.Qid,'funcion__['_:_[
+    ''puzzle.Qid,'ByStr32.NombreTipo],'funcion__['_:_[''guess_a.Qid,'Option_['ByStr32.NombreTipo]],'funcion__['_:_[
+    ''guess_b.Qid,'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''pa.Qid,'ByStr20.NombreTipo],'funcion__['_:_[
+    ''pb.Qid,'ByStr20.NombreTipo],'funcion__['_:_[''oa.Qid,'ByStr20.NombreTipo],'let__in_[''gab.Qid,'Pair____['Option_[
+    'ByStr32.NombreTipo],'Option_['ByStr32.NombreTipo],''guess_a.Qid,''guess_b.Qid],'match__[''gab.Qid,'__[
+    'opcionMatch__['Pair__['Some_[''ga.Qid],'Some_[''gb.Qid]],'let__in_[''c1.Qid,'builtin_['_<._[''d1.Qid,''d2.Qid]],
+    'match__[''c1.Qid,'__['opcionMatch__['true.Bool,''pa.Qid],'opcionMatch__['false.Bool,'let__in_[''c2.Qid,
+    'builtin_['_==._[''d1.Qid,''d2.Qid]],'match__[''c2.Qid,'__['opcionMatch__['false.Bool,''pb.Qid],
+    'opcionMatch__['true.Bool,''oa.Qid]]]]]]]]],'__['opcionMatch__['Pair__['Some_[''_.Qid],'None.Option],
+    ''pa.Qid],'__['opcionMatch__['Pair__['None.Option,'Some_[''_.Qid]],''pb.Qid],'opcionMatch__[
+    'Pair__['None.Option,'None.Option],''oa.Qid]]]]]]]]]]]]],
+
+    '__['let__[''solution_submitted.Qid,'__[
+    'Int32.TipoEntero,'s_['0.Zero]]],'__['let__[''time_window_missed.Qid,'__['Int32.TipoEntero,'s_^2['0.Zero]]],'__[
+    'let__[''not_a_player.Qid,'__['Int32.TipoEntero,'s_^3['0.Zero]]],'__['let__[''too_early_to_claim.Qid,'__[
+    'Int32.TipoEntero,'s_^4['0.Zero]]],'__['let__[''wrong__sender_or_solution.Qid,'__['Int32.TipoEntero,'s_^5[
+    '0.Zero]]],'__['let__[''here_is_the_reward.Qid,'__['Int32.TipoEntero,'s_^6['0.Zero]]],'let__[''cannot_withdraw.Qid,
+    '__['Int32.TipoEntero,'s_^7['0.Zero]]]]]]]]]]]]]]]]]]]],
+    
+	
+
+	
+	'NombreContrato_[''ZilGame.Qid],
+	
+	'_`,_['_:_[''owner.Qid,
+    'ByStr20.NombreTipo],'_`,_['_:_[''player_a.Qid,'ByStr20.NombreTipo],'_`,_['_:_[''player_b.Qid,'ByStr20.NombreTipo],
+    '_:_[''puzzle.Qid,'ByStr32.NombreTipo]]]],
+	
+	'__['campo_=_['_:_[''player_a_hash.Qid,'Option_['ByStr32.NombreTipo]],
+    'None`{_`}['ByStr32.NombreTipo]],'__['campo_=_['_:_[''player_b_hash.Qid,'Option_['ByStr32.NombreTipo]],'None`{_`}[
+    'ByStr32.NombreTipo]],'campo_=_['_:_[''timer.Qid,'Option_['BNum.NombreTipo]],'None`{_`}['BNum.NombreTipo]]]],
+	
+	'__[
+    'transicion___end[''Play.Qid,'_:_[''guess.Qid,'ByStr32.NombreTipo],'__['guardar__[''tm_opt.Qid,''timer.Qid],'__[
+    '_<-&BLOCKNUMBER[''b.Qid],'__['_=_[''c.Qid,'aplicarF_['__[''can_play.Qid,''tm_opt.Qid,''b.Qid]]],'match__[
+    ''c.Qid,'__['opcionMatch__['false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''time_window_missed.Qid]]],'__[
+    '_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__[
+    'true.Bool,'__['_=_[''isa.Qid,'builtin_['_==._[''_sender.Qid,''player_a.Qid]]],'__['_=_[''isb.Qid,'builtin_['_==._[
+    ''_sender.Qid,''player_b.Qid]]],'__['_=_[''tt.Qid,'true.Bool],'match__[''isa.Qid,'__['opcionMatch__['true.Bool,'__[
+    'guardar__[''ah.Qid,''player_a_hash.Qid],'__['_=_[''hopt.Qid,'aplicarF_['__[''update_hash.Qid,''ah.Qid,
+    ''guess.Qid]]],'__['actualizar__[''player_a_hash.Qid,''hopt.Qid],'__['_=_[''tm1.Qid,'aplicarF_['__[
+    ''update_timer.Qid,''tm_opt.Qid,''b.Qid]]],'__['actualizar__[''timer.Qid,''tm1.Qid],'__['_=_[''msg.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[
+    ''code.Qid,''solution_submitted.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],
+    'enviar_[''msgs.Qid]]]]]]]]],'opcionMatch__['false.Bool,'match__[''isb.Qid,'__['opcionMatch__['true.Bool,'__[
+    'guardar__[''bh.Qid,''player_b_hash.Qid],'__['_=_[''hopt.Qid,'aplicarF_['__[''update_hash.Qid,''bh.Qid,
+    ''guess.Qid]]],'__['actualizar__[''player_b_hash.Qid,''hopt.Qid],'__['_=_[''tm1.Qid,'aplicarF_['__[
+    ''update_timer.Qid,''tm_opt.Qid,''b.Qid]]],'__['actualizar__[''timer.Qid,''tm1.Qid],'__['_=_[''msg.Qid,
+    '`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[
+    ''code.Qid,''solution_submitted.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],
+    'enviar_[''msgs.Qid]]]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],
+    'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''not_a_player.Qid]]],
+    '__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]]]],
+	
+	'__[
+    'transicion___end[''ClaimReward.Qid,'_:_[''solution.Qid,'Int128.TipoEntero],'__['guardar__[''tm_opt.Qid,
+    ''timer.Qid],'__['_<-&BLOCKNUMBER[''b.Qid],'__['_=_[''ttc.Qid,'aplicarF_['__[''time_to_claim.Qid,
+    ''tm_opt.Qid,''b.Qid]]],'match__[''ttc.Qid,'__['opcionMatch__['false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_[
+    '"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,
+    ''too_early_to_claim.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[
+    ''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['guardar__[''pa.Qid,''player_a_hash.Qid],'__['guardar__[''pb.Qid,
+    ''player_b_hash.Qid],'__['_=_[''is_valid.Qid,'aplicarF_['__[''check_validity.Qid,''_sender.Qid,
+    ''solution.Qid,''player_a.Qid,''player_b.Qid,''pa.Qid,''pb.Qid]]],'match__[''is_valid.Qid,'__['opcionMatch__[
+    'false.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+    'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''wrong__sender_or_solution.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]],'opcionMatch__['true.Bool,'__['_=_[''winner.Qid,
+    'aplicarF_['__[''determine_winner.Qid,''puzzle.Qid,''pa.Qid,''pb.Qid,''player_a.Qid,''player_b.Qid,
+    ''owner.Qid]]],'__['guardar__[''bal.Qid,''_balance.Qid],'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],
+    'dirEnvio_[''winner.Qid],'cantidadEnvio_[''bal.Qid],'_:_[''code.Qid,''here_is_the_reward.Qid]]],'__['_=_[''ff.Qid,
+    'false.Bool],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[
+    ''msgs.Qid]]]]]]]]]]]]]]]]]]],
+	
+	'transicion___end[''Withdraw.Qid,'lpv.ListaParamInm,'__['_=_[''tm.Qid,'aplicarF_[
+    ''_creation_block.Qid]],'__['_<-&BLOCKNUMBER[''b.Qid],'__['_=_[''cw.Qid,'aplicarF_['__[
+    ''can_withdraw.Qid,''tm.Qid,''b.Qid]]],'__['_=_[''is_owner.Qid,'builtin_['_==._[''owner.Qid,''_sender.Qid]]],'__[
+    'guardar__[''bal.Qid,''_balance.Qid],'__['_=_[''good_to_go.Qid,'_and_[''cw.Qid,''is_owner.Qid]],'match__[
+    ''good_to_go.Qid,'__['opcionMatch__['true.Bool,'__['_=_[''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[
+    ''owner.Qid],'cantidadEnvio_[''bal.Qid],'_:_[''code.Qid,''here_is_the_reward.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_[
+    '__[''one_msg.Qid,''msg.Qid]]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"GameOver".String],
+    'lcv.ListaCamposEvento]],'__['evento_[''e.Qid],'enviar_[''msgs.Qid]]]]]],'opcionMatch__['false.Bool,'__['_=_[
+    ''msg.Qid,'`{_;_;_;_`}['-tag:_['"".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,
+    '0.Zero]],'_:_[''code.Qid,''cannot_withdraw.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,
+    ''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]   
+,'mv.Memoria,'mv.Memoria], unbounded) .
+
 
 
 

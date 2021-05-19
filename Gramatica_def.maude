@@ -311,7 +311,7 @@ fmod Programa is
   pr QID .
   pr QID-LIST .
   pr INT .
-  sort DeclaracionOp TipoEntero Entero Contrato Igualdad .
+  sort DeclaracionOp TipoEntero Entero Contrato Igualdad TipoOpto .
   subsort DeclaracionOp Entero < Expresion .
 
   ***DATOS PRMITIVOS
@@ -347,8 +347,8 @@ fmod Programa is
   ***Declaración de la operación to_nat.
   --- op to-nat_ : @Token@ -> @DeclaracionOp@ [ctor prec 14] .
   --- ***Declaración de la operación to_(u)int32/64/128/256.
-  --- ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> @TipoOpto@ [ctor] .
-  --- op __ : @TipoOpto@ @Token@ -> @DeclaracionOp@ [ctor prec 14] . 
+  ops to-int32 to-int64 to-int128 to-int256 to-uint32 to-uint64 to-uint128 to-uint256 : -> TipoOpto [ctor] .
+  op __ : TipoOpto Qid -> DeclaracionOp [ctor prec 14] . 
 
   ***STRINGS
   ***La operación eq ya está definida anteriormente para los enteros y como es la misma es la que usaremos.
@@ -423,7 +423,7 @@ fmod Programa is
   ***DATOS ALGEBRAICOS
   ***Declaración option
   sort NombreTipo Option Lista Par Natural .
-  subsort TipoEntero Map < NombreTipo .
+  subsort TipoEntero Map Option < NombreTipo .
   ops String ByStr32 ByStr33 ByStr20 BNum Bool Message Error ByStr ByStr64 Unit : -> NombreTipo [ctor] .  ***Falta meter los enteros
   op Option_ : NombreTipo -> Option [ctor prec 13] .  ***A lo mejor hay que hacer un tipo declaracionOption para diferenciarlo.
   ***Constructoras option
@@ -440,6 +440,7 @@ fmod Programa is
 
   ***Declaración Pares
   op Pair__ : NombreTipo NombreTipo -> Par [ctor prec 13] .
+  op Pair__ : Bool Option -> Par [ctor prec 13] .
   ***Constructora Pair
   op Pair____ : NombreTipo NombreTipo Qid Qid -> Par [ctor prec 13] .
 
@@ -522,8 +523,10 @@ fmod Programa is
   ***op __ : Expresiones Expresiones -> Expresiones [ctor assoc] .
   op opcionMatch__ : TipoOpcion Expresiones -> Opcion [ctor prec 20] .  ***La segunda entrada no sería un string sino un statement.
   ***op _=>_ : Constructora Expresiones -> Opcion [ctor prec 20] .
-  op opcionMatch__ : QidList Expresiones -> Opcion [ctor prec 20] .
+  op opcionMatch__ : Qid Expresiones -> Opcion [ctor prec 20] .
   op opcionMatch__ : TipoOpcion QidList -> Opcion [ctor prec 20] .
+  op opcionMatch__ : TipoOpcion Bool -> Opcion [ctor prec 20] .
+  op opcionMatch__ : Qid Bool -> Opcion [ctor prec 20] .
   op ov : -> ListaOpciones [ctor] .
   op __ : ListaOpciones ListaOpciones -> ListaOpciones [ctor assoc prec 21] .
   op match__ : Qid ListaOpciones -> ExpresionMatch [ctor prec 21] .
@@ -643,7 +646,7 @@ fmod MEMORIA is
   sort Memoria Variable Val Pareja PilaMemoria ParejaFuncion letIn AmbitoAplicacion memoriaTransicion Opciones ListaT memoriaLetIn ParejaAct ParejaImportacion
        ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun ParejaTipo memoriaProcedimiento . 
   subsort Qid < Variable .
-  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool Lista MapVacio < Val .
+  subsort DeclaracionOp Entero String PilaMemoria ExpresionFuncion ParamInm Expresion ParejaFuncion Option Evento String Bool Lista MapVacio ExpresionAplicarF Par < Val .
   subsort Pareja < Memoria .
   subsort Option < AmbitoAplicacion .
   subsort memoriaTransicion memoriaProcedimiento memoriaLetIn ParejaAct ParejaImportacion ParejaAplicar ParejaPar ParejaSome ParejaNil ParejaCons ParejaFun ParejaTipo < Pareja .
@@ -682,6 +685,8 @@ fmod MEMORIA is
   op [_=>_] : Variable Int -> Pareja [ctor] .
   op [_=>_] : Variable Memoria -> Pareja [ctor] .
   op [_=>_] : TipoOpcion Memoria -> Pareja [ctor] .
+  op [_=>_] : TipoOpcion QidList -> Pareja [ctor] .
+  op [_=>_] : TipoOpcion Bool -> Pareja [ctor] .
   op [_=>_] : TipoOpcion ListaDeclaraciones -> Pareja [ctor] .
   op soloOpcion[_=>_] : TipoOpcion Memoria -> Pareja [ctor] .
   op [_=>_] : Variable TipoParamInm -> Pareja [ctor] .
@@ -734,6 +739,7 @@ fmod MEMORIA is
   vars NT NT1 : NombreTipo .
   var CONS : Constructoras .
   var CON : Constructora .
+  var B : Bool .
 
 
   op esEntero : Val -> Bool [ctor] .
@@ -749,9 +755,11 @@ fmod MEMORIA is
   eq almacenar(lpv) = mv .
   eq almacenar(lcv) = mv .
   eq almacenar(true) = [true] .
+  eq almacenar(false) = [false] .
   eq almacenar(builtin OPB) = [OPB] .
   eq almacenar(guardar x x2) = [x => x2] .
   eq almacenar(insertar x LP x2) = Insertar[x => x2, LP] .
+  eq almacenar(obtener x x2 LP) = Obtener[x => x2, LP] .
   eq almacenar(evento x) = ['evento => x] .
   eq almacenar(enviar x) = ['enviar => x] .
   eq almacenar(throw x) = ['throw => x] .
@@ -782,12 +790,20 @@ fmod MEMORIA is
   op almacenarMatch : ExpresionMatch -> Memoria [ctor] .
   op almacenarMatch : Opcion -> Memoria [ctor] .
   eq almacenarMatch(ldv) = mv .
+  eq almacenarMatch(ev) = mv .
   eq almacenarMatch(insertar x LP x2 LD) = Insertar[x => x2, LP] almacenarMatch(LD) .
   eq almacenarMatch(obtener x x2 LP LD) = Obtener[x => x2, LP] almacenarMatch(LD) .
   eq almacenarMatch(delete x LP LD) = Eliminar[x, LP] almacenarMatch(LD) .
   eq almacenarMatch(builtin OPB LD) = [OPB] almacenarMatch(LD) .
+  eq almacenarMatch(Some NT x LD) = Some[x] almacenarMatch(LD) .
+  eq almacenarMatch(aplicarF (x xl) LD) = AplicarF[x , xl] almacenarMatch(LD) .
   eq almacenarMatch(D LD) = almacenar(D) almacenarMatch(LD) .
+  eq almacenarMatch(E LD) = almacenar(E) almacenarMatch(LD) .
   eq almacenarMatch(opcionMatch TOP EXPS) = [TOP => almacenarMatch(EXPS)] .
+  eq almacenarMatch(opcionMatch TOP x) = [TOP => x] .
+  eq almacenarMatch(opcionMatch TOP B) = [TOP => B] .
+  eq almacenarMatch(opcionMatch x EXPS) = [x => almacenarMatch(EXPS)] .
+  eq almacenarMatch(opcionMatch x B) = [x => B] .
   eq almacenarMatch(OPC LOP) = almacenarMatch(OPC) almacenarMatch(LOP) .
   eq almacenarMatch(match x LOP) = [x => almacenarMatch(LOP)] .
 
@@ -896,6 +912,7 @@ mod REGLAS is
   var QL : QidList .
   var CON : Constructora .
   var PROC : Procedimiento .
+  var DECOP : DeclaracionOpMapI .
 
   ***Regla para guardar las importaciones
   rl[Contrato N import LIMP NL LE NC LPI LCM LT ,M, M'] => [Contrato N iv NL LE NC LPI LCM LT ,M Importaciones[LIMP], M'] .
@@ -935,11 +952,15 @@ mod REGLAS is
   rl[C , M , M3[x, LPI, D LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
   rl[C , M , M3[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
   rl[C , M , M3[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
+  rl[C , M , M3[x, LPI, aplicarF (x2 QL) LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 AplicarF[x2,QL], M4 ]M'] .
+  rl[C , M , M3[x, LPI, DECOP LD, M2, M4]M'] => [C , M , M3[x, LPI, LD, M2 almacenar(DECOP), M4 ]M'] .
+  
 
   rl[C , M , M3 Proc[x, LPI, D LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, throw x2 LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 ['throw => x2], M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, DECOP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenar(DECOP), M4 ]M'] .
   
   ***Regla para almacenar las entradas en la memoria
   ***rl[C , M , M3[x, PI, LD, M2, M4]M'] => [C , M , M3[x, lpv, LD, M2, M4 almacenar(PI)]M'] .
