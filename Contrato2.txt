@@ -19,7 +19,7 @@ storeName : String)
 
 field members : Map ByStr20 (Pair (String) (Uint32))
                 = Emp ByStr20 (Pair (String) (Uint32))
-field welcome_msg : Option String = None {String}
+field lastBookID : Option String = None {String}
 field bookInventory : Map Uint32 (Pair (String) (String))
                     = Emp Uint32 (Pair (String) (String))
 
