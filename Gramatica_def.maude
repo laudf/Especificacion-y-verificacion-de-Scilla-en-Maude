@@ -705,10 +705,12 @@ fmod MEMORIA is
  *** op [_=>_] : Variable Map{Nat, Bool} -> Pareja [ctor] .
   op [_=>_] : Variable Map{Nat, Clave} -> Pareja [ctor] .
   op [_=>_] : Variable Map{Nat, Nat} -> Pareja [ctor] .
+  op [_=>_] : Memoria Memoria -> Pareja [ctor] .
   ***op [_=>_] : Variable Map{Bool, Bool} -> Pareja [ctor] .
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable TipoDato Memoria -> Pareja [ctor] .
   op [_=>_,_] : Variable Memoria Memoria -> Pareja [ctor] .
+  op [_,_] : Memoria QidList -> Pareja [ctor] .
   op [_=>_,_] : Variable Int Memoria -> Pareja [ctor] .
   op Existe[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
   op Insertar[_=>_,_] : Variable Variable ListaPosiciones -> Pareja [ctor] .
@@ -1120,7 +1122,13 @@ mod REGLAS-EJECUTAR is
   eq opcionCorrecta(M2[x2 => Some IN] M5 [x2 => M6 [Some x => M7] M8] M1) = M2[x2 => Some IN] M5 [x2 => soloOpcion[Some x => M7]] M1 .
   eq opcionCorrecta(M2[x2 => TOP] M5 [x2 => M6 [TOP => M7] M8] M1) = M2[x2 => TOP] M5 [x2 => soloOpcion[TOP => M7]] M1 .
   eq opcionCorrecta(M2[x2 => soloOpcion[TOP => M7]] M1) = M2[x2 => soloOpcion[TOP => opcionCorrecta(M7)]] M1 .
-  ***eq opcionCorrecta(M) = M [owise] .
+ ***    if not(tenerMod(M3)) /\ not(M3 == mv) .
+
+  --- op opcionCorrecta : Memoria Memoria -> Memoria [ctor] .
+  --- ***eq opcionCorrecta(M2[x2 => Some IN] M5 [x2 => M6 [Some x => M7] M8] M1) = M2[x2 => Some IN] M5 [x2 => soloOpcion[Some x => M7]] M1 .
+  --- eq opcionCorrecta(M2[x2 => TOP] M5, [x2 => M6 [TOP => M7] M8] M1) = [x2 => soloOpcion[TOP => M7]] M1 .
+  --- eq opcionCorrecta(M2, [x2 => soloOpcion[TOP => M7]] M1) = [x2 => soloOpcion[TOP => opcionCorrecta(M2, M7)]] M1 .
+  
 
   op hayOpcion : Memoria -> Bool [ctor] .
   eq hayOpcion(M1[TOP => M]M2) = true .
@@ -1140,27 +1148,70 @@ mod REGLAS-EJECUTAR is
   op obtenerValor : Map{Nat,Nat} Nat -> Option [ctor] .
   eq obtenerValor((MPN, N |-> N1, MPN1), N) = Some N1 .
   eq obtenerValor(MPN, N) = None [owise] .
+  
+  op sustituirFuncion : Memoria Memoria QidList -> Memoria [ctor] .
+  eq sustituirFuncion(M, M1, nil) = M1 .
+  eq sustituirFuncion(M[x => IN]M1, Funcion[[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
+  eq sustituirFuncion(M[x => V]M1, Funcion[[x1 => NT], M2], x QL) = Funcion[[x1 => V], sustituirFuncion(M[x => V]M1, M2, QL)] .
+  
+  op cogerParamFuncion : Memoria -> Memoria [ctor] .
+  eq cogerParamFuncion(Funcion[[x1 => IN], M2]) = [x1 => IN] cogerParamFuncion(M2) .
+  eq cogerParamFuncion(Funcion[[x1 => V], M2]) = [x1 => V] cogerParamFuncion(M2) .
+  eq cogerParamFuncion(M) = mv [owise] .
+
+  op cogerInst : Memoria -> Memoria [ctor] .
+  eq cogerInst(Funcion[[x1 => IN], M2]) = cogerInst(M2) .
+  eq cogerInst(Funcion[[x1 => V], M2]) = cogerInst(M2) .
+  eq cogerInst(M) = M [owise] .
+
+  op ejecutarFuncion : Memoria Memoria -> Val [ctor] .
+  eq ejecutarFuncion(M[x => V] M1 [x1 => V1]M3, [x or x1]) = V or V1 .
+  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x <. x1]) = IN < IN1 .
+  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x1 <. x]) = IN1 < IN .
+  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x ==. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN == IN1] , M2) .
+  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x <. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN < IN1] , M2) .
+  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x +. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN + IN1] , M2) .
+  eq ejecutarFuncion(M, [x2 => IN, M2]) = ejecutarFuncion(M [x2 => IN] , M2) .
+  eq ejecutarFuncion(M[x => TOP]M3, [x2 => M1[TOP => B]M2]) = B .
+  
 
   rl[M[x4 => IN]M1 , [x, M2[x2 => [x3 ==. x4]] M3, M4[x3 => IN1] M5]] => [M[x4 => IN]M1 , [x, M2[x2 => IN1 == IN] M3, M4[x3 => IN1] M5]] .
   rl[M[x4 => MP]M1 , [x, M2[x2 => x4] M3, M4]] => [M[x4 => MP]M1 , [x, M2[x2 => MP] M3, M4]] .
+  rl[M[x4 => V]M1 , [x, M2[x2 => x4] M3, M4]] => [M[x4 => V]M1 , [x, M2[x2 => V] M3, M4]] .
   rl[M[x4 => MPN]M1 , [x, M2[x2 => x4] M3, M4]] => [M[x4 => MPN]M1 , [x, M2[x2 => MPN] M3, M4]] .
   rl[M , [x, M1 [ x2 => MP] M2 [x4 => [contains x2 x3]] M3, M4[x3 => N] M5]] => [M , [x, M1 [ x2 => MP] M2 [x4 => $hasMapping(MP, N)] M3, M4[x3 => N] M5]]  .
   rl[M [ x4 => MP] M2, [x, M1 Eliminar[x4, posicion x3] M3, M4[x3 => N] M5]] => [M [ x4 => eliminar(MP, N)] M2, [x, M1 M3, M4[x3 => N] M5]]  .
   rl[M , [x, M1 [ x2 => MPN] M2 [x4 => [get x2 x3]] M3, M4[x3 => N] M5]] => [M , [x, M1 [ x2 => MPN] M2 [x4 => obtenerValor(MPN, N)] M3, M4[x3 => N] M5]]  .
   ***Regla para ejecutar la operacion BLOCKNUMBER (de forma directa, es decir, no está dentro de ningun match)
-  rl[M , [x, M2 NumBloque[x2] M3, M4]] => [M, [x, M2[x2 => 1] M3, M4]] .
+  rl[M , [x, M2 NumBloque[x2] M3, M4]] => [M, [x, M2[x2 => 7] M3, M4]] .
   ***Regla para ejecutar la operacion + (de forma directa, es decir, no está dentro de ningun match)
   rl[M[x2 => IN] M5 [x3 => IN1] M6 , [x, M2 [x1 => [x2 +. x3]] M3, M4]] => [M[x2 => IN] M5 [x3 => IN1] M6 , [x, M2 [x1 => IN + IN1] M3, M4]] .
   ***Regla para ejecutar la operacion negb (de forma directa, es decir, no está dentro de ningun match)
-  rl[M , [x, M2 [x2 => B] M5  [x1 => [negb x2]] M3, M4]] => [M , [x,  M2 [x2 => B] M5 [x1 => not(B)] M3, M4]] .
-  ***Regla para ejecutar la operacion negb (de forma directa, es decir, no está dentro de ningun match)
-  rl[M , [x, M2 [x2 => B] M5 [x3 => B1] M6 [x1 => [x2 and x3]] M3, M4]] => [M , [x,  M2 [x2 => B] M5 [x3 => B1] M6 [x1 => B and B1] M3, M4]] .
+  rl[M Importaciones[BoolUtils] M7 , [x, M2 [x2 => B] M5  [x1 => [negb x2]] M3, M4]] => [M Importaciones[BoolUtils] M7 , [x,  M2 [x2 => B] M5 [x1 => not(B)] M3, M4]] .
+  ***Regla para ejecutar la operacion and (de forma directa, es decir, no está dentro de ningun match)
+  rl[M Importaciones[BoolUtils] M7 , [x, M2 [x2 => B] M5 [x3 => B1] M6 [x1 => [x2 and x3]] M3, M4]] => [M  Importaciones[BoolUtils] M7 , [x,  M2 [x2 => B] M5 [x3 => B1] M6 [x1 => B and B1] M3, M4]] .
+  ***Regla para ejecutar la operacion or (de forma directa, es decir, no está dentro de ningun match)
+  rl[M , [x, M2 [x2 => B] M5 [x3 => B1] M6 [x1 => [x2 or x3]] M3, M4]] => [M , [x,  M2 [x2 => B] M5 [x3 => B1] M6 [x1 => B or B1] M3, M4]] .
+  rl[M , [x, M2 [x2 => B] M5 [x3 => B1] M6 [x1 => [x3 or x2]] M3, M4]] => [M , [x,  M2 [x2 => B] M5 [x3 => B1] M6 [x1 => B1 or B] M3, M4]] .
+  
+  ***Regla para ejecutar un let in
+  rl[M , [x, M2[x3 => IN1] M5 [x1 => [x2 => IN, [x3 +. x2]]] M3, M4]] => [M , [x, M2[x3 => IN1] M5 [x1 => IN1 + IN] M3, M4]] .
+  ***Reglas para ejecutar una funcion
+  crl[M [x2 => M1] M5 , [x, M2[x1 => AplicarF[x2, QL]] M3, M4]] => [M [x2 => M1] M5 , [x, M2[x1 => [M1, QL]] M3, M4]]
+    if not(tenerMod(M2)) .
+  crl[M , [x, M2[x1 => [M1, QL]] M3, M4]] => [M , [x, M2[x1 => [sustituirFuncion(M M2, M1, QL), nil]] M3, M4]] 
+     if not(QL == nil)  .
+  rl[M , [x, M2[x1 => [ M1, nil]] M3, M4]] => [M , [x, M2[x1 => [ cogerParamFuncion(M1) => cogerInst(M1)]] M3, M4]] .
+  rl[M , [x, M2[x1 => [ M1 => M5]] M3, M4]] => [M , [x, M2[x1 => ejecutarFuncion(M1, M5)] M3, M4]] .
+
   ***rl[M , M3[x, M2[x2 => IN ==. IN1] M5, M4]M'] => [M , M3[x, M2[x2 => IN == IN1] M5, M4]M'] .
   ***Regla para quedarte con la opción que te interesa del match
 ---   crl[M , [x, M2[x2 => soloOpcion[TOP => M7]] M1, M4]] => [M , [x, M2[x2 => soloOpcion[TOP => opcionCorrecta(M7)]] M1, M4]] 
 ---      if hayOpcion(M7) .
   crl[M , [x, M2, M4]] => [M , [x, opcionCorrecta(M2), M4]] 
     if hayOpcion(M2) .
+  --- rl[M , [x, M2 [x1 => [TOP => M6]M3] M5, M4]] => [M , [x, M2 opcionCorrecta(M2, [x1 => [TOP => M6]M3]) M5, M4]] .
+  --- rl[M , [x, M2 [x1 => soloOpcion[TOP => M6]] M5, M4]] => [M , [x, M2 opcionCorrecta(M2, [x1 => soloOpcion[TOP => M6]]) M5, M4]] .
   ***Ragla para ejecutar la declaracion actualizar
   --- rl[M , [x, M2[x2 => soloOpcion[B => Actualizar[x3, x4] M7]] M1, M4 [x4 => VCP]M5]] => [M , [x, [x2 => soloOpcion[B => Actualizar[x3, VCP] M7]] M1, M4 [x4 => VCP]M5]] .
   --- rl[M [x3 => VCP1] M2 , M3[x, [x2 => [B => Actualizar[x3, VCP] M7]] M1, M4]M'] => [M[x3 => VCP] M2  , M3[x, [x2 => [B => M7]] M1, M4]M'] .
@@ -1185,15 +1236,21 @@ mod REGLAS-EJECUTAR is
 
   op sustituirEjecutar : Memoria Memoria -> Memoria [ctor] .
   eq sustituirEjecutar(M, mv) = mv .
+  eq sustituirEjecutar(M[x => IN]M1 [x1 => IN1] M2, M3 [x2 => [x ==. x1]]M4) = M3[x2 => IN == IN1]M4 .
+  eq sustituirEjecutar(M[x1 => IN]M1 [x => IN1] M2, [x2 => [x ==. x1]]) = [x2 => IN1 == IN] .
+  eq sustituirEjecutar(M[x4 => M6]M2, M4 ['enviar => x4]M5) = M4 ['enviar => M6]M5 .
+  eq sustituirEjecutar(M[x4 => M6]M2, M4 ['evento => x4]M5) = M4 ['evento => M6]M5 .
   ceq sustituirEjecutar(M[x4 => IN1]M2, M4 [x5 => x4]M5) = M4 [x5 => IN1] M5 
     if not(tenerMod(M4)) /\ not(tenerMod(M5)) .
-  ceq sustituirEjecutar(M[x4 => IN1]M2, M4 [x5 => x4]M5) = M4 [x5 => IN1] sustituirEjecutar(M[x4 => IN1]M2 M4 [x5 => x4], M5)  
+  ceq sustituirEjecutar(M[x4 => IN1]M2, M4 [x5 => x4]M5) = M4 [x5 => IN1] sustituirEjecutar(M[x4 => IN1]M2 M4 [x5 => IN1], M5)  
     if not(tenerMod(M4)) /\ tenerMod(M5) .
-  eq sustituirEjecutar(M[x4 => V]M2, M4 [x5 => x4]M5) = M4 [x5 => V]M5 .
+  ceq sustituirEjecutar(M[x4 => V]M2, M4 [x5 => x4]M5) = M4 [x5 => V]M5 
+    if not(x5 == 'evento) .
   eq sustituirEjecutar(M[x4 => Some[x]]M2, M4 Actualizar[x5, x4]M5) = M4 Actualizar[x5, Some x]M5 .
   eq sustituirEjecutar(M[x4 => V]M2, M4 Actualizar[x5, x4]M5) = M4 Actualizar[x5, V]M5 .
   eq sustituirEjecutar(M[x4 => IN]M2, M4 Actualizar[x5, x4]M5) = M4 Actualizar[x5, IN]M5 .
   eq sustituirEjecutar(M[x4 => [B]]M2, M4 Actualizar[x5, x4]M5) = M4 Actualizar[x5, B]M5 .
+  
   eq sustituirEjecutar(M, M4 [x4 => IN]M2 Actualizar[x5, x4]M5) = M4 [x4 => IN]M2 Actualizar[x5, IN]M5 .
   eq sustituirEjecutar(M[x4 => N]M2, M4 Eliminar[x5, posicion x4]M5) = M4 Eliminar[x5, N]M5 .
   eq sustituirEjecutar(M[x3 => N]M2 [x2 => Par[S, IN1]] M3, M4 Insertar[x => x2, posicion x3]M5) = M4 Insertar[x => [S, IN1], N] M5 .
@@ -1208,8 +1265,8 @@ mod REGLAS-EJECUTAR is
   eq sustituirEjecutar(Eliminar[x, N], M[x => MPN]M2) = M[x => eliminarNat(MPN, N)]M2 .
    ***if MP1 := insert(IN, V, MP) [print x] .
   eq sustituirEjecutar(M[x4 => Funcion[[x5 => NT],M1]]M2 [x3 => M5]M3, AplicarF[x,x3]) = M5 .
-  eq sustituirEjecutar(M[x4 => M6]M2, M4 ['enviar => x4]M5) = M4 ['enviar => M6]M5 .
-  eq sustituirEjecutar(M[x4 => M6]M2, M4 ['evento => x4]M5) = M4 ['evento => M6]M5 .
+
+
   --- ceq sustituirEjecutar(M, M4 P M5) = sustituirEjecutar(M M4, P M5) 
   ---    if tenerMod(P) .
   ceq sustituirEjecutar(M, M1[x3 => M4]M2) = M1[x3 => sustituirEjecutar(M M1, M4)] sustituirEjecutar(M M1 [x3 => sustituirEjecutar(M M1, M4)], M2) 
@@ -1227,6 +1284,7 @@ mod REGLAS-EJECUTAR is
   eq tenerMod(M1[x3 => AplicarF[x, x2]]M2) = true .
   eq tenerMod(M1 Actualizar[x, x2] M2) = true .
   eq tenerMod(M1 Insertar[x => x2, LP] M2) = true .
+  eq tenerMod([x ==. x1]) = true .
   eq tenerMod(Par[x1, x2]) = true .
   eq tenerMod(AplicarF[x, x2]) = true .
   eq tenerMod(M1[x3 => M4]M2) = tenerMod(M4) or tenerMod(M2) .
