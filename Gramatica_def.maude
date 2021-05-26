@@ -702,13 +702,14 @@ fmod MEMORIA is
   sort ValorVariable TipoVariable .
   subsort ValorCampo Bool String < ValorVariable .
   subsort TipoParamInm < TipoVariable .
-  op [_=>_|_] : Variable Int TipoEntero -> Pareja [ctor] .
+  ***op [_=>_|_] : Variable Int TipoEntero -> Pareja [ctor] .
   op [_=>_|_] : Variable ValorVariable TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable Memoria Qid -> Pareja [ctor] .
   op [_=>_|_] : Variable Memoria TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable Map{Nat,Clave} TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable Map{Nat,Nat} TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable ParEjecucion Par -> Pareja [ctor] .
+  op [_=>_|_] : Variable Int TipoVariable -> Pareja [ctor] .
 
   op [_=>_] : Variable Int -> Pareja [ctor] .
   
@@ -976,13 +977,17 @@ mod REGLAS is
   ***Regla para guardar los parametros inmutables en la memoria.
   crl[Contrato N I NL LE NC LPI LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M almacenar(LPI), M'] 
     if not(LPI == lpv) .
-
+  
+  op esNone : ValorCampo -> Bool [ctor] .
+  eq esNone(None{NT}) = true .
+  eq esNone(VCP) = false [owise] .
+  
   ***Regla para guardar un campo en la memoria
   rl[Contrato N I NL LE NC LPI campo x : TP = APF LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => almacenar(APF) | TP], M'] .
   rl[Contrato N I NL LE NC LPI campo x : TP = None{NT} LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => None | TP], M'] .
   rl[Contrato N I NL LE NC LPI campo x : TE = TE IN LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => IN | TE], M'] .
   crl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP | TP], M'] 
-     if not(esEntero(VCP)) .
+     if not(esEntero(VCP)) /\ not(esNone(VCP)) .
   crl[C,M [x => Emp NT TE | Map NT TE]M1, M'] => [C,M[x => MPN | Map NT TE]M1, M'] 
     if MPN := empty .
   crl[C,M [x => Emp NT TV | Map NT TV]M1, M'] => [C,M[x => MP | Map NT TV]M1, M'] 
@@ -1174,8 +1179,9 @@ mod REGLAS-EJECUTAR is
   
   op sustituirFuncion : Memoria Memoria QidList -> Memoria [ctor] .
   eq sustituirFuncion(M, M1, nil) = M1 .
-  eq sustituirFuncion(M[x => IN]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
-  eq sustituirFuncion(M[x => V]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => V], sustituirFuncion(M[x => V]M1, M2, QL)] .
+  ***eq sustituirFuncion(M[x => IN]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
+  eq sustituirFuncion(M[x => IN | NT]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
+  eq sustituirFuncion(M[x => V | TV]M1, Funcion[Entrada[x1 => TV], M2], x QL) = Funcion[[x1 => V], sustituirFuncion(M[x => V]M1, M2, QL)] .
   eq sustituirFuncion(M[x => M3 | 'mensaje]M1, Funcion[Entrada[x1 => Message], M2], x QL) = Funcion[[x1 => M3 | 'mensaje], sustituirFuncion(M[x => M3]M1, M2, QL)] .
   
   op cogerParamFuncion : Memoria -> Memoria [ctor] .
@@ -1198,7 +1204,7 @@ mod REGLAS-EJECUTAR is
   eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x <. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN < IN1] , M2) .
   eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x +. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN + IN1] , M2) .
   ***eq ejecutarFuncion([x => M3], [x2 => Nil[NT], M2]) = M3 .
-  eq ejecutarFuncion(M, [x2 => IN, M2]) = ejecutarFuncion(M [x2 => IN] , M2) .
+  eq ejecutarFuncion(M, [x2 => TE IN, M2]) = ejecutarFuncion(M [x2 => IN] , M2) .
   eq ejecutarFuncion(M[x => TOP]M3, [x2 => M1[TOP => B]M2]) = B .
 
   vars VV VV1 : ValorVariable .
@@ -1214,10 +1220,17 @@ mod REGLAS-EJECUTAR is
   ***Regla para ejecutar la operacion suma
   ***Los parámetros están en las variables globales y en las variables locales
   rl[M[x4 => IN | TE]M1 , [x, M2[x3 => IN1 | TE]M5[x2 => [x3 +. x4]] M3, M4]] => [M[x4 => IN | TE]M1 , [x, M2 M5[x2 => IN + IN1 | TE] M3, M4]] .
+  ***Los dos parametros estan en las variables globales
+  rl[M[x4 => IN | TV]M1[x3 => IN1 | TV]M5 , [x, M2[x2 => [x4 +. x3]] M3, M4]] => [M[x4 => IN | TV]M1[x3 => IN1 | TV]M5 , [x, M2 [x2 => IN + IN1 | TV] M3, M4]] .
+  ***Uno de los parámetros está en las variable local y el otro dentro de la asignacion
+  rl[M, [x, M2[x3 => IN1 | TE]M5[x2 => [x4 => IN | TE] [x3 +. x4]] M3, M4]] => [M , [x, M2 [x3 => IN1 | TE] M5[x2 => IN1 + IN | TE] M3, M4]] .
 
   ***Regla para quitar el match
   rl[M , [x, M2[x2 => TOP | NT] M5 [x2 => M6 [TOP => M7] M8] M1, M4]] => [M , [x, M2 M5 M7 M1, M4]] .
-  rl[M , [x, M2[x2 => Some IN | Option TE] M5 [x2 => M6 [Some x3 => M7] M8] M1, M4]] => [M , [x, M2 M5 [x3 => IN | TE] M7 M1, M4]] .
+  rl[M , [x, M2[x2 => Some IN | Option TV] M5 [x2 => M6 [Some x3 => M7] M8] M1, M4]] => [M , [x, M2 M5 [x3 => IN | TV] M7 M1, M4]] .
+  ***En el caso de que esté dentro de un igual.
+  rl[M , [x, M2[x2 => TOP | NT] M5 [x3 => [x2 => M6 [TOP => x4] M8]] M1, M4]] => [M , [x, M2 M5 [x3 => x4] M1, M4]] .
+  rl[M , [x, M2[x2 => Some IN | Option TV] M5 [x4 => [x2 => M6 [Some x3 => M7] M8]] M1, M4]] => [M , [x, M2 M5 [x4 => [x3 => IN | TV] M7] M1, M4]] .
 
   ***Regla para ejecutar la operacion actualizar
   ***La variable x2 está en la entrada de la transicion.
@@ -1225,6 +1238,9 @@ mod REGLAS-EJECUTAR is
   ***La variable x2 es una variable local, este caso solo vale para enteros.
   rl[M[x1 => IN | TE]M1 , [x, M2[x2 => IN1 | TE] M5 Actualizar[x1, x2] M3, M4]] => [M[x1 => IN1 | TE]M1 , [x, M2 [x2 => IN1 | TE] M5 M3, M4]] .
   rl[M[x1 => V1 | TV]M1 , [x, M2[x2 => V | TE] M5 Actualizar[x1, x2] M3, M4]] => [M[x1 => V | TV]M1 , [x, M2 [x2 => V | TE] M5 M3, M4]] .
+  rl[M[x1 => V1 | TV]M1 , [x, M2[x2 => V | TV] M5 Actualizar[x1, x2] M3, M4]] => [M[x1 => V | TV]M1 , [x, M2 [x2 => V | TV] M5 M3, M4]] .
+  ***La x2 esta en la entrada de la transicion
+  rl[M[x1 => IN | TE]M1 , [x, M2 Actualizar[x1, x2] M3, M4 [x2 => IN1 | TE] M5]] => [M[x1 => IN1 | TE]M1 , [x, M2 M3, M4 [x2 => IN1 | TE] M5]] .
 
   ***Regla para sustituir las variables de los eventos.
   ***Desde una variable global.
@@ -1252,6 +1268,9 @@ mod REGLAS-EJECUTAR is
   rl[M [x2 => MPN | TV] M1 , [x, M2 [x1 => x2] M3, M4]] => [M [x2 => MPN | TV] M1 , [x, M2 [x1 => MPN | TV] M3, M4]] .
   rl[M [x2 => IN | TE] M1 , [x, M2 [x1 => x2] M3, M4]] => [M [x2 => IN | TE] M1 , [x, M2 [x1 => IN | TE] M3, M4]] .
 
+  ***Reglas para sustituir variables que son locales.
+  rl[M  , [x, M2 [x2 => IN | TV] M1 [x1 => x2] M3, M4]] => [M , [x, M2[x2 => IN | TV] M1 [x1 => IN | TV] M3, M4]] .
+
   ***Regla para ejecutar la operacion existe
   rl[M [x => MP | TV] M1, [x1, M2 Existe[x2 => x,posicion x3]M3, M4[x3 => N | TE]M5]] => [M [x => MP | TV] M1, [x1, M2 [x2 => $hasMapping(MP, N) | Bool]M3, M4[x3 => N | TE]M5]] .
   
@@ -1262,19 +1281,28 @@ mod REGLAS-EJECUTAR is
   rl[M [x => V] M6 [x2 => MP | Map NT TVal] M1, [x1, M2 Insertar[x2 => x,posicion x3]M3, M4[x3 => N | TE]M5]] => [M [x => V] M6 [x2 => insert(N, V, MP) | Map NT TVal] M1, [x1, M2 M3, M4[x3 => N | TE]M5]]  .
   ***Solo vale para cuando el valor del mapa es un par y el parametro está en una variable local
   rl[M[x2 => MP | Map NT TVal] M1, [x1, M2 [x => V | TVal] M6  Insertar[x2 => x,posicion x3]M3, M4[x3 => N | TE]M5]] => [M [x2 => insert(N, V, MP) | Map NT TVal] M1, [x1, M2 [x => V | TVal] M6 M3, M4[x3 => N | TE]M5]]  .
+  ***Solo vale para cuando el valor del mapa es un par y el parametro está en una variable local
+  rl[M[x2 => MPN | Map NT TE] M1, [x1, M2 [x3 => N | NT]M5 [x => IN | TE] M6  Insertar[x2 => x,posicion x3]M3, M4]] => [M [x2 => insert(N, IN, MPN) | Map NT TE] M1, [x1, M2 [x3 => N | NT]M5 [x => IN | TE] M6  M3, M4]]  .
  
+  op hayMsg : Memoria -> Bool [ctor] .
+  eq hayMsg(M[x => M1 | 'mensaje]M2) = true .
+  eq hayMsg(M) = false [owise] .
 
   ***Reglas para ejecutar una funcion
   crl[M [x2 => M1] M5 , [x, M2[x1 => AplicarF[x2, QL]] M3, M4]] => [M [x2 => M1] M5 , [x, M2[x1 => [M1, QL]] M3, M4]]
     if not(tenerMod(M2)) .
-  crl[M , [x, M2[x1 => [M1, QL]] M3, M4]] => [M , [x, M2[x1 => [sustituirFuncion(M M2, M1, QL), nil]] M3, M4]] 
-     if not(QL == nil)  .
-  rl[M , [x, M2[x1 => [ M1, nil]] M3, M4]] => [M , [x, M2[x1 => [ cogerParamFuncion(M1) => cogerInst(M1)]] M3, M4]] .
-  rl[M , [x, M2[x1 => [ [x2 => M6 | 'mensaje] => [x3 => Nil[NT], M8]]] M3, M4]] => [M , [x, M2[x1 => M6 | 'mensaje] M3, M4]]  .
+  --- crl[M , [x, M2[x1 => [M1, QL]] M3, M4]] => [M , [x, M2[x1 => [sustituirFuncion(M M2, M1, QL), nil]] M3, M4]] 
+  ---    if not(QL == nil)  .
+  --- rl[M , [x, M2[x1 => [ M1, nil]] M3, M4]] => [M , [x, M2[x1 => [ cogerParamFuncion(M1) => cogerInst(M1)]] M3, M4]] .
+  --- rl[M , [x, M2[x1 => [ [x2 => M6 | 'mensaje] => [x3 => Nil[NT], M8]]] M3, M4]] => [M , [x, M2[x1 => M6 | 'mensaje] M3, M4]]  .
+  --- crl[M , [x, M2[x1 => [ M5 => M6]] M3, M4]] => [M , [x, M2[x1 => ejecutarFuncion(M5, M6) | Bool] M3, M4]]  
+  ---    if not(hayMsg(M5)) .
 
   ***Regla para ejecutar un let in
   ***La operacion es < y una de las variables está en la entrada de la transicion
   rl[M , [x, M2 [x1 => [x2 => TE IN, [x3 <. x2]]] M3, M4 [x3 => IN1 | TE] M5]] => [M , [x, M2 [x1 => IN1 < IN | Bool] M3, M4[x3 => IN1 | TE] M5]] .
+  ***La operacion badd y una de las variables es local.
+  rl[M , [x, M2[x3 => IN1 | BNum] M5 [x1 => [x2 => TE IN, [x3 +. x2]]] M3, M4 ]] => [M , [x, M2[x3 => IN1 | BNum] M5 [x1 => IN1 + IN | BNum] M3, M4 ]] .
 
   ***Regla para transformar una pareja
   var PE : ParEjecucion .
@@ -1292,6 +1320,28 @@ mod REGLAS-EJECUTAR is
 
   ***Regla para ejecutar la operacion get
   rl[M , [x, M1 [ x2 => MPN | Map NT TE] M2 [x4 => [get x2 x3]] M3, M4[x3 => N | TE] M5]] => [M , [x, M1 [ x2 => MPN | Map NT TE] M2 [x4 => obtenerValor(MPN, N) | Option TE] M3, M4[x3 => N | TE] M5]]  .
+  rl[M [ x2 => MPN | Map NT TE] M2 , [x, M1 [x3 => N | NT] M5 Obtener[x1 => x2, posicion x3] M3, M4]] => [M [ x2 => MPN | Map NT TE] M2 , [x, M1 [x3 => N | NT] M5 [x1 => obtenerValor(MPN, N) | Option TE ] M3, M4]]  .
+
+  ***Regla para ejecutar la operacion BLOCKNUMBER
+  rl[M , [x, M1 NumBloque[x1] M2, M3]] => [M , [x, M1 [x1 => 4 | BNum ] M2, M3]] .
+
+  ***Regla para ejecutar la operacion negb
+  rl[M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x1 => [negb x2]] M2, M3]] => [M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x1 => not(V) | Bool] M2, M3]] .
+
+  ***Regla para ejecutar la operacion andb
+  rl[M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x3 => V1 | Bool] M6 [x1 => [x2 and x3]] M2, M3]] => [M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x3 => V1 | Bool] M6 [x1 => V and V1 | Bool] M2, M3]] .
+
+  ***Regla para ejecutar la operacion andb
+  rl[M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x3 => V1 | Bool] M6 [x1 => [x3 or x2]] M2, M3]] => [M Importaciones[BoolUtils] M4, [x, M1 [x2 => V | Bool] M5 [x3 => V1 | Bool] M6 [x1 => V1 or V | Bool] M2, M3]] .
+
+  ***Quitar la memoria de un booleano
+  rl[M , [x, M1 [x1 => [B]] M2, M3]] => [M , [x, M1 [x1 => B | Bool ] M2, M3]] .
+
+  ***Regla para ejecutar la operacion menor
+  rl[M , [x, M1 [x2 => IN | TE] M4 [x1 => [x2 <. x3]] M2, M3[x3 => IN1 | TE]M5]] => [M , [x, M1 [x2 => IN | TE] M4 [x1 => IN < IN1 | Bool] M2, M3[x3 => IN1 | TE]M5]] .
+ 
+  ***Regla para crear un bloque
+  rl[M , [x, M1 [x1 => AplicarF['_creation_block]] M2, M3]] => [M , [x, M1 [x1 => 2 | BNum ] M2, M3]] .
 
 ---   rl[M[x4 => MP]M1 , [x, M2[x2 => x4] M3, M4]] => [M[x4 => MP]M1 , [x, M2[x2 => MP] M3, M4]] .
 ---   rl[M[x4 => V]M1 , [x, M2[x2 => x4] M3, M4]] => [M[x4 => V]M1 , [x, M2[x2 => V] M3, M4]] .
