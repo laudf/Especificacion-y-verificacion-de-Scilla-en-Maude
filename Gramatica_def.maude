@@ -901,10 +901,11 @@ endfm
 
 fmod SISTEMA is
   pr MEMORIA .
-  sort Sistema Memorias .
+  sort Sistema Memorias Sustituir .
 
   op [_,_,_] : Contrato Memoria Memoria -> Sistema [ctor] .
-  op [_,_] : Memoria Memoria -> Memorias [ctor] .
+  op [_,_] : Memoria Memoria -> Sistema [ctor] .
+  op {_,_} : Memoria Qid -> Sistema [ctor] .
   op init : -> Sistema .
   eq init = [Contrato 0 iv NombreLibreria 'HelloWorld let 'one_msg funcion 'msg : Message let 'nil_msg Nil{Message} in
    Cons Message 'msg 'nil_msg let 'S1 Uint32 3 let 'S2 Uint32 2 NombreContrato 'HelloWorld ('owner : ByStr20) 
@@ -965,13 +966,13 @@ mod REGLAS is
   var MPN : Map{Nat,Nat} .
 
   ***Regla para guardar las importaciones
-  rl[Contrato N import LIMP NL LE NC LPI LCM LT ,M, M'] => [Contrato N iv NL LE NC LPI LCM LT ,M Importaciones[LIMP], M'] .
+  rl[Contrato N import LIMP NL LE NC lpv LCM LT ,M, M'] => [Contrato N iv NL LE NC lpv LCM LT ,M Importaciones[LIMP], M'] .
   ***Regla para guardar una variable de un let en la memoria
-  rl[Contrato N I NL let x TE IN LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => IN | TE], M'] .
-  crl[Contrato N I NL let x V LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M[x => V], M'] 
+  rl[Contrato N I NL let x TE IN LE NC lpv LCM LT ,M, M'] => [Contrato N I NL LE NC lpv LCM LT ,M[x => IN | TE], M'] .
+  crl[Contrato N I NL let x V LE NC lpv LCM LT ,M, M'] => [Contrato N I NL LE NC lpv LCM LT ,M[x => V], M'] 
      if not(esEntero(V)) .
   ***Reglas para almacenar los tipos en la memoria
-  rl[Contrato N I NL tipo x CONS LE NC LPI LCM LT ,M, M'] => [Contrato N I NL LE NC LPI LCM LT ,M Tipo[x, almacenarTipo(CONS)], M'] .
+  rl[Contrato N I NL tipo x CONS LE NC lpv LCM LT ,M, M'] => [Contrato N I NL LE NC lpv LCM LT ,M Tipo[x, almacenarTipo(CONS)], M'] .
   
   
   ***Regla para guardar los parametros inmutables en la memoria.
@@ -983,10 +984,10 @@ mod REGLAS is
   eq esNone(VCP) = false [owise] .
   
   ***Regla para guardar un campo en la memoria
-  rl[Contrato N I NL LE NC LPI campo x : TP = APF LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => almacenar(APF) | TP], M'] .
-  rl[Contrato N I NL LE NC LPI campo x : TP = None{NT} LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => None | TP], M'] .
-  rl[Contrato N I NL LE NC LPI campo x : TE = TE IN LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => IN | TE], M'] .
-  crl[Contrato N I NL LE NC LPI campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC LPI LCM LT,M[x => VCP | TP], M'] 
+  rl[Contrato N I NL LE NC lpv campo x : TP = APF LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M[x => almacenar(APF) | TP], M'] .
+  rl[Contrato N I NL LE NC lpv campo x : TP = None{NT} LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M[x => None | TP], M'] .
+  rl[Contrato N I NL LE NC lpv campo x : TE = TE IN LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M[x => IN | TE], M'] .
+  crl[Contrato N I NL LE NC lpv campo x : TP = VCP LCM LT,M, M'] => [Contrato N I NL LE NC lpv LCM LT,M[x => VCP | TP], M'] 
      if not(esEntero(VCP)) /\ not(esNone(VCP)) .
   crl[C,M [x => Emp NT TE | Map NT TE]M1, M'] => [C,M[x => MPN | Map NT TE]M1, M'] 
     if MPN := empty .
@@ -999,7 +1000,7 @@ mod REGLAS is
   ***Regla para guardar una transicion en la memoria (en este caso se guarda la regla entera)
   rl[Contrato N I NL LE NC LPI LCM T LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[T]] .
   ***Regla para guardar una transicion en la memoria (se divide la transicion en [nombre, entradas, cuerpo])
-  rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv,  ['_amount => Uint128]['_sender => ByStr20]]M'] .
+  rl[C , M , M2 [transicion x LPI LD end] M'] => [C , M , M2[x, LPI, LD, mv,  Entrada['_amount => Uint128] Entrada['_sender => ByStr20]]M'] .
   ***Regla para guardar un procedimiento en la memoria (en este caso se guarda la regla entera)
   rl[Contrato N I NL LE NC LPI LCM PROC LT ,M,M'] => [Contrato N I NL LE NC LPI LCM LT,M,M'[PROC]] .
   ***Regla para guardar un procedimiento en la memoria
@@ -1035,6 +1036,11 @@ mod REGLAS is
   rl[C , M , M3 Proc[x, LPI, EM LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2[EM], M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, LD, M2[EM]M5, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenarMatch(EM) M5, M4 ]M'] .
 
+  
+ 
+  ***rl [C, M, M1 [x, lpv, ldv, M4, M5]M7] => [C, M, M1 [x, M4, M5]M7] .
+
+  ***rl[Contrato N iv NL lev NC lpv lcmv ltv, M , M1] => [M , M1] .
   ***Regla para sustituir valores globales e las transiciones
   --- crl[C , M , M3[x, LPI, LD, M7, M6]M'] => [C , M , M3[x, LPI, LD, sustituir(M, M7), M6]M'] 
   ---    if tenerModificar(M7) [print "Entra" M7] .
@@ -1068,6 +1074,15 @@ endm
 ---   sort Elt to Entero .
 --- endv
 
+mod REGLAS-SUPRIMIR is
+  pr SISTEMA .
+
+  vars M M1 M2 M3 M4 : Memoria .
+  var x : Qid .
+
+  rl [M, M1 [x, lpv, ldv, M2, M3]M4] => [M, M1 [x, M2, M3]M4] .
+
+endm
 
 
 
@@ -1103,7 +1118,8 @@ mod REGLAS-EJECUTAR is
   var S : String .
   var CL : Clave .
  
-  rl [M, M1 [x, LPI, LD, M4, M5]M7] => [M, M1 [x, M4, M5]M7] .
+  
+  
   ***rl [M[x => NT]M1, M2] => [M[x => 1]M1, M2] .
   --- rl [M, M1 [x, M4, M5 ['_amount => TE] M6]M7] => [M, M1 [x, M4, M5 ['_amount => 100] M6]M7] .
   --- rl [M, M1 [x, M4, M5 ['_sender => NT] M6]M7] => [M, M1 [x, M4, M5 ['_sender => 1] M6]M7] .
@@ -1180,32 +1196,49 @@ mod REGLAS-EJECUTAR is
   op sustituirFuncion : Memoria Memoria QidList -> Memoria [ctor] .
   eq sustituirFuncion(M, M1, nil) = M1 .
   ***eq sustituirFuncion(M[x => IN]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
-  eq sustituirFuncion(M[x => IN | NT]M1, Funcion[Entrada[x1 => NT], M2], x QL) = Funcion[[x1 => IN], sustituirFuncion(M[x => IN]M1, M2, QL)] .
-  eq sustituirFuncion(M[x => V | TV]M1, Funcion[Entrada[x1 => TV], M2], x QL) = Funcion[[x1 => V], sustituirFuncion(M[x => V]M1, M2, QL)] .
+  eq sustituirFuncion(M[x => IN | TV]M1, Funcion[Entrada[x1 => TV], M2], x QL) = Funcion[[x1 => IN | TV], sustituirFuncion(M[x => IN | TV]M1, M2, QL)] .
+  eq sustituirFuncion(M[x => V | TV]M1, Funcion[Entrada[x1 => TV], M2], x QL) = Funcion[[x1 => V | TV], sustituirFuncion(M[x => V | TV]M1, M2, QL)] .
   eq sustituirFuncion(M[x => M3 | 'mensaje]M1, Funcion[Entrada[x1 => Message], M2], x QL) = Funcion[[x1 => M3 | 'mensaje], sustituirFuncion(M[x => M3]M1, M2, QL)] .
   
   op cogerParamFuncion : Memoria -> Memoria [ctor] .
-  eq cogerParamFuncion(Funcion[[x1 => IN], M2]) = [x1 => IN] cogerParamFuncion(M2) .
-  eq cogerParamFuncion(Funcion[[x1 => V], M2]) = [x1 => V] cogerParamFuncion(M2) .
+  eq cogerParamFuncion(Funcion[[x1 => IN | TV], M2]) = [x1 => IN | TV] cogerParamFuncion(M2) .
+  eq cogerParamFuncion(Funcion[[x1 => V | TV], M2]) = [x1 => V | TV] cogerParamFuncion(M2) .
   eq cogerParamFuncion(Funcion[[x1 => M3 | 'mensaje], M2]) = [x1 => M3 | 'mensaje] cogerParamFuncion(M2) .
   eq cogerParamFuncion(M) = mv [owise] .
 
   op cogerInst : Memoria -> Memoria [ctor] .
-  eq cogerInst(Funcion[[x1 => IN], M2]) = cogerInst(M2) .
-  eq cogerInst(Funcion[[x1 => V], M2]) = cogerInst(M2) .
+  eq cogerInst(Funcion[[x1 => IN | TV], M2]) = cogerInst(M2) .
+  eq cogerInst(Funcion[[x1 => V | TV], M2]) = cogerInst(M2) .
   eq cogerInst(Funcion[[x1 => M3 | 'mensaje], M2]) = cogerInst(M2) .
   eq cogerInst(M) = M [owise] .
 
-  op ejecutarFuncion : Memoria Memoria -> Val [ctor] .
-  eq ejecutarFuncion(M[x => V] M1 [x1 => V1]M3, [x or x1]) = V or V1 .
-  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x <. x1]) = IN < IN1 .
-  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x1 <. x]) = IN1 < IN .
-  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x ==. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN == IN1] , M2) .
-  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x <. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN < IN1] , M2) .
-  eq ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3, [x2 => [x +. x1], M2]) = ejecutarFuncion(M[x => IN] M1 [x1 => IN1]M3 [x2 => IN + IN1] , M2) .
+  sort ValorTipo .
+  op |_,_| : Val TipoVariable -> ValorTipo [ctor] .
+  op |_,_| : Int TipoVariable -> ValorTipo [ctor] .
+
+  op ejecutarFuncion : Memoria Memoria -> ValorTipo [ctor] .
+  eq ejecutarFuncion(M[x => V | TV] M1 [x1 => V1 | TV]M3, [x or x1]) = | V or V1, Bool | .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x <. x1]) = | IN < IN1, Bool | .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x1 <. x]) = | IN1 < IN, Bool | .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x2 => [x ==. x1], M2]) = ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3 [x2 => IN == IN1 | Bool] , M2) .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x2 => [x1 ==. x], M2]) = ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3 [x2 => IN1 == IN | Bool] , M2) .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x2 => [x <. x1], M2]) = ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3 [x2 => IN < IN1 | Bool] , M2) .
+  eq ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3, [x2 => [x +. x1], M2]) = ejecutarFuncion(M[x => IN | TV] M1 [x1 => IN1 | TV]M3 [x2 => IN + IN1 | TV] , M2) .
+  eq ejecutarFuncion(M[x => IN | BNum] M1 [x1 => IN1 | TE]M3, [x2 => [x +. x1], M2]) = ejecutarFuncion(M[x => IN | BNum] M1 [x1 => IN1 | TE]M3 [x2 => IN + IN1 | BNum] , M2) .
+  eq ejecutarFuncion(M[x => V | TV] M1 [x1 => V1 | TV]M3, [x2 => Par[x1, x], M2]) = ejecutarFuncion(M[x => V | TV] M1 [x1 => V1 | TV]M3 [x2 => Pair V1 V] , M2) .
+  eq ejecutarFuncion(M[x => V | TV] M1 [x1 => V1 | TV]M3, [x2 => Par[x, x1], M2]) = ejecutarFuncion(M[x => V | TV] M1 [x1 => V1 | TV]M3 [x2 => Pair V V1] , M2) .
   ***eq ejecutarFuncion([x => M3], [x2 => Nil[NT], M2]) = M3 .
-  eq ejecutarFuncion(M, [x2 => TE IN, M2]) = ejecutarFuncion(M [x2 => IN] , M2) .
-  eq ejecutarFuncion(M[x => TOP]M3, [x2 => M1[TOP => B]M2]) = B .
+
+  eq ejecutarFuncion(M, [x2 => TE IN, M2]) = ejecutarFuncion(M [x2 => IN | TE] , M2) .
+  eq ejecutarFuncion(M[x => TOP | TV]M3, [x2 => M1[TOP => B]M2]) = | B, Bool | .
+  eq ejecutarFuncion(M[x => TOP | TV]M3, [x2 => M1[x3 => B]]) = | B, Bool |  .
+  eq ejecutarFuncion(M[x1 => IN | TV] M2 [x => TOP]M3, [x2 => M1[TOP => x1]M2]) = | IN, TV | .
+  eq ejecutarFuncion(M[x => TOP | TV]M3, [x2 => M1[x3 => M4]]) = ejecutarFuncion(M[x => TOP | TV]M3, M4)  .
+  eq ejecutarFuncion(M[x => IN | TV]M3, Some[x]) = | Some IN, Option TV | .
+  eq ejecutarFuncion(M[x => TOP | TV]M3, [x => M1[TOP => M2]M4]) = ejecutarFuncion(M[x => TOP | TV]M3, M2) .
+
+  op ejecutarFuncionEntero : Memoria Memoria -> Int [ctor] .
+  eq ejecutarFuncionEntero(M[x => IN] M4[x => TOP]M3, [x2 => M1[TOP => x]M2]) = IN .
 
   vars VV VV1 : ValorVariable .
   var TV : TipoVariable .
@@ -1215,7 +1248,7 @@ mod REGLAS-EJECUTAR is
   
   ***Regla para ejecutar la operacion igual
   ***Los parámetros están en las variables globales y en la entrada de la transicion
-  rl[M[x4 => IN | TE]M1 , [x, M2[x2 => [x3 ==. x4]] M3, M4[x3 => IN1 | TE] M5]] => [M[x4 => IN | TE]M1 , [x, M2[x2 => IN1 == IN | Bool] M3, M4[x3 => IN1 | TE] M5]] .
+  rl[M[x4 => IN | TV]M1 , [x, M2[x2 => [x3 ==. x4]] M3, M4[x3 => IN1 | TV] M5]] => [M[x4 => IN | TV]M1 , [x, M2[x2 => IN1 == IN | Bool] M3, M4[x3 => IN1 | TV] M5]] .
 
   ***Regla para ejecutar la operacion suma
   ***Los parámetros están en las variables globales y en las variables locales
@@ -1242,15 +1275,15 @@ mod REGLAS-EJECUTAR is
   ***La x2 esta en la entrada de la transicion
   rl[M[x1 => IN | TE]M1 , [x, M2 Actualizar[x1, x2] M3, M4 [x2 => IN1 | TE] M5]] => [M[x1 => IN1 | TE]M1 , [x, M2 M3, M4 [x2 => IN1 | TE] M5]] .
 
-  ***Regla para sustituir las variables de los eventos.
+  ***Regla para sustituir las variables de los eventos y mensajes.
   ***Desde una variable global.
-  rl[M [x2 => IN | TE] M1 , [x, M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M [x2 => IN | TE] M1 , [x, M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
+  rl[M [x2 => IN | TV] M1 , [x, M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M [x2 => IN | TV] M1 , [x, M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
   ***Desde una variable local
   rl[M , [x, M1[x2 => VV | TV] M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M , [x, M1 M2 [x1 => M5[x3 => VV]M6 | x4] M3, M4]] .
   ***Desde una variable local, este caso solo vale para enteros
-  rl[M , [x, M1[x2 => IN | TE] M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M , [x, M1 [x2 => IN | TE] M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
+  rl[M , [x, M1[x2 => IN | TV] M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M , [x, M1 [x2 => IN | TV] M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
   ***Desde una variable que está en la entrada de la transicion
-  rl[M , [x, M1 [x1 => M5[x3 => x2]M6 | x4] M3, M4[x2 => IN | TE] M2]] => [M , [x, M1 [x1 => M5[x3 => IN]M6 | x4] M3, M4 [x2 => IN | TE] M2]] .
+  rl[M , [x, M1 [x1 => M5[x3 => x2]M6 | x4] M3, M4[x2 => IN | TV] M2]] => [M , [x, M1 [x1 => M5[x3 => IN]M6 | x4] M3, M4 [x2 => IN | TV] M2]] .
   
 
   ***Regla para ejecutar la operacion evento.
@@ -1288,16 +1321,32 @@ mod REGLAS-EJECUTAR is
   eq hayMsg(M[x => M1 | 'mensaje]M2) = true .
   eq hayMsg(M) = false [owise] .
 
+  --- op devolverTipo : ValorTipo -> TipoVariable [ctor] .
+  --- eq devolverTipo(| V, TV |) = TV .
+  --- eq devolverTipo(| IN, TV |) = TV .
+
+  --- op devolverValor : ValorTipo -> Val [ctor] .
+  --- eq devolverValor(| V, TV |) = V .
+  --- eq devolverValor(| IN, TV |) = IN .
+
+
+  var VT : ValorTipo .
+
+  op [_=>_] : Variable ValorTipo -> Memoria [ctor] .
+
+
   ***Reglas para ejecutar una funcion
   crl[M [x2 => M1] M5 , [x, M2[x1 => AplicarF[x2, QL]] M3, M4]] => [M [x2 => M1] M5 , [x, M2[x1 => [M1, QL]] M3, M4]]
     if not(tenerMod(M2)) .
-  --- crl[M , [x, M2[x1 => [M1, QL]] M3, M4]] => [M , [x, M2[x1 => [sustituirFuncion(M M2, M1, QL), nil]] M3, M4]] 
-  ---    if not(QL == nil)  .
-  --- rl[M , [x, M2[x1 => [ M1, nil]] M3, M4]] => [M , [x, M2[x1 => [ cogerParamFuncion(M1) => cogerInst(M1)]] M3, M4]] .
-  --- rl[M , [x, M2[x1 => [ [x2 => M6 | 'mensaje] => [x3 => Nil[NT], M8]]] M3, M4]] => [M , [x, M2[x1 => M6 | 'mensaje] M3, M4]]  .
-  --- crl[M , [x, M2[x1 => [ M5 => M6]] M3, M4]] => [M , [x, M2[x1 => ejecutarFuncion(M5, M6) | Bool] M3, M4]]  
-  ---    if not(hayMsg(M5)) .
-
+  crl[M , [x, M2[x1 => [M1, QL]] M3, M4]] => [M , [x, M2[x1 => [sustituirFuncion(M M2 M4, M1, QL), nil]] M3, M4]] 
+     if not(QL == nil)  .
+  rl[M , [x, M2[x1 => [ M1, nil]] M3, M4]] => [M , [x, M2[x1 => [ cogerParamFuncion(M1) => cogerInst(M1)]] M3, M4]] .
+  rl[M , [x, M2[x1 => [ [x2 => M6 | 'mensaje] => [x3 => Nil[NT], M8]]] M3, M4]] => [M , [x, M2[x1 => M6 | 'mensaje] M3, M4]]  .
+  crl[M , [x, M2[x1 => [ M5 => M6]] M3, M4]] => [M , [x, M2[x1 => VT] M3, M4]]  
+     if not(hayMsg(M5)) /\ VT := ejecutarFuncion(M5, M6) .
+  rl[M , [x, M2[x1 => | V, TV |] M3, M4]] => [M , [x, M2[x1 => V | TV] M3, M4]]  .
+  rl[M , [x, M2[x1 => | IN, TV |] M3, M4]] => [M , [x, M2[x1 => IN | TV] M3, M4]]  .
+    
   ***Regla para ejecutar un let in
   ***La operacion es < y una de las variables está en la entrada de la transicion
   rl[M , [x, M2 [x1 => [x2 => TE IN, [x3 <. x2]]] M3, M4 [x3 => IN1 | TE] M5]] => [M , [x, M2 [x1 => IN1 < IN | Bool] M3, M4[x3 => IN1 | TE] M5]] .
@@ -1502,10 +1551,106 @@ mod REGLAS-EJECUTAR is
 
 endm
 
+mod REGLAS-VALOR is
+ pr SISTEMA .
+ pr CONVERSION .
+ vars x x1 : Qid .
+ var TV : TipoVariable .
+ vars M M1 M2 : Memoria .
+ var IN : Int .
+ vars S S' : String .
+ var N : Nat .
+
+ op convertirInt : Qid -> Int [ctor] .
+ ceq convertirInt(x) = IN
+    if S := string(x) /\
+       ***N := sd(length(S), 2) /\
+       ***S' := substr(S, 1, N) [print N] .
+       IN := rat(S, 10)  .
+
+ op convertirString : Qid -> String [ctor] .
+ ceq convertirString(x) = S'
+    if S := string(x) /\
+       N := sd(length(S), 2) /\
+       S' := substr(S, 1, N) [print N] .
+
+ op esString : Qid -> Bool [ctor] .
+ ceq esString(x) = true 
+    if S := string(x) /\
+       N := find(S, "\"", 0) .
+ eq esString(x) = false [owise] .
+
+
+ crl {Entrada[x => TV] M, x1} => {M [x => convertirInt(x1) | TV], 'q} 
+   if not(x1 == 'q) /\ not(esString(x1)) .
+
+ crl {Entrada[x => TV] M, x1} => {M [x => convertirString(x1) | TV], 'q} 
+   if not(x1 == 'q) .
+endm
+
+mod REGLAS-VALOR-TRANSICION is
+ pr SISTEMA .
+ pr CONVERSION .
+ vars x x1 x2 : Qid .
+ var TV : TipoVariable .
+ vars M M1 M2 : Memoria .
+ var IN : Int .
+ vars S S' : String .
+ var N : Nat .
+
+ op convertirInt : Qid -> Int [ctor] .
+ ceq convertirInt(x) = IN
+    if S := string(x) /\
+       ***N := sd(length(S), 2) /\
+       ***S' := substr(S, 1, N) [print N] .
+       IN := rat(S, 10)  .
+
+ op convertirString : Qid -> String [ctor] .
+ ceq convertirString(x) = S'
+    if S := string(x) /\
+       N := sd(length(S), 2) /\
+       S' := substr(S, 1, N) [print N] .
+
+ op esString : Qid -> Bool [ctor] .
+ ceq esString(x) = true 
+    if S := string(x) /\
+       N := find(S, "\"", 0) .
+ eq esString(x) = false [owise] .
+
+
+
+ crl {[x1, M1, Entrada[x => TV] M], x2} => {[x1, M1, M [x => convertirInt(x2) | TV]], 'q} 
+   if not(x2 == 'q) /\ not(esString(x2)) [print "hecho"] .
+
+ crl {[x1, M1, Entrada[x => TV] M], x2} => {[x1, M1, M [x => convertirString(x2) | TV]], 'q} 
+   if not(x2 == 'q) [print "hecho"] .
+endm
+
+red esString('1) .
+red esString('"hola") .
+red convertirString('"Hola") .
+
+mod REGLAS-TRANSICION is
+  pr SISTEMA .
+
+
+  vars x : Qid .
+  var TV : TipoVariable .
+  vars M M1 M2 M3 : Memoria .
+
+
+  rl {M [x, M1, M2] M3, x} => {[x, M1, M2], 'q} .
+
+
+endm 
+
+
+
 rew init .
 red tenerModificar([false => ['x2 => ['x4 => 'x5]]]) .
 red sustituir(['x1 => "ss"] ['x => ""], ['c => 'v] [false => ['x2 => ['x4 => 'x]]]) .
 red almacenar(let 'x Nil{Message} in Cons Message 'msg 'nil_msg) .
+***red convertirInt('"Hola") .
 --- search init =>* [cv , M:Memoria] .
 
 
