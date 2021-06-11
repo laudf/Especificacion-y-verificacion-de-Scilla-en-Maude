@@ -14,7 +14,7 @@ fmod PARSING is
 ---  op <_> : Term -> ParsingRes [ctor] .
 
  vars T T1 T1' T2 T2' T3 T3' T4 T4' T5 T5' T6 T6' T7 T7' : Term .
- var  TL TL' : TermList .
+ var  TL TL' TL1 : TermList .
  var  Ct : Constant .
  var  S : String .
  var  F : Float .
@@ -64,12 +64,7 @@ fmod PARSING is
  eq parse('bubble[TL]) = TL .
 
 
- ceq parse('_=_;[T1, T2]) = '_=_;[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_+_[T1, T2]) = '_+._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
+
  ***ENTEROS
  ceq parse('eq__[T1, T2]) = '_==._[T1', T2']
   if T1' := parse(T1) /\
@@ -372,11 +367,11 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
  eq downQidType(Ct)
     = qid(substr(string(getName(Ct)), 0, length(string(getName(Ct))))) .
 
- op downQidList : TermList -> [QidList] [memo] .
+ op downQidList : TermList -> QidList [ctor] .
  eq downQidList(T)
-    = qid(substr(string(getName(T)), 1, length(string(getName(T))))) .
+    = downQid(T) .
  eq downQidList(T TL)
-    = qid(substr(string(getName(T)), 1, length(string(getName(T))))) downQidList(TL) .
+    = downQid(T) downQidList(TL) [print TL] .
  
 
  ***sort TipoValorE .
@@ -421,9 +416,9 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
  op sustituirTerminoTransicion : Term Term -> Term [ctor] .
  eq sustituirTerminoTransicion('`[_`,_`][T, T1], '`{_`,_`}[T2, T3]) = '`[_`,_`][T, T2]  .
 
- op obtenerNombresTransiciones : TermList -> TermList [ctor] .
+ op obtenerNombresTransiciones : TermList -> QidList [ctor] .
  eq obtenerNombresTransiciones(empty) = nil .
- eq obtenerNombresTransiciones(('`[_`,_`,_`][T, T1, T2], TL)) = T obtenerNombresTransiciones(TL) .
+ eq obtenerNombresTransiciones(('`[_`,_`,_`][T, T1, T2], TL)) = downQid(T) obtenerNombresTransiciones(TL) .
  eq obtenerNombresTransiciones('`[_`,_`][T, '__[TL]]) = obtenerNombresTransiciones(TL) .
 
  op devolverString : QidList -> String [ctor] .
@@ -431,11 +426,13 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
  eq devolverString(Q QL) = string(Q) + ", " + devolverString(QL) .
 
  op obtenerResultado : TermList -> TermList [ctor] .
- eq obtenerResultado(empty) = nil .
- eq obtenerResultado(('`[_=>_`][''enviar.Qid, TL], TL')) = '`[_=>_`][''enviar.Qid, TL], obtenerResultado(TL') .
- eq obtenerResultado(('`[_=>_`][''evento.Qid, TL], TL')) = '`[_=>_`][''evento.Qid, TL], obtenerResultado(TL') .
+ eq obtenerResultado(empty) = empty .
+ eq obtenerResultado((TL1, '`[_=>_`][''enviar.Qid, TL], TL')) = '`[_=>_`][''enviar.Qid, TL], obtenerResultado(TL') .
+ eq obtenerResultado((TL1, '`[_=>_`][''evento.Qid, TL], TL')) = '`[_=>_`][''evento.Qid, TL], obtenerResultado(TL') .
  eq obtenerResultado('`[_`,_`,_`][T, '__[TL], T2]) = obtenerResultado(TL) .
- eq obtenerResultado('`[_`,_`,_`][T, T1, T2]) = T1 .
+ eq obtenerResultado('`[_`,_`,_`][T, 'mv.Memoria, T2]) = empty .
+ eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''evento.Qid, TL], T2]) = '`[_=>_`][''evento.Qid, TL] .
+ eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''enviar.Qid, TL], T2]) = '`[_=>_`][''enviar.Qid, TL] .
  eq obtenerResultado('`[_`,_`][T, T1]) = obtenerResultado(T1) .
 
 
@@ -448,7 +445,6 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
 
 endfm
 
-red parse('bubble[''a.Qid, ''msg.Qid]) .
 
 mod MTP is
  ***pr SISTEMA .
@@ -485,7 +481,7 @@ mod MTP is
  op term:_ : Term -> Attribute [ctor] .
 
  sort State .
- ops idle reading parsing pedirInfo guardarMem cargarParametros suprimir cogerTransicion ejecutarTransicion pedirParamTransicion cargarParamTransicion : -> State [ctor] .
+ ops idle reading parsing pedirInfo guardarMem cargarParametros suprimir cogerTransicion pedirParamTransicion cargarParamTransicion : -> State [ctor] .
 
  *** Run command
  op run : -> Configuration [ctor] .
@@ -552,7 +548,7 @@ crl [parsing] :
     QIL := tokenize(Read) /\
     QIL1 := preparse(QIL) /\
     {T, Ty} := metaParse(GRAMMAR, QIL1, anyType) /\
-    T' := parse(T) [print QIL1 T "\nParseado: " T'] .
+    T' := parse(T) [print QIL "\n" QIL1 "\n" T "\nParseado: " T' "\n"] .
 
 crl [guardarMemoria] :
     < example : EXAMPLE | file: noFile, read: "",  state: guardarMem, terms: empty,  term: T, Attrs >
@@ -560,7 +556,7 @@ crl [guardarMemoria] :
     write(stdout, example, "Guardado.\n")
  if 
     {T', Ty} := metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`][T, 'mv.Memoria, 'mv.Memoria], unbounded) /\
-    T1 := modificarTermino(T') [print "\nGuardarMemoria: " T1]  .
+    T1 := modificarTermino(T') [print T' "\nGuardarMemoria: " T1]  .
 
 crl [suprimirCampos] :
     < example : EXAMPLE | read: "",  state: suprimir, term: T, Attrs >
@@ -583,7 +579,7 @@ crl [suprimirCampos] :
 crl [pedirParametros] :
     < example : EXAMPLE | read: "", state: pedirInfo, term: T, Attrs >
  => < example : EXAMPLE | read: "", state: cargarParametros, term: T, Attrs >
-    getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " >") 
+    getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " > ") 
     if 
       hayEntradas(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradas(T) [print T] .
@@ -591,7 +587,7 @@ crl [pedirParametros] :
 crl [noHayParametros] :
     < example : EXAMPLE | read: "", state: pedirInfo, term: T, Attrs >
  => < example : EXAMPLE | read: "", state: cogerTransicion, term: T, Attrs >
-    getLine(stdin, example, "Que transicion quieres ejecutar? " + devolverString(downQidList(QIL)) + " >") 
+    getLine(stdin, example, "Que transicion quieres ejecutar? " + devolverString(QIL) + " > ") 
     if 
       not(hayEntradas(T)) /\
       QIL := obtenerNombresTransiciones(T) [print QIL] .
@@ -625,7 +621,7 @@ crl [cogerTransicion] :
 crl [pedirParamTransicion] :
     < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T3, Attrs >
  => < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, Attrs >
-    getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " >") 
+    getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " > ") 
     if 
       hayEntradasTransicion(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradasTransicion(T) [print T] .
@@ -638,7 +634,7 @@ crl [pedirParamTransicion] :
       {T', Ty} := metaRewrite(upModule('REGLAS-EJECUTAR, true), T, unbounded) /\
       T2 := sustituirTermino(T1, T') /\
       T3 := obtenerTermino(T2) /\
-      TL := obtenerResultado(T')  [print "El resultado de las variables globales es: "  T3  "\nEl resultado de la transicion es: " TL] .
+      TL := obtenerResultado(T')  [print T' "\nEl resultado de las variables globales es: "  T3  "\nEl resultado de la transicion es: " TL] .
 
  crl [cargarPTransicion] :
     gotLine(example, stdin, Text)
@@ -688,7 +684,7 @@ crl [pedirParamTransicion] :
 
  eq run =
     <> < example : EXAMPLE | file: noFile, read: "", state: idle, terms: empty >
-    getLine(stdin, example, "Introduce file name> ") .
+    getLine(stdin, example, "Introduce el nombre del archivo> ") .
 endm
 
 

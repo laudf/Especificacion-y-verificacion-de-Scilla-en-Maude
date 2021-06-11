@@ -40,14 +40,14 @@ transition addMember (name : String , addr : ByStr20 , memberType : Uint32)
                     _amount : Uint128 0 ; 
                     code : code_success} ;
              msgs = (one_msg msg) ;
-             send msgs 
+             send msg
           | False =>
               msg = {_tag : "" ;
                     _recipient : _sender ;
                     _amount : Uint128 0 ;
                     code : code_invalid_params} ;
               msgs = (one_msg msg) ;
-              send msgs
+              send msg
           end
      | False =>
        msg = {_tag : "" ;

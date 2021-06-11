@@ -2,8 +2,8 @@ fmod PREPARSE is
  pr CONVERSION .
  pr QID-LIST .
 
- var S S1 S2 S3 S4 : QidList .
- var Q Q1 : Qid .
+ vars S S1 S2 S3 S4 : QidList .
+ vars Q Q1 : Qid .
 
  op preparse : QidList -> QidList .
  eq preparse('scilla_version Q 'library S ) = 'scilla-version Q 'iv 'library preparse(S) .
