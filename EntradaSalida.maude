@@ -1,5 +1,6 @@
 load preparse.maude
 load Gramatica_def.maude
+load codigoMuerto.maude
 load file.maude
 
 fmod PARSING is
@@ -22,6 +23,7 @@ fmod PARSING is
  var  I : Int .
  vars St St' St'' St''' : String .
  vars  N N' : Nat .
+ vars QIL QIL1 : QidList .
 
  op parse : Term -> Term .
  ***eq parse(T) = parse(upModule('campos_modificables, true), T) .
@@ -181,6 +183,8 @@ fmod PARSING is
  ceq parse('Option_[T1]) = 'Option_[T1']
   if T1' := parse(T1) .
  ***Listas
+ ceq parse('List_[T1]) = 'List_[T1']
+  if T1' := parse(T1) .
  ceq parse('Nil`{_`}[T1]) = 'Nil`{_`}[T1']
   if T1' := parse(T1) .
  ceq parse('Cons`{_`}__[T1, T2, T3]) = 'Cons___[T1', T2', T3']
@@ -235,9 +239,10 @@ fmod PARSING is
   if TL' := parseL(TL) .
  
 
- ceq parse('@__[T1, T2]) = '@__[T1', T2']
+ ceq parse('@___[T1, T2, T3]) = '@___[T1', T2', T3']
   if T1' := parse(T1) /\
-     T2' := parse(T2) .
+     T2' := parse(T2) /\
+     T3' := parse(T3) .
  ceq parse('builtin_[T1]) = 'builtin_[T1']
   if T1' := parse(T1) .
  ceq parse('|_=>_[T1, T2]) = 'opcionMatch__[T1', T2']
@@ -317,6 +322,11 @@ fmod PARSING is
  ceq parse('bool-to-string_[T1]) = 'bool-to-string_[T1']
   if T1' := parse(T1) .
 ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
+  if T1' := parse(T1) /\
+     T2' := parse(T2) .
+
+ ***INTUTILS
+ ceq parse('uint128-le__[T1, T2]) = '_<._[T1', T2']
   if T1' := parse(T1) /\
      T2' := parse(T2) .
 
@@ -419,27 +429,55 @@ ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
  op obtenerNombresTransiciones : TermList -> QidList [ctor] .
  eq obtenerNombresTransiciones(empty) = nil .
  eq obtenerNombresTransiciones(('`[_`,_`,_`][T, T1, T2], TL)) = downQid(T) obtenerNombresTransiciones(TL) .
+ ***eq obtenerNombresTransiciones(('Proc`[_`,_`,_`,_`,_`][T, T1, T2, T3, T4], TL)) = obtenerNombresTransiciones(TL) .
  eq obtenerNombresTransiciones('`[_`,_`][T, '__[TL]]) = obtenerNombresTransiciones(TL) .
+ eq obtenerNombresTransiciones('`[_`,_`][T, T1]) = obtenerNombresTransiciones(T1) .
 
  op devolverString : QidList -> String [ctor] .
  eq devolverString(Q) = string(Q) .
  eq devolverString(Q QL) = string(Q) + ", " + devolverString(QL) .
 
+ op tenerDev : TermList -> Bool [ctor] .
+ eq tenerDev(('`[_=>_`][''enviar.Qid, TL], TL')) = true .
+ eq tenerDev(('`[_=>_`][''evento.Qid, TL], TL')) = true .
+ eq tenerDev(('`[_=>_`][''evento.Qid, TL], TL')) = true .
+ eq tenerDev((T, TL')) = tenerDev(TL') .
+ eq tenerDev(TL) = false [owise] .
+
  op obtenerResultado : TermList -> TermList [ctor] .
  eq obtenerResultado(empty) = empty .
- eq obtenerResultado((TL1, '`[_=>_`][''enviar.Qid, TL], TL')) = '`[_=>_`][''enviar.Qid, TL], obtenerResultado(TL') .
- eq obtenerResultado((TL1, '`[_=>_`][''evento.Qid, TL], TL')) = '`[_=>_`][''evento.Qid, TL], obtenerResultado(TL') .
+ ceq obtenerResultado((TL1, '`[_=>_`][''enviar.Qid, TL], TL')) = '`[_=>_`][''enviar.Qid, TL], obtenerResultado(TL')
+    if not(tenerDev(TL1)) .
+ ceq obtenerResultado((TL1, '`[_=>_`][''evento.Qid, TL], TL')) = '`[_=>_`][''evento.Qid, TL], obtenerResultado(TL') 
+    if not(tenerDev(TL1)) .
  eq obtenerResultado('`[_`,_`,_`][T, '__[TL], T2]) = obtenerResultado(TL) .
  eq obtenerResultado('`[_`,_`,_`][T, 'mv.Memoria, T2]) = empty .
  eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''evento.Qid, TL], T2]) = '`[_=>_`][''evento.Qid, TL] .
  eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''enviar.Qid, TL], T2]) = '`[_=>_`][''enviar.Qid, TL] .
+ eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''throw.Qid, TL], T2]) = '`[_=>_`][''throw.Qid, TL] .
  eq obtenerResultado('`[_`,_`][T, T1]) = obtenerResultado(T1) .
 
 
 ---  op introducirValor : Term Term -> Term [ctor] .
 ---  eq introducirValor('__['Entrada`[_=>_`][T, T1], TL], T2) = '__[TL, '`[_=>_|_`][T, T2, T1]] [print T2] .
 ---  eq introducirValor('`[_`,_`][T, T1], T2) = '`[_`,_`][introducirValor(T, T2), T1] [print "aa"] .
- 
+ op obtenerCampos : QidList -> QidList [ctor] .
+ eq obtenerCampos(nil) = nil .
+ eq obtenerCampos('field Q QIL) = Q obtenerCampos(QIL) .
+ eq obtenerCampos(Q QIL) = obtenerCampos(QIL) .
+
+ var C : Constant .
+ var Q'' : Qid .
+
+ op obtenerCamposMod : TermList QidList -> TermList [ctor] .
+ eq obtenerCamposMod(TL, nil) = empty .
+ ceq obtenerCamposMod((TL1, '`[_=>_|_`][C, T, T1], TL'), Q QIL) = '`[_=>_|_`][C, T, T1], obtenerCamposMod((TL1, TL'), QIL)
+   if Q' := getName(C) /\
+      S := string(Q') /\
+      St := substr(S, 1, length(S)) /\
+      Q'' := qid(St) /\
+      Q'' == Q  .
+ eq obtenerCamposMod('__[TL], QIL) = obtenerCamposMod(TL, QIL) .
  
 
 
@@ -454,18 +492,20 @@ mod MTP is
  pr  LEXICAL .
  pr PARSING .
  inc FILE .
+ pr DEAD-CODE-SCILLA .
 
  vars Text Original Read Source : String .
  var  Attrs Attrs1 : AttributeSet .
  vars FHIn FHOut : Oid .
- var  QIL QIL1 : QidList .
+ var  QIL QIL1 QIL2 : QidList .
  vars T T' T1 T2 T3 T4 : Term .
  var  M : Module .
  vars N N' : Nat .
  var  Ty : Type .
  vars  Q Q1 : Qid .
  var S : String .
- var TL : TermList .
+ vars TL TL1 : TermList .
+ var DCI : DeadCodeInfo .
 
  *** Object and class definition
  op EXAMPLE : -> Cid [ctor] .
@@ -478,10 +518,11 @@ mod MTP is
  op read:_ : String -> Attribute [ctor] .
  op state:_ : State -> Attribute [ctor] .
  op terms:_ : TermList -> Attribute [ctor gather (&)] .
- op term:_ : Term -> Attribute [ctor] .
+ op term:_ : Term -> Attribute [ctor] .   
+ op listaCampos:_ : QidList -> Attribute [ctor] .
 
  sort State .
- ops idle reading parsing pedirInfo guardarMem cargarParametros suprimir cogerTransicion pedirParamTransicion cargarParamTransicion : -> State [ctor] .
+ ops idle reading parsing pedirInfo guardarMem cargarParametros suprimir cogerTransicion pedirParamTransicion cargarParamTransicion eleccion eleccionHecha analisis terminar : -> State [ctor] .
 
  *** Run command
  op run : -> Configuration [ctor] .
@@ -542,25 +583,52 @@ rl [newLine] :
 
 crl [parsing] :
     < example : EXAMPLE | read: Read, state: parsing, Attrs >
- => < example : EXAMPLE | read: "", state: guardarMem, term: T', Attrs >
+ => < example : EXAMPLE | read: "", state: eleccion, term: T', listaCampos: QIL2, Attrs >
     write(stdout, example, "Parsed.\n")
  if Read =/= "" /\
     QIL := tokenize(Read) /\
     QIL1 := preparse(QIL) /\
+    QIL2 := obtenerCampos(QIL1) /\
     {T, Ty} := metaParse(GRAMMAR, QIL1, anyType) /\
     T' := parse(T) [print QIL "\n" QIL1 "\n" T "\nParseado: " T' "\n"] .
 
+
+rl [elegir] :
+    < example : EXAMPLE | read: "", state: eleccion, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: eleccionHecha, term: T, listaCampos: QIL2, Attrs >
+    getLine(stdin, example, "Que quieres hacer: 1 ejecutar o 2 analizar codigo muerto > ") .
+
+rl [eleccionHecha] :
+   gotLine(example, FHIn, Text)
+   < example : EXAMPLE | read: "", state: eleccionHecha, term: T, listaCampos: QIL2, Attrs  >
+=> if Text == "1\n"
+   then < example : EXAMPLE | read: "", state: guardarMem, term: T, listaCampos: QIL2, Attrs  > 
+        closeFile(FHIn, example)
+   else < example : EXAMPLE | read: "", state: analisis, term: T, Attrs   >
+        getLine(FHIn, example)
+   fi .
+
+crl [analizar] :
+    < example : EXAMPLE | read: "", state: analisis, term: T, Attrs >
+ => < example : EXAMPLE | read: "", state: terminar, term: T, Attrs >
+
+  if DCI := deadCode(T) [print "El resultado del analisis es: " DCI] .
+
+rl [terminar] :
+    < example : EXAMPLE | read: "", state: terminar, term: T, Attrs >
+ => write(stdout, example, "Terminado.\n") .
+
 crl [guardarMemoria] :
-    < example : EXAMPLE | file: noFile, read: "",  state: guardarMem, terms: empty,  term: T, Attrs >
- => < example : EXAMPLE | read: "", state: suprimir, term: T1, Attrs >
+    < example : EXAMPLE | file: noFile, read: "",  state: guardarMem, terms: empty,  term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: suprimir, term: T1, listaCampos: QIL2, Attrs >
     write(stdout, example, "Guardado.\n")
  if 
     {T', Ty} := metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`][T, 'mv.Memoria, 'mv.Memoria], unbounded) /\
     T1 := modificarTermino(T') [print T' "\nGuardarMemoria: " T1]  .
 
 crl [suprimirCampos] :
-    < example : EXAMPLE | read: "",  state: suprimir, term: T, Attrs >
- => < example : EXAMPLE | read: "", state: pedirInfo, term: T', Attrs >
+    < example : EXAMPLE | read: "",  state: suprimir, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirInfo, term: T', listaCampos: QIL2, Attrs >
     write(stdout, example, "Suprimidos.\n")
  if 
     {T', Ty} := metaRewrite(upModule('REGLAS-SUPRIMIR, true), T, unbounded) [print T'] .
@@ -577,16 +645,16 @@ crl [suprimirCampos] :
 ---  eq obtenerEntrada([C, M Entrada[x => TV] M1, M2]) = {x, TV} .
 
 crl [pedirParametros] :
-    < example : EXAMPLE | read: "", state: pedirInfo, term: T, Attrs >
- => < example : EXAMPLE | read: "", state: cargarParametros, term: T, Attrs >
+    < example : EXAMPLE | read: "", state: pedirInfo, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: cargarParametros, term: T, listaCampos: QIL2, Attrs >
     getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " > ") 
     if 
       hayEntradas(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradas(T) [print T] .
 
 crl [noHayParametros] :
-    < example : EXAMPLE | read: "", state: pedirInfo, term: T, Attrs >
- => < example : EXAMPLE | read: "", state: cogerTransicion, term: T, Attrs >
+    < example : EXAMPLE | read: "", state: pedirInfo, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: cogerTransicion, term: T, listaCampos: QIL2, Attrs >
     getLine(stdin, example, "Que transicion quieres ejecutar? " + devolverString(QIL) + " > ") 
     if 
       not(hayEntradas(T)) /\
@@ -594,8 +662,8 @@ crl [noHayParametros] :
 
  crl [cargarP] :
     gotLine(example, stdin, Text)
-    < example : EXAMPLE | read: "", state: cargarParametros, term: T, Attrs >
- => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, Attrs >
+    < example : EXAMPLE | read: "", state: cargarParametros, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, listaCampos: QIL2, Attrs >
     write(stdout, example, "Cargado.\n")
    if
      Q := tokenize(Text) /\
@@ -607,8 +675,8 @@ crl [noHayParametros] :
 
 crl [cogerTransicion] :
     gotLine(example, stdin, Text)
-    < example : EXAMPLE | read: "", state: cogerTransicion, term: T, Attrs >
- => < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T2 T, Attrs >
+    < example : EXAMPLE | read: "", state: cogerTransicion, term: T, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T2 T, listaCampos: QIL2, Attrs >
     write(stdout, example, "Elegido.\n")
     if 
      Q := tokenize(Text) /\
@@ -619,27 +687,28 @@ crl [cogerTransicion] :
      T2 := sustituirTerminoTransicion(T, T')  [print Q T2] .
 
 crl [pedirParamTransicion] :
-    < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T3, Attrs >
- => < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, Attrs >
+    < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
     getLine(stdin, example, "Introduce el parametro " + string(downQid(T1)) + " que es del tipo " + string(downQidType(T2)) + " > ") 
     if 
       hayEntradasTransicion(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradasTransicion(T) [print T] .
 
  crl [ejecutarTransicion] :
-    < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T1, Attrs >
- => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, Attrs >
+    < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T1, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, listaCampos: QIL2, Attrs >
     if 
       not(hayEntradasTransicion(T)) /\
       {T', Ty} := metaRewrite(upModule('REGLAS-EJECUTAR, true), T, unbounded) /\
       T2 := sustituirTermino(T1, T') /\
       T3 := obtenerTermino(T2) /\
-      TL := obtenerResultado(T')  [print T' "\nEl resultado de las variables globales es: "  T3  "\nEl resultado de la transicion es: " TL] .
+      TL1 := obtenerCamposMod(T3, QIL2) /\
+      TL := obtenerResultado(T')  [print T' "\nEl resultado de las variables globales es: "  TL1  "\nEl resultado de la transicion es: " TL] .
 
  crl [cargarPTransicion] :
     gotLine(example, stdin, Text)
-    < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, Attrs >
- => < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T2 T3, Attrs >
+    < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T2 T3, listaCampos: QIL2, Attrs >
     write(stdout, example, "Cargado.\n")
    if
      Q := tokenize(Text) /\

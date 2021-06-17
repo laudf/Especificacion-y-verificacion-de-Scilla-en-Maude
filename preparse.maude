@@ -4,10 +4,13 @@ fmod PREPARSE is
 
  vars S S1 S2 S3 S4 : QidList .
  vars Q Q1 : Qid .
+ vars St St1 : String .
+ var N : Nat .
 
  op preparse : QidList -> QidList .
  eq preparse('scilla_version Q 'library S ) = 'scilla-version Q 'iv 'library preparse(S) .
  eq preparse('scilla_version S) = 'scilla-version preparse(S) .
+ eq preparse(S 'uint128_le S1) = preparse(S) 'uint128-le preparse(S1) .
  eq preparse(S '`( '`) S1) = preparse(S) '`( 'lpv '`) preparse(S1) .
  ***eq preparse(S 'match S1 '| S2 '| S3 'end S4) = preparse(S) '`( 'match preparse(S1) '| preparse(S2) '| preparse(S3) 'end '`) preparse(S4) .
  eq preparse(S 'transition S1) = preparse(S) '`( 'transition preparse(S1) .
@@ -30,6 +33,14 @@ fmod PREPARSE is
  eq preparse(S '_exception: S1) = preparse(S) '-exception: preparse(S1) .
  eq preparse(S '_exception ': S1) = preparse(S) '-exception: preparse(S1) .
  eq preparse(S '<- '& 'BLOCKNUMBER S1) = preparse(S) '<-&BLOCKNUMBER preparse(S1) .
+ eq preparse(S '= S2 '; S1) = preparse(S) '= '`( preparse(S2) '`) ';  preparse(S1) .
+ eq preparse(S 'field S3 '= S2 'field S1) = preparse(S) 'field preparse(S3) '= '`( preparse(S2) '`)  preparse('field S1) .
+ ***eq preparse(S '; S2 '| S1) = preparse(S) '; '`( preparse(S2) '`) '|  preparse(S1) .
+---  ceq preparse(S Q S1) = preparse(S) Q1 ': preparse(S1)
+---      if St := string(Q) /\
+---      N := find(St, ":", 0) /\
+---      St1 := substr (St, 0, N) /\
+---      Q1 := qid(St1) [print St] .
  ***eq preparse(S 'match S1 'end S2) = preparse(S) '`( 'match preparse(S1) 'end '`) preparse(S2) .
 
 ---  eq preparse(S '= S1 'let S2) = preparse(S) '`( preparse(S1) '`) 'let preparse(S2) .
@@ -41,3 +52,5 @@ fmod PREPARSE is
 
  eq preparse(S) = S [owise] .
 endfm
+
+red preparse( 'name: 'p) .

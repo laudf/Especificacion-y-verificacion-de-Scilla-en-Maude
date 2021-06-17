@@ -5,7 +5,7 @@ fth DEAD-CODE-TH is
  op funOpL : -> QidList .
  op assignOpL : -> QidList .
  op varSort : -> Qid .
- op noCuenta : -> Qid .
+ op noCuentaL : -> QidList .
 endfth
 
 fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
@@ -54,7 +54,7 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
 
  op getVars : Term -> TermList .
  ceq getVars(Q[TL]) = getVars*(TL)
-     if Q =/= noCuenta .
+     if not(occurs(Q, noCuentaL)) .
  ceq getVars(C) = if getType(C) == varSort
                  then C
                  else empty
@@ -62,7 +62,7 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
   if C =/= ''_.Qid .
  eq getVars(C) = empty .
  ceq getVars(Q[TL]) = empty
-     if Q == noCuenta .
+     if occurs(Q, noCuentaL) .
  eq getVars(V) = empty .
 
  op getVars* : TermList -> TermList .
@@ -74,9 +74,10 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
    if occurs(Q, assignOpL) .
  eq getUsed('match__[T, TL]) = (getVars(T), getUsed*(TL)) .
  ceq getUsed(Q[Q1, T]) = (getVars(Q1), getUsed*(T))
-   if Q := 'opcionMatch__ .
+   if Q := 'opcionMatch__ /\
+      getType(Q1) == varSort .
  ceq getUsed(Q[T, Q1]) = getVars(Q1)
-   if Q := 'opcionMatch__ [print Q]  .
+   if Q := 'opcionMatch__ .
  
  ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
    if occurs(Q, assignOpL) /\
@@ -84,6 +85,12 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
  ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
    if occurs(Q, assignOpL) /\
       Q := '_or_ .
+ ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
+   if occurs(Q, assignOpL) /\
+      Q := 'forall__ .
+ ceq getUsed(Q[T, Q1[TL]]) = getVars*(TL) 
+   if occurs(Q, assignOpL) /\
+      Q1 := '`{_;_`} .
  ceq getUsed(Q[T, T']) = getVars(T') 
    if occurs(Q, assignOpL) .
  ceq getUsed(Q[T, T', T'']) = (getVars(T'), getUsed*(T'')) 
@@ -91,10 +98,10 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
       Q := 'let__in_ .
  ceq getUsed(Q[T, T', T'']) = (getVars(T), getVars(T'), getVars(T'')) 
    if occurs(Q, assignOpL) .
- ceq getUsed(Q[TL]) = getVars(TL)
+ ceq getUsed(Q[TL]) = getVars*(TL)
    if occurs(Q, assignOpL) .
  ceq getUsed(Q[TL]) = getUsed*(TL)
-  if not(occurs(Q, assignOpL))  .
+  if not(occurs(Q, assignOpL)) .
  eq getUsed(T) = empty [owise].
 
  op getUsed* : TermList -> TermList .
@@ -121,10 +128,10 @@ fmod SCILLA-INST is
 
  op funOpL : -> QidList .
  eq funOpL = 'transicion___end 'funcion__ 'procedimiento___end .
- op noCuenta : -> Qid .
- eq noCuenta = 'actualizar__ .
+ op noCuentaL : -> QidList .
+ eq noCuentaL = 'actualizar__ '`{_;_`} .
  op assignOpL : -> QidList .
- eq assignOpL = 'evento_ '_=_ '_:_ 'actualizar__ 'guardar__ 'insertar___ 'enviar_ 'delete__ 'Cons___ 'Some__ 'let__in_ '_or_ 'Some_ 'negb_ 'builtin_ 'throw_ 'aplicarF_  .
+ eq assignOpL = 'evento_ '_=_ '_:_ 'actualizar__ 'guardar__ 'insertar___ 'enviar_ 'delete__ 'Cons___ 'Some__ 'let__in_ '_or_ 'Some_ 'negb_ 'builtin_ 'throw_ 'aplicarF_ 'Pair____ 'existe___ 'obtener___ 'forall__ .
  op varSort : -> Qid .
  eq varSort = 'Qid .
 endfm
@@ -135,6 +142,7 @@ fmod DEAD-CODE-SCILLA is
  pr DEAD-CODE-DEF{Scilla} .
 endfm
 
+***Contrato 1
 --- red deadCode('Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],'__['let__[
 ---     ''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[''set_hello_code.Qid,'__['Uint32.TipoEntero,
 ---     's_^2['0.Zero]]]]],'NombreContrato_[''HelloWorld.Qid],'_:_[''owner.Qid,'ByStr20.NombreTipo],'campo_=_['_:_[
@@ -147,6 +155,7 @@ endfm
 ---     ''welcome_msg.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"getHello".String],'_:_[''msg.Qid,''r.Qid]]],'evento_[
 ---     ''e.Qid]]]]]]) .
 
+--- ***Contrato 2
 --- red deadCode('Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''BookStore.Qid],'__['let__[''one_msg.Qid,
 ---     'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}['Message.NombreTipo],'Cons___[
 ---     'Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''code_success.Qid,'__['Uint32.TipoEntero,'0.Zero]],'__[
@@ -203,7 +212,7 @@ endfm
 ---     '0.Zero]],'_:_[''code.Qid,''code_success.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],
 ---     'enviar_[''msgs.Qid]]]]]]]]]]]]]]]) .
 
-
+***Contrato 3
 --- red deadCode('Contrato_______['0.Zero,'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''Crowdfunding.Qid],'__[
 ---     'let__[''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
 ---     'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''check_update.Qid,
@@ -278,6 +287,7 @@ endfm
 ---     ''_sender.Qid],'_:_[''amount.Qid,''v.Qid]]]],'__['evento_[''e.Qid],'enviar_[
 ---     ''msgs.Qid]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]) .
 
+***Contrato 4
 --- red deadCode('Contrato_______['0.Zero,'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''OpenAuction.Qid],'__['let__[
 ---     ''blk_leq.Qid,'funcion__['_:_[''blk1.Qid,'BNum.NombreTipo],'funcion__['_:_[''blk2.Qid,'BNum.NombreTipo],'let__in_[
 ---     ''bc1.Qid,'builtin_['_<._[''blk1.Qid,''blk2.Qid]],'let__in_[''bc2.Qid,'builtin_['_==._[''blk1.Qid,''blk2.Qid]],
@@ -350,95 +360,393 @@ endfm
 ---     ''beneficiary.Qid],'cantidadEnvio_[''hb.Qid],'_;_['_:_[''code.Qid,''auction_end_code.Qid],'_:_[''highest_bid.Qid,
 ---     ''hb.Qid]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]]]]]]) .
 
-red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['NombreLibreria_[''FungibleToken.Qid],'__[
-    'let__[''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
-    'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''two_msgs.Qid,'funcion__[
-    '_:_[''msg1.Qid,'Message.NombreTipo],'funcion__['_:_[''msg2.Qid,'Message.NombreTipo],'let__in_[''msgs_tmp.Qid,
-    'aplicarF_['__[''one_msg.Qid,''msg2.Qid]],'Cons___['Message.NombreTipo,''msg1.Qid,''msgs_tmp.Qid]]]]],'__['tipo__[
-    ''Error.Qid,'__['|_[''CodeIsSender.Qid],'__['|_[''CodeInsufficientFunds.Qid],'|_[
-    ''CodeInsufficientAllowance.Qid]]]],'__['let__[''make_error.Qid,'funcion__['_:_[''result.Qid,'Error.NombreTipo],
-    'let__in_[''result_code.Qid,'match__[''result.Qid,'__['opcionMatch__[''CodeIsSender.Qid,'__['Int32.TipoEntero,'-_[
-    's_['0.Zero]]]],'__['opcionMatch__[''CodeInsufficientFunds.Qid,'__['Int32.TipoEntero,'-_['s_^2['0.Zero]]]],
-    'opcionMatch__[''CodeInsufficientAllowance.Qid,'__['Int32.TipoEntero,'-_['s_^3['0.Zero]]]]]]],'`{_;_`}[
-    '-exception:_['"Error".String],'_:_[''code.Qid,''result_code.Qid]]]]],'__['let__[''zero.Qid,'__[
-    'Uint128.TipoEntero,'0.Zero]],'__['tipo__[''Unit.Qid,'|_[''Unit.Qid]],'let__[''get_val.Qid,'funcion__['_:_[
-    ''some_val.Qid,'Option_['Uint128.TipoEntero]],'match__[''some_val.Qid,'__['opcionMatch__['Some_[''val.Qid],
-    ''val.Qid],'opcionMatch__['None.Option,''zero.Qid]]]]]]]]]]]],'NombreContrato_[''FungibleToken.Qid],'_`,_['_:_[
-    ''contract_owner.Qid,'ByStr20.NombreTipo],'_`,_['_:_[''name.Qid,'String.NombreTipo],'_`,_['_:_[''symbol.Qid,
-    'String.NombreTipo],'_`,_['_:_[''decimals.Qid,'Uint32.TipoEntero],'_:_[''init_supply.Qid,'Uint128.TipoEntero]]]]],
-    '__['campo_=_['_:_[''total_supply.Qid,'Uint128.TipoEntero],'aplicarF_[''init_supply.Qid]],'__['campo_=_['_:_[
-    ''balances.Qid,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]],'let__in_[''emp_map.Qid,'Emp__['ByStr20.NombreTipo,
-    'Uint128.TipoEntero],'builtin_['put___[''emp_map.Qid,''contract_owner.Qid,''init_supply.Qid]]]],'campo_=_['_:_[
-    ''allowances.Qid,'Map__['ByStr20.NombreTipo,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]]],'Emp__[
-    'ByStr20.NombreTipo,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]]]]],'__['procedimiento___end[''ThrowError.Qid,
-    '_:_[''err.Qid,'Error.NombreTipo],'__['_=_[''e.Qid,'aplicarF_['__[''make_error.Qid,''err.Qid]]],'throw_[''e.Qid]]],
-    '__['procedimiento___end[''IsNotSender.Qid,'_:_[''address.Qid,'ByStr20.NombreTipo],'__['_=_[''is_sender.Qid,
-    'builtin_['_==._[''_sender.Qid,''address.Qid]]],'match__[''is_sender.Qid,'__['opcionMatch__['true.Bool,'__['_=_[
-    ''err.Qid,'aplicarF_[''CodeIsSender.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]],'opcionMatch__['false.Bool,
-    'ev.Expresiones]]]]],'__['procedimiento___end[''AuthorizedMoveIfSufficientBalance.Qid,'_`,_['_:_[''from.Qid,
-    'ByStr20.NombreTipo],'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]]],'__[
-    'obtener___[''o_from_bal.Qid,''balances.Qid,'posicion_[''from.Qid]],'__['_=_[''bal.Qid,'aplicarF_['__[
-    ''get_val.Qid,''o_from_bal.Qid]]],'__['_=_[''can_do.Qid,'aplicarF_['__[''uint128_le.Qid,''amount.Qid,''bal.Qid]]],
-    'match__[''can_do.Qid,'__['opcionMatch__['true.Bool,'__['_=_[''new_from_bal.Qid,'builtin_['_-_[''bal.Qid,
-    ''amount.Qid]]],'__['insertar___[''balances.Qid,'posicion_[''from.Qid],''new_from_bal.Qid],'__['obtener___[
-    ''get_to_bal.Qid,''balances.Qid,'posicion_[''to.Qid]],'__['_=_[''new_to_bal.Qid,'match__[''get_to_bal.Qid,'__[
-    'opcionMatch__['Some_[''bal.Qid],'builtin_['_+._[''bal.Qid,''amount.Qid]]],'opcionMatch__['None.Option,
-    ''amount.Qid]]]],'insertar___[''balances.Qid,'posicion_[''to.Qid],''new_to_bal.Qid]]]]]],'opcionMatch__[
-    'false.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeInsufficientFunds.Qid]],'aplicarF_['__[''ThrowError.Qid,
-    ''err.Qid]]]]]]]]]],
+***Contrato 5
+--- red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['NombreLibreria_[''FungibleToken.Qid],'__[
+---     'let__[''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
+---     'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''two_msgs.Qid,'funcion__[
+---     '_:_[''msg1.Qid,'Message.NombreTipo],'funcion__['_:_[''msg2.Qid,'Message.NombreTipo],'let__in_[''msgs_tmp.Qid,
+---     'aplicarF_['__[''one_msg.Qid,''msg2.Qid]],'Cons___['Message.NombreTipo,''msg1.Qid,''msgs_tmp.Qid]]]]],'__['tipo__[
+---     ''Error.Qid,'__['|_[''CodeIsSender.Qid],'__['|_[''CodeInsufficientFunds.Qid],'|_[
+---     ''CodeInsufficientAllowance.Qid]]]],'__['let__[''make_error.Qid,'funcion__['_:_[''result.Qid,'Error.NombreTipo],
+---     'let__in_[''result_code.Qid,'match__[''result.Qid,'__['opcionMatch__[''CodeIsSender.Qid,'__['Int32.TipoEntero,'-_[
+---     's_['0.Zero]]]],'__['opcionMatch__[''CodeInsufficientFunds.Qid,'__['Int32.TipoEntero,'-_['s_^2['0.Zero]]]],
+---     'opcionMatch__[''CodeInsufficientAllowance.Qid,'__['Int32.TipoEntero,'-_['s_^3['0.Zero]]]]]]],'`{_;_`}[
+---     '-exception:_['"Error".String],'_:_[''code.Qid,''result_code.Qid]]]]],'__['let__[''zero.Qid,'__[
+---     'Uint128.TipoEntero,'0.Zero]],'__['tipo__[''Unit.Qid,'|_[''Unit.Qid]],'let__[''get_val.Qid,'funcion__['_:_[
+---     ''some_val.Qid,'Option_['Uint128.TipoEntero]],'match__[''some_val.Qid,'__['opcionMatch__['Some_[''val.Qid],
+---     ''val.Qid],'opcionMatch__['None.Option,''zero.Qid]]]]]]]]]]]],'NombreContrato_[''FungibleToken.Qid],'_`,_['_:_[
+---     ''contract_owner.Qid,'ByStr20.NombreTipo],'_`,_['_:_[''name.Qid,'String.NombreTipo],'_`,_['_:_[''symbol.Qid,
+---     'String.NombreTipo],'_`,_['_:_[''decimals.Qid,'Uint32.TipoEntero],'_:_[''init_supply.Qid,'Uint128.TipoEntero]]]]],
+---     '__['campo_=_['_:_[''total_supply.Qid,'Uint128.TipoEntero],'aplicarF_[''init_supply.Qid]],'__['campo_=_['_:_[
+---     ''balances.Qid,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]],'let__in_[''emp_map.Qid,'Emp__['ByStr20.NombreTipo,
+---     'Uint128.TipoEntero],'builtin_['put___[''emp_map.Qid,''contract_owner.Qid,''init_supply.Qid]]]],'campo_=_['_:_[
+---     ''allowances.Qid,'Map__['ByStr20.NombreTipo,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]]],'Emp__[
+---     'ByStr20.NombreTipo,'Map__['ByStr20.NombreTipo,'Uint128.TipoEntero]]]]],'__['procedimiento___end[''ThrowError.Qid,
+---     '_:_[''err.Qid,'Error.NombreTipo],'__['_=_[''e.Qid,'aplicarF_['__[''make_error.Qid,''err.Qid]]],'throw_[''e.Qid]]],
+---     '__['procedimiento___end[''IsNotSender.Qid,'_:_[''address.Qid,'ByStr20.NombreTipo],'__['_=_[''is_sender.Qid,
+---     'builtin_['_==._[''_sender.Qid,''address.Qid]]],'match__[''is_sender.Qid,'__['opcionMatch__['true.Bool,'__['_=_[
+---     ''err.Qid,'aplicarF_[''CodeIsSender.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]],'opcionMatch__['false.Bool,
+---     'ev.Expresiones]]]]],'__['procedimiento___end[''AuthorizedMoveIfSufficientBalance.Qid,'_`,_['_:_[''from.Qid,
+---     'ByStr20.NombreTipo],'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]]],'__[
+---     'obtener___[''o_from_bal.Qid,''balances.Qid,'posicion_[''from.Qid]],'__['_=_[''bal.Qid,'aplicarF_['__[
+---     ''get_val.Qid,''o_from_bal.Qid]]],'__['_=_[''can_do.Qid,'aplicarF_['__[''uint128_le.Qid,''amount.Qid,''bal.Qid]]],
+---     'match__[''can_do.Qid,'__['opcionMatch__['true.Bool,'__['_=_[''new_from_bal.Qid,'builtin_['_-_[''bal.Qid,
+---     ''amount.Qid]]],'__['insertar___[''balances.Qid,'posicion_[''from.Qid],''new_from_bal.Qid],'__['obtener___[
+---     ''get_to_bal.Qid,''balances.Qid,'posicion_[''to.Qid]],'__['_=_[''new_to_bal.Qid,'match__[''get_to_bal.Qid,'__[
+---     'opcionMatch__['Some_[''bal.Qid],'builtin_['_+._[''bal.Qid,''amount.Qid]]],'opcionMatch__['None.Option,
+---     ''amount.Qid]]]],'insertar___[''balances.Qid,'posicion_[''to.Qid],''new_to_bal.Qid]]]]]],'opcionMatch__[
+---     'false.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeInsufficientFunds.Qid]],'aplicarF_['__[''ThrowError.Qid,
+---     ''err.Qid]]]]]]]]]],
     
-    '__['transicion___end[''IncreaseAllowance.Qid,'_`,_['_:_[''spender.Qid,'ByStr20.NombreTipo],
-    '_:_[''amount.Qid,'Uint128.TipoEntero]],'__['aplicarF_['__[''IsNotSender.Qid,''spender.Qid]],'__['obtener___[
-    ''some_current_allowance.Qid,''allowances.Qid,'__['posicion_[''_sender.Qid],'posicion_[''spender.Qid]]],'__['_=_[
-    ''current_allowance.Qid,'aplicarF_['__[''get_val.Qid,''some_current_allowance.Qid]]],'__['_=_[''new_allowance.Qid,
-    'builtin_['_+._[''current_allowance.Qid,''amount.Qid]]],'__['insertar___[''allowances.Qid,'__['posicion_[
-    ''_sender.Qid],'posicion_[''spender.Qid]],''new_allowance.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
-    '"IncreasedAllowance".String],'_;_['_:_[''token_owner.Qid,''_sender.Qid],'_;_['_:_[''spender.Qid,''spender.Qid],
-    '_:_[''new_allowance.Qid,''new_allowance.Qid]]]]],'evento_[''e.Qid]]]]]]]],
+---     '__['transicion___end[''IncreaseAllowance.Qid,'_`,_['_:_[''spender.Qid,'ByStr20.NombreTipo],
+---     '_:_[''amount.Qid,'Uint128.TipoEntero]],'__['aplicarF_['__[''IsNotSender.Qid,''spender.Qid]],'__['obtener___[
+---     ''some_current_allowance.Qid,''allowances.Qid,'__['posicion_[''_sender.Qid],'posicion_[''spender.Qid]]],'__['_=_[
+---     ''current_allowance.Qid,'aplicarF_['__[''get_val.Qid,''some_current_allowance.Qid]]],'__['_=_[''new_allowance.Qid,
+---     'builtin_['_+._[''current_allowance.Qid,''amount.Qid]]],'__['insertar___[''allowances.Qid,'__['posicion_[
+---     ''_sender.Qid],'posicion_[''spender.Qid]],''new_allowance.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"IncreasedAllowance".String],'_;_['_:_[''token_owner.Qid,''_sender.Qid],'_;_['_:_[''spender.Qid,''spender.Qid],
+---     '_:_[''new_allowance.Qid,''new_allowance.Qid]]]]],'evento_[''e.Qid]]]]]]]],
     
-    '__['transicion___end[
-    ''DecreaseAllowance.Qid,'_`,_['_:_[''spender.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]],'__[
-    'aplicarF_['__[''IsNotSender.Qid,''spender.Qid]],'__['obtener___[''some_current_allowance.Qid,''allowances.Qid,'__[
-    'posicion_[''_sender.Qid],'posicion_[''spender.Qid]]],'__['_=_[''current_allowance.Qid,'aplicarF_['__[
-    ''get_val.Qid,''some_current_allowance.Qid]]],'__['_=_[''new_allowance.Qid,'let__in_[''amount_le_allowance.Qid,
-    'aplicarF_['__[''uint128_le.Qid,''amount.Qid,''current_allowance.Qid]],'match__[''amount_le_allowance.Qid,'__[
-    'opcionMatch__['true.Bool,'builtin_['_-_[''current_allowance.Qid,''amount.Qid]]],'opcionMatch__['false.Bool,
-    ''zero.Qid]]]]],'__['insertar___[''allowances.Qid,'__['posicion_[''_sender.Qid],'posicion_[''spender.Qid]],
-    ''new_allowance.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"DecreasedAllowance".String],'_;_['_:_[
-    ''token_owner.Qid,''_sender.Qid],'_;_['_:_[''spender.Qid,''spender.Qid],'_:_[''new_allowance.Qid,
-    ''new_allowance.Qid]]]]],'evento_[''e.Qid]]]]]]]],
+---     '__['transicion___end[
+---     ''DecreaseAllowance.Qid,'_`,_['_:_[''spender.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]],'__[
+---     'aplicarF_['__[''IsNotSender.Qid,''spender.Qid]],'__['obtener___[''some_current_allowance.Qid,''allowances.Qid,'__[
+---     'posicion_[''_sender.Qid],'posicion_[''spender.Qid]]],'__['_=_[''current_allowance.Qid,'aplicarF_['__[
+---     ''get_val.Qid,''some_current_allowance.Qid]]],'__['_=_[''new_allowance.Qid,'let__in_[''amount_le_allowance.Qid,
+---     'aplicarF_['__[''uint128_le.Qid,''amount.Qid,''current_allowance.Qid]],'match__[''amount_le_allowance.Qid,'__[
+---     'opcionMatch__['true.Bool,'builtin_['_-_[''current_allowance.Qid,''amount.Qid]]],'opcionMatch__['false.Bool,
+---     ''zero.Qid]]]]],'__['insertar___[''allowances.Qid,'__['posicion_[''_sender.Qid],'posicion_[''spender.Qid]],
+---     ''new_allowance.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"DecreasedAllowance".String],'_;_['_:_[
+---     ''token_owner.Qid,''_sender.Qid],'_;_['_:_[''spender.Qid,''spender.Qid],'_:_[''new_allowance.Qid,
+---     ''new_allowance.Qid]]]]],'evento_[''e.Qid]]]]]]]],
     
-    '__['transicion___end[''Transfer.Qid,'_`,_['_:_[''to.Qid,
-    'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]],'__['aplicarF_['__[
-    ''AuthorizedMoveIfSufficientBalance.Qid,''_sender.Qid,''to.Qid,''amount.Qid]],'__['_=_[''e.Qid,'`{_;_`}[
-    '-eventname:_['"TransferSuccess".String],'_;_['_:_[''sender.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],
-    '_:_[''amount.Qid,''amount.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}['-tag:_[
-    '"RecipientAcceptTransfer".String],'dirEnvio_[''to.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[''sender.Qid,
-    ''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''amount.Qid,''amount.Qid]]]]],'__['_=_[
-    ''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"TransferSuccessCallBack".String],'dirEnvio_[''_sender.Qid],
-    'cantidadEnvio_[''zero.Qid],'_;_['_:_[''sender.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
-    ''amount.Qid,''amount.Qid]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,
-    ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]],
+---     '__['transicion___end[''Transfer.Qid,'_`,_['_:_[''to.Qid,
+---     'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]],'__['aplicarF_['__[
+---     ''AuthorizedMoveIfSufficientBalance.Qid,''_sender.Qid,''to.Qid,''amount.Qid]],'__['_=_[''e.Qid,'`{_;_`}[
+---     '-eventname:_['"TransferSuccess".String],'_;_['_:_[''sender.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],
+---     '_:_[''amount.Qid,''amount.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"RecipientAcceptTransfer".String],'dirEnvio_[''to.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[''sender.Qid,
+---     ''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''amount.Qid,''amount.Qid]]]]],'__['_=_[
+---     ''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"TransferSuccessCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_[''zero.Qid],'_;_['_:_[''sender.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
+---     ''amount.Qid,''amount.Qid]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,
+---     ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]],
     
-    'transicion___end[''TransferFrom.Qid,'_`,_['_:_[''from.Qid,
-    'ByStr20.NombreTipo],'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]]],'__[
-    'obtener___[''o_spender_allowed.Qid,''allowances.Qid,'__['posicion_[''from.Qid],'posicion_[''_sender.Qid]]],'__[
-    '_=_[''allowed.Qid,'aplicarF_['__[''get_val.Qid,''o_spender_allowed.Qid]]],'__['_=_[''can_do.Qid,'aplicarF_['__[
-    ''uint128_le.Qid,''amount.Qid,''allowed.Qid]]],'match__[''can_do.Qid,'__['opcionMatch__['true.Bool,'__['aplicarF_[
-    '__[''AuthorizedMoveIfSufficientBalance.Qid,''from.Qid,''to.Qid,''amount.Qid]],'__['_=_[''e.Qid,'`{_;_`}[
-    '-eventname:_['"TransferFromSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,
-    ''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''amount.Qid,''amount.Qid]]]]]],'__['evento_[''e.Qid],'__[
-    '_=_[''new_allowed.Qid,'builtin_['_-_[''allowed.Qid,''amount.Qid]]],'__['insertar___[''allowances.Qid,'__[
-    'posicion_[''from.Qid],'posicion_[''_sender.Qid]],''new_allowed.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}[
-    '-tag:_['"RecipientAcceptTransferFrom".String],'dirEnvio_[''to.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[
-    ''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
-    ''amount.Qid,''amount.Qid]]]]]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
-    '"TransferFromSuccessCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[
-    ''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
-    ''amount.Qid,''amount.Qid]]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,
-    ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[
-    ''CodeInsufficientAllowance.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]]]]]]]]]]]) .
+---     'transicion___end[''TransferFrom.Qid,'_`,_['_:_[''from.Qid,
+---     'ByStr20.NombreTipo],'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''amount.Qid,'Uint128.TipoEntero]]],'__[
+---     'obtener___[''o_spender_allowed.Qid,''allowances.Qid,'__['posicion_[''from.Qid],'posicion_[''_sender.Qid]]],'__[
+---     '_=_[''allowed.Qid,'aplicarF_['__[''get_val.Qid,''o_spender_allowed.Qid]]],'__['_=_[''can_do.Qid,'aplicarF_['__[
+---     ''uint128_le.Qid,''amount.Qid,''allowed.Qid]]],'match__[''can_do.Qid,'__['opcionMatch__['true.Bool,'__['aplicarF_[
+---     '__[''AuthorizedMoveIfSufficientBalance.Qid,''from.Qid,''to.Qid,''amount.Qid]],'__['_=_[''e.Qid,'`{_;_`}[
+---     '-eventname:_['"TransferFromSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,
+---     ''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''amount.Qid,''amount.Qid]]]]]],'__['evento_[''e.Qid],'__[
+---     '_=_[''new_allowed.Qid,'builtin_['_-_[''allowed.Qid,''amount.Qid]]],'__['insertar___[''allowances.Qid,'__[
+---     'posicion_[''from.Qid],'posicion_[''_sender.Qid]],''new_allowed.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}[
+---     '-tag:_['"RecipientAcceptTransferFrom".String],'dirEnvio_[''to.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[
+---     ''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
+---     ''amount.Qid,''amount.Qid]]]]]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"TransferFromSuccessCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_[''zero.Qid],'_;_['_:_[
+---     ''initiator.Qid,''_sender.Qid],'_;_['_:_[''sender.Qid,''from.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
+---     ''amount.Qid,''amount.Qid]]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,
+---     ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[
+---     ''CodeInsufficientAllowance.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]]]]]]]]]]]) .
 
+***Contrato 6
+--- red deadCode(
+--- 'Contrato_______['0.Zero,'import_['__['BoolUtils.LibImportar,'__['PairUtils.LibImportar,
+---     'ListUtils.LibImportar]]],'__['NombreLibreria_[''NonfungibleToken.Qid],'__['tipo__[''Dummy.Qid,'|_[''Dummy.Qid]],
+---     '__['tipo__[''Operation.Qid,'__['|_[''Add.Qid],'|_[''Sub.Qid]]],'__['let__[''zero.Qid,'__['Uint256.TipoEntero,
+---     '0.Zero]],'__['let__[''one.Qid,'__['Uint256.TipoEntero,'s_['0.Zero]]],'__['let__[''verdad.Qid,'aplicarF_[
+---     ''Dummy.Qid]],'__['let__[''add_operation.Qid,'aplicarF_[''Add.Qid]],'__['let__[''sub_operation.Qid,'aplicarF_[
+---     ''Sub.Qid]],'__['let__[''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,
+---     'Nil`{_`}['Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''two_msgs.Qid,
+---     'funcion__['_:_[''msg1.Qid,'Message.NombreTipo],'funcion__['_:_[''msg2.Qid,'Message.NombreTipo],'let__in_[
+---     ''msgs_tmp.Qid,'aplicarF_['__[''one_msg.Qid,''msg2.Qid]],'Cons___['Message.NombreTipo,''msg1.Qid,
+---     ''msgs_tmp.Qid]]]]],'__['let__[''get_bal.Qid,'funcion__['_:_[''some_bal.Qid,'Option_['Uint256.TipoEntero]],
+---     'match__[''some_bal.Qid,'__['opcionMatch__['Some_[''bal.Qid],''bal.Qid],'opcionMatch__['None.Option,
+---     ''zero.Qid]]]]],'__['let__[''build_pair.Qid,'funcion__['_:_[''input_to_address.Qid,'ByStr20.NombreTipo],'funcion__[
+---     '_:_[''input_token_uri.Qid,'String.NombreTipo],'Pair____['ByStr20.NombreTipo,'String.NombreTipo,
+---     ''input_to_address.Qid,''input_token_uri.Qid]]]],'__['tipo__[''Error.Qid,'__['|_[''CodeNotContractOwner.Qid],'__[
+---     '|_[''CodeIsSelf.Qid],'__['|_[''CodeTokenExists.Qid],'__['|_[''CodeIsNotMinter.Qid],'__['|_[''CodeNotApproved.Qid],
+---     '__['|_[''CodeNotTokenOwner.Qid],'__['|_[''CodeNotFound.Qid],'__['|_[''CodeNotApprovedForAll.Qid],'__['|_[
+---     ''CodeNotOwnerOrOperator.Qid],'|_[''CodeNotApprovedSpenderOrOperator.Qid]]]]]]]]]]],'let__[''make_error.Qid,
+---     'funcion__['_:_[''result.Qid,'Error.NombreTipo],'let__in_[''result_code.Qid,'match__[''result.Qid,'__[
+---     'opcionMatch__[''CodeNotContractOwner.Qid,'__['Int32.TipoEntero,'-_['s_['0.Zero]]]],'__['opcionMatch__[
+---     ''CodeIsSelf.Qid,'__['Int32.TipoEntero,'-_['s_^2['0.Zero]]]],'__['opcionMatch__[''CodeTokenExists.Qid,'__[
+---     'Int32.TipoEntero,'-_['s_^3['0.Zero]]]],'__['opcionMatch__[''CodeIsNotMinter.Qid,'__['Int32.TipoEntero,'-_['s_^4[
+---     '0.Zero]]]],'__['opcionMatch__[''CodeNotApproved.Qid,'__['Int32.TipoEntero,'-_['s_^5['0.Zero]]]],'__[
+---     'opcionMatch__[''CodeNotTokenOwner.Qid,'__['Int32.TipoEntero,'-_['s_^6['0.Zero]]]],'__['opcionMatch__[
+---     ''CodeNotFound.Qid,'__['Int32.TipoEntero,'-_['s_^7['0.Zero]]]],'__['opcionMatch__[''CodeNotApprovedForAll.Qid,'__[
+---     'Int32.TipoEntero,'-_['s_^8['0.Zero]]]],'__['opcionMatch__[''CodeNotOwnerOrOperator.Qid,'__['Int32.TipoEntero,'-_[
+---     's_^9['0.Zero]]]],'opcionMatch__[''CodeNotApprovedSpenderOrOperator.Qid,'__['Int32.TipoEntero,'-_['s_^10[
+---     '0.Zero]]]]]]]]]]]]]],'`{_;_`}['-exception:_['"Error".String],'_:_[''code.Qid,''result_code.Qid]]]]]]]]]]]]]]]]]],
+---     'NombreContrato_[''NonfungibleToken.Qid],'_`,_['_:_[''contract_owner.Qid,'ByStr20.NombreTipo],'_`,_['_:_[
+---     ''name.Qid,'String.NombreTipo],'_:_[''symbol.Qid,'String.NombreTipo]]],'__['campo_=_['_:_[''minters.Qid,'Map__[
+---     'ByStr20.NombreTipo,''Dummy.Qid]],'let__in_[''emp_map.Qid,'Emp__['ByStr20.NombreTipo,''Dummy.Qid],'builtin_[
+---     'put___[''emp_map.Qid,''contract_owner.Qid,''verdad.Qid]]]],'__['campo_=_['_:_[''token_owners.Qid,'Map__[
+---     'Uint256.TipoEntero,'ByStr20.NombreTipo]],'Emp__['Uint256.TipoEntero,'ByStr20.NombreTipo]],'__['campo_=_['_:_[
+---     ''owned_token_count.Qid,'Map__['ByStr20.NombreTipo,'Uint256.TipoEntero]],'Emp__['ByStr20.NombreTipo,
+---     'Uint256.TipoEntero]],'__['campo_=_['_:_[''token_approvals.Qid,'Map__['Uint256.TipoEntero,'ByStr20.NombreTipo]],
+---     'Emp__['Uint256.TipoEntero,'ByStr20.NombreTipo]],'__['campo_=_['_:_[''operator_approvals.Qid,'Map__[
+---     'ByStr20.NombreTipo,'Map__['ByStr20.NombreTipo,''Dummy.Qid]]],'Emp__['ByStr20.NombreTipo,'Map__[
+---     'ByStr20.NombreTipo,''Dummy.Qid]]],'__['campo_=_['_:_[''token_uris.Qid,'Map__['Uint256.TipoEntero,
+---     'String.NombreTipo]],'Emp__['Uint256.TipoEntero,'String.NombreTipo]],'__['campo_=_['_:_[''total_supply.Qid,
+---     'Uint256.TipoEntero],'__['Uint256.TipoEntero,'0.Zero]],'campo_=_['_:_[''token_id_count.Qid,'Uint256.TipoEntero],
+---     '__['Uint256.TipoEntero,'0.Zero]]]]]]]]],
+    
+---     '__['procedimiento___end[''ThrowError.Qid,'_:_[''err.Qid,
+---     'Error.NombreTipo],'__['_=_[''e.Qid,'aplicarF_['__[''make_error.Qid,''err.Qid]]],'throw_[''e.Qid]]],
+    
+---     '__[
+---     'procedimiento___end[''IsContractOwner.Qid,'lpv.ListaParamInm,'__['_=_[''is_contract_owner.Qid,'builtin_['_==._[
+---     ''contract_owner.Qid,''_sender.Qid]]],'match__[''is_contract_owner.Qid,'__['opcionMatch__['true.Bool,
+---     'ev.Expresiones],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeNotContractOwner.Qid]],'aplicarF_[
+---     '__[''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__['procedimiento___end[''IsSelf.Qid,'_`,_['_:_[''address_a.Qid,
+---     'ByStr20.NombreTipo],'_:_[''address_b.Qid,'ByStr20.NombreTipo]],'__['_=_[''is_self.Qid,'builtin_['_==._[
+---     ''address_a.Qid,''address_b.Qid]]],'match__[''is_self.Qid,'__['opcionMatch__['false.Bool,'ev.Expresiones],
+---     'opcionMatch__['true.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeIsSelf.Qid]],'aplicarF_['__[''ThrowError.Qid,
+---     ''err.Qid]]]]]]]],
+    
+---     '__['procedimiento___end[''IsTokenExists.Qid,'_:_[''token_id.Qid,'Uint256.TipoEntero],'__[
+---     'existe___[''token_exist.Qid,''token_owners.Qid,'posicion_[''token_id.Qid]],'match__[''token_exist.Qid,'__[
+---     'opcionMatch__['false.Bool,'ev.Expresiones],'opcionMatch__['true.Bool,'__['_=_[''err.Qid,'aplicarF_[
+---     ''CodeTokenExists.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__['procedimiento___end[''IsMinter.Qid,
+---     '_:_[''address.Qid,'ByStr20.NombreTipo],'__['existe___[''is_minter.Qid,''minters.Qid,'posicion_[''address.Qid]],
+---     'match__[''is_minter.Qid,'__['opcionMatch__['true.Bool,'ev.Expresiones],'opcionMatch__['false.Bool,'__['_=_[
+---     ''err.Qid,'aplicarF_[''CodeIsNotMinter.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__[
+---     'procedimiento___end[''IsTokenOwner.Qid,'_`,_['_:_[''token_id.Qid,'Uint256.TipoEntero],'_:_[''address.Qid,
+---     'ByStr20.NombreTipo]],'__['obtener___[''some_token_owner.Qid,''token_owners.Qid,'posicion_[''token_id.Qid]],
+---     'match__[''some_token_owner.Qid,'__['opcionMatch__['Some_[''addr.Qid],'__['_=_[''is_token_owner.Qid,'builtin_[
+---     '_==._[''addr.Qid,''address.Qid]]],'match__[''is_token_owner.Qid,'__['opcionMatch__['true.Bool,'ev.Expresiones],
+---     'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeNotTokenOwner.Qid]],'aplicarF_['__[''ThrowError.Qid,
+---     ''err.Qid]]]]]]]],'opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[''CodeNotFound.Qid]],'aplicarF_['__[
+---     ''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__['procedimiento___end[''IsApprovedForAll.Qid,'_`,_['_:_[''token_owner.Qid,
+---     'ByStr20.NombreTipo],'_:_[''operator.Qid,'ByStr20.NombreTipo]],'__['existe___[''is_operator_approved.Qid,
+---     ''operator_approvals.Qid,'__['posicion_[''token_owner.Qid],'posicion_[''operator.Qid]]],'match__[
+---     ''is_operator_approved.Qid,'__['opcionMatch__['true.Bool,'ev.Expresiones],'opcionMatch__['false.Bool,'__['_=_[
+---     ''err.Qid,'aplicarF_[''CodeNotApprovedForAll.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__[
+---     'procedimiento___end[''IsOwnerOrOperator.Qid,'_:_[''token_owner.Qid,'ByStr20.NombreTipo],'__['_=_[''is_owner.Qid,
+---     'builtin_['_==._[''_sender.Qid,''token_owner.Qid]]],'__['existe___[''is_approved_for_all.Qid,
+---     ''operator_approvals.Qid,'__['posicion_[''token_owner.Qid],'posicion_[''_sender.Qid]]],'__['_=_[
+---     ''is_authorised.Qid,'_or_[''is_owner.Qid,''is_approved_for_all.Qid]],'match__[''is_authorised.Qid,'__[
+---     'opcionMatch__['true.Bool,'ev.Expresiones],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[
+---     ''CodeNotOwnerOrOperator.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]]]],
+    
+---     '__['procedimiento___end[
+---     ''IsApprovedSpenderOrOperator.Qid,'_`,_['_:_[''token_id.Qid,'Uint256.TipoEntero],'_:_[''token_owner.Qid,
+---     'ByStr20.NombreTipo]],'__['obtener___[''some_token_approval.Qid,''token_approvals.Qid,'posicion_[''token_id.Qid]],
+---     '__['_=_[''is_approved.Qid,'match__[''some_token_approval.Qid,'__['opcionMatch__['None.Option,'false.Bool],
+---     'opcionMatch__['Some_[''approved_address.Qid],'builtin_['_==._[''_sender.Qid,''approved_address.Qid]]]]]],'__[
+---     'existe___[''is_operator.Qid,''operator_approvals.Qid,'__['posicion_[''token_owner.Qid],'posicion_[
+---     ''_sender.Qid]]],'__['_=_[''is_authorised.Qid,'_or_[''is_approved.Qid,''is_operator.Qid]],'match__[
+---     ''is_authorised.Qid,'__['opcionMatch__['true.Bool,'ev.Expresiones],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,
+---     'aplicarF_[''CodeNotApprovedSpenderOrOperator.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]]]]]]]]],
+    
+---     '__[
+---     'procedimiento___end[''UpdateTokenCount.Qid,'_`,_['_:_[''operation.Qid,''Operation.Qid],'_:_[''address.Qid,
+---     'ByStr20.NombreTipo]],'match__[''operation.Qid,'__['opcionMatch__[''Add.Qid,'__['obtener___[''some_to_count.Qid,
+---     ''owned_token_count.Qid,'posicion_[''address.Qid]],'__['_=_[''new_to_count.Qid,'let__in_[''current_count.Qid,
+---     'aplicarF_['__[''get_bal.Qid,''some_to_count.Qid]],'builtin_['_+._[''current_count.Qid,''one.Qid]]]],'insertar___[
+---     ''owned_token_count.Qid,'posicion_[''address.Qid],''new_to_count.Qid]]]],'opcionMatch__[''Sub.Qid,'__['obtener___[
+---     ''some_from_count.Qid,''owned_token_count.Qid,'posicion_[''address.Qid]],'let__in_[''current_count.Qid,'aplicarF_[
+---     '__[''get_bal.Qid,''some_from_count.Qid]],'let__in_[''is_zero.Qid,'builtin_['_==._[''current_count.Qid,
+---     ''zero.Qid]],'__['match__[''is_zero.Qid,'__['opcionMatch__['true.Bool,''zero.Qid],'opcionMatch__['false.Bool,
+---     'builtin_['_-_[''current_count.Qid,''one.Qid]]]]],'insertar___[''owned_token_count.Qid,'posicion_[''address.Qid],
+---     ''new_from_count.Qid]]]]]]]]],
+    
+---     '__['transicion___end[''BalanceOf.Qid,'_:_[''address.Qid,'ByStr20.NombreTipo],'__[
+---     'obtener___[''some_bal.Qid,''owned_token_count.Qid,'posicion_[''address.Qid]],'__['_=_[''balance.Qid,'aplicarF_[
+---     '__[''get_bal.Qid,''some_bal.Qid]]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"BalanceOfCallBack".String],
+---     'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''balance.Qid,''balance.Qid]]],
+---     '__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]],
+    
+---     '__[
+---     'transicion___end[''TotalSupply.Qid,'lpv.ListaParamInm,'__['guardar__[''current_supply.Qid,''total_supply.Qid],'__[
+---     '_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"TotalSupplyCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''total_supply.Qid,''current_supply.Qid]]],'__['_=_[
+---     ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]],
+    
+---     '__['transicion___end[
+---     ''Name.Qid,'lpv.ListaParamInm,'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"NameCallBack".String],'dirEnvio_[
+---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''name.Qid,''name.Qid]]],'__['_=_[''msgs.Qid,
+---     'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]],
+    
+---     '__['transicion___end[''Symbol.Qid,
+---     'lpv.ListaParamInm,'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"SymbolCallBack".String],'dirEnvio_[
+---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''symbol.Qid,''symbol.Qid]]],'__['_=_[
+---     ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]],
+    
+---     '__['transicion___end[
+---     ''GetApproved.Qid,'_:_[''token_id.Qid,'Uint256.TipoEntero],'__['obtener___[''some_token_approval.Qid,
+---     ''token_approvals.Qid,'posicion_[''token_id.Qid]],'match__[''some_token_approval.Qid,'__['opcionMatch__['Some_[
+---     ''addr.Qid],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"GetApprovedCallBack".String],'dirEnvio_[
+---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''approved_addr.Qid,''addr.Qid],'_:_[
+---     ''token_id.Qid,''token_id.Qid]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]],'opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[''CodeNotApproved.Qid]],'aplicarF_['__[
+---     ''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__['transicion___end[''GetTokenURI.Qid,'_:_[''token_id.Qid,
+---     'Uint256.TipoEntero],'__['obtener___[''some_token_uri.Qid,''token_uris.Qid,'posicion_[''token_id.Qid]],'match__[
+---     ''some_token_uri.Qid,'__['opcionMatch__['Some_[''token_uri.Qid],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"GetTokenURICallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[
+---     ''token_uri.Qid,''token_uri.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],
+---     'enviar_[''msgs.Qid]]]],'opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[''CodeNotFound.Qid]],'aplicarF_[
+---     '__[''ThrowError.Qid,''err.Qid]]]]]]]],
+    
+---     '__['transicion___end[''CheckTokenOwner.Qid,'_`,_['_:_[''token_id.Qid,
+---     'Uint256.TipoEntero],'_:_[''address.Qid,'ByStr20.NombreTipo]],'__['aplicarF_['__[''IsTokenOwner.Qid,''token_id.Qid,
+---     ''address.Qid]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"IsTokenOwnerCallBack".String],'dirEnvio_[
+---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'lcv.ListaCamposEvento]],'__['_=_[''msgs.Qid,
+---     'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]],
+    
+---     '__['transicion___end[
+---     ''CheckApprovedForAll.Qid,'_`,_['_:_[''token_owner.Qid,'ByStr20.NombreTipo],'_:_[''operator.Qid,
+---     'ByStr20.NombreTipo]],'__['aplicarF_['__[''IsApprovedForAll.Qid,''token_owner.Qid,''operator.Qid]],'__['_=_[
+---     ''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"IsApprovedForAllCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''token_owner.Qid,''token_owner.Qid],'_:_[
+---     ''operator.Qid,''operator.Qid]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]]],
+    
+---     '__['transicion___end[''ConfigureMinter.Qid,'_:_[''minter.Qid,'ByStr20.NombreTipo],'__['aplicarF_[
+---     ''IsContractOwner.Qid],'__['obtener___[''some_minter.Qid,''minters.Qid,'posicion_[''minter.Qid]],'match__[
+---     ''some_minter.Qid,'__['opcionMatch__['Some_[''Dummy.Qid],'__['delete__[''minters.Qid,'posicion_[''minter.Qid]],'__[
+---     '_=_[''e.Qid,'`{_;_`}['-eventname:_['"RemovedMinterSuccess".String],'_:_[''minter.Qid,''minter.Qid]]],'evento_[
+---     ''e.Qid]]]],'opcionMatch__['None.Option,'__['insertar___[''minters.Qid,'posicion_[''minter.Qid],''verdad.Qid],'__[
+---     '_=_[''e.Qid,'`{_;_`}['-eventname:_['"AddMinterSuccess".String],'_:_[''minter.Qid,''minter.Qid]]],'evento_[
+---     ''e.Qid]]]]]]]]],
+    
+---     '__['procedimiento___end[''Minting.Qid,'_:_[''input_pair.Qid,'Pair__['ByStr20.NombreTipo,
+---     'String.NombreTipo]],'__['_=_[''to.Qid,'let__in_[''fst_string_bystr20.Qid,'@__[''fst.Qid,'__['ByStr20.NombreTipo,
+---     'String.NombreTipo]],'aplicarF_['__[''fst_string_bystr20.Qid,''input_pair.Qid]]]],'__['_=_[''token_uri.Qid,
+---     'let__in_[''snd_string_bystr20.Qid,'@__[''snd.Qid,'__['ByStr20.NombreTipo,'String.NombreTipo]],'aplicarF_['__[
+---     ''snd_string_bystr20.Qid,''input_pair.Qid]]]],'__['aplicarF_['__[''IsMinter.Qid,''_sender.Qid]],'__['aplicarF_['__[
+---     ''UpdateTokenCount.Qid,''add_operation.Qid,''to.Qid]],'__['guardar__[''current_supply.Qid,''total_supply.Qid],'__[
+---     '_=_[''new_supply.Qid,'builtin_['_+._[''current_supply.Qid,''one.Qid]]],'__['actualizar__[''total_supply.Qid,
+---     ''new_supply.Qid],'__['guardar__[''current_token_id_count.Qid,''token_id_count.Qid],'__['_=_[
+---     ''new_token_id_count.Qid,'builtin_['_+._[''current_token_id_count.Qid,''one.Qid]]],'__['actualizar__[
+---     ''token_id_count.Qid,''new_token_id_count.Qid],'__['_=_[''token_id.Qid,'aplicarF_[''new_token_id_count.Qid]],'__[
+---     'aplicarF_['__[''IsTokenExists.Qid,''token_id.Qid]],'__['insertar___[''token_owners.Qid,'posicion_[''token_id.Qid],
+---     ''to.Qid],'__['insertar___[''token_uris.Qid,'posicion_[''token_id.Qid],''token_uri.Qid],'__['_=_[''e.Qid,'`{_;_`}[
+---     '-eventname:_['"MintSuccess".String],'_;_['_:_[''by.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_;_[
+---     '_:_[''token_id.Qid,''token_id.Qid],'_:_[''token_uri.Qid,''token_uri.Qid]]]]]],'evento_[''e.Qid]]]]]]]]]]]]]]]]],
+    
+---     '__['transicion___end[''Mint.Qid,'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''token_uri.Qid,
+---     'String.NombreTipo]],'__['_=_[''input_pair.Qid,'aplicarF_['__[''build_pair.Qid,''to.Qid,''token_uri.Qid]]],'__[
+---     'aplicarF_['__[''Minting.Qid,''input_pair.Qid]],'__['guardar__[''token_id.Qid,''token_id_count.Qid],'__['_=_[
+---     ''msg_to_recipient.Qid,'`{_;_;_;_`}['-tag:_['"RecipientAcceptMint".String],'dirEnvio_[''to.Qid],'cantidadEnvio_[
+---     '__['Uint128.TipoEntero,'0.Zero]],'lcv.ListaCamposEvento]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"MintCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[
+---     ''recipient.Qid,''_sender.Qid],'_;_['_:_[''token_id.Qid,''token_id.Qid],'_:_[''token_uri.Qid,''token_uri.Qid]]]]],
+---     '__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]]]]]],
+    
+---     '__['transicion___end[''BatchMint.Qid,'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[
+---     ''token_uris_list.Qid,'List_['String.@NombreTipo@]]],'__['_=_[''pair_token_uri_list.Qid,'@__[''list_map.Qid,'__[
+---     'String.NombreTipo,'Pair__['ByStr20.NombreTipo,'String.NombreTipo]]]],'__['_=_[''tmp_fun.Qid,'aplicarF_['__[
+---     ''build_pair.Qid,''to.Qid]]],'__['_=_[''input_list.Qid,'aplicarF_['__[''pair_token_uri_list.Qid,''tmp_fun.Qid,
+---     ''token_uris_list.Qid]]],'__['forall__[''input_list.Qid,''Minting.Qid],'__['_=_[''msg_to_recipient.Qid,
+---     '`{_;_;_;_`}['-tag:_['"RecipientAcceptBatchMint".String],'dirEnvio_[''to.Qid],'cantidadEnvio_['__[
+---     'Uint128.TipoEntero,'0.Zero]],'lcv.ListaCamposEvento]],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"BatchMintCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],
+---     'lcv.ListaCamposEvento]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,''msg_to_recipient.Qid,
+---     ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]],
+    
+---     '__['transicion___end[''Burn.Qid,'_:_[''token_id.Qid,
+---     'Uint256.TipoEntero],'__['obtener___[''some_token_owner.Qid,''token_owners.Qid,'posicion_[''token_id.Qid]],
+---     'match__[''some_token_owner.Qid,'__['opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[''CodeNotFound.Qid]],
+---     'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]],'opcionMatch__['Some_[''token_owner.Qid],'__['aplicarF_['__[
+---     ''IsOwnerOrOperator.Qid,''token_owner.Qid]],'__['delete__[''token_owners.Qid,'posicion_[''token_id.Qid]],'__[
+---     'delete__[''token_approvals.Qid,'posicion_[''token_id.Qid]],'__['delete__[''token_uris.Qid,'posicion_[
+---     ''token_id.Qid]],'__['aplicarF_['__[''UpdateTokenCount.Qid,''sub_operation.Qid,''token_owner.Qid]],'__['guardar__[
+---     ''current_supply.Qid,''total_supply.Qid],'__['_=_[''new_supply.Qid,'builtin_['_-_[''current_supply.Qid,
+---     ''one.Qid]]],'__['actualizar__[''total_supply.Qid,''new_supply.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"BurnSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_;_['_:_[''burn_address.Qid,''token_owner.Qid],
+---     '_:_[''token_id.Qid,''token_id.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"BurnCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[
+---     ''initiator.Qid,''_sender.Qid],'_;_['_:_[''burn_address.Qid,''token_owner.Qid],'_:_[''token_id.Qid,
+---     ''token_id.Qid]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]]]]]]]]]]]]]]]],
+    
+---     '__['transicion___end[''SetApprove.Qid,'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[
+---     ''token_id.Qid,'Uint256.TipoEntero]],'__['obtener___[''some_token_owner.Qid,''token_owners.Qid,'posicion_[
+---     ''token_id.Qid]],'match__[''some_token_owner.Qid,'__['opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[
+---     ''CodeNotFound.Qid]],'aplicarF_['__[''ThrowError.Qid,''err.Qid]]]],'opcionMatch__['Some_[''token_owner.Qid],'__[
+---     'aplicarF_['__[''IsOwnerOrOperator.Qid,''token_owner.Qid]],'__['obtener___[''is_approved.Qid,''token_approvals.Qid,
+---     'posicion_[''token_id.Qid]],'match__[''is_approved.Qid,'__['opcionMatch__['Some_[''approved_spender.Qid],'__['_=_[
+---     ''is_approved_spender.Qid,'builtin_['_==._[''to.Qid,''approved_spender.Qid]]],'match__[''is_approved_spender.Qid,
+---     '__['opcionMatch__['true.Bool,'__['delete__[''token_approvals.Qid,'posicion_[''token_id.Qid]],'__['_=_[''e.Qid,
+---     '`{_;_`}['-eventname:_['"RemoveApprovalSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_;_['_:_[
+---     ''removed_spender.Qid,''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[
+---     ''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"RemoveApprovalSuccessCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''removed_spender.Qid,''to.Qid],'_:_[''token_id.Qid,
+---     ''token_id.Qid]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]]]]],'opcionMatch__['false.Bool,'__['_=_[''err.Qid,'aplicarF_[''CodeNotApproved.Qid]],'aplicarF_['__[
+---     ''ThrowError.Qid,''err.Qid]]]]]]]],'opcionMatch__['None.Option,'__['insertar___[''token_approvals.Qid,'posicion_[
+---     ''token_id.Qid],''t.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_['"AddApprovalSuccess".String],'_;_['_:_[
+---     ''initiator.Qid,''_sender.Qid],'_;_['_:_[''approved_spender.Qid,''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],
+---     '__['evento_[''e.Qid],'__['_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"AddApprovalSuccessCallBack".String],
+---     'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''approved_spender.Qid,
+---     ''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''one_msg.Qid,
+---     ''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]],
+    
+---     '__['transicion___end[''SetApprovalForAll.Qid,'_:_[
+---     ''to.Qid,'ByStr20.NombreTipo],'__['aplicarF_['__[''IsSelf.Qid,''to.Qid,''_sender.Qid]],'__['existe___[
+---     ''is_operator.Qid,''operator_approvals.Qid,'__['posicion_[''_sender.Qid],'posicion_[''to.Qid]]],'__['match__[
+---     ''is_operator.Qid,'__['opcionMatch__['false.Bool,'__['insertar___[''operator_approvals.Qid,'__['posicion_[
+---     ''_sender.Qid],'posicion_[''to.Qid]],''verdad.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"AddApprovalForAllSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_:_[''operator.Qid,''to.Qid]]]],
+---     'evento_[''e.Qid]]]],'opcionMatch__['true.Bool,'__['delete__[''operator_approvals.Qid,'__['posicion_[
+---     ''_sender.Qid],'posicion_[''to.Qid]]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"RemoveApprovalForAllSuccess".String],'_;_['_:_[''initiator.Qid,''_sender.Qid],'_:_[''operator.Qid,''to.Qid]]]],
+---     'evento_[''e.Qid]]]]]],'__['_=_[''new_status.Qid,'negb_[''is_operator.Qid]],'__['_=_[''msg_to_sender.Qid,
+---     '`{_;_;_;_`}['-tag:_['"SetApprovalForAllSuccessCallBack".String],'dirEnvio_[''_sender.Qid],'cantidadEnvio_['__[
+---     'Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''operator.Qid,''to.Qid],'_:_[''status.Qid,''new_status.Qid]]]],'__['_=_[
+---     ''msgs.Qid,'aplicarF_['__[''one_msg.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]],
+    
+---     '__['transicion___end[
+---     ''Transfer.Qid,'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''token_id.Qid,'Uint256.TipoEntero]],'__['aplicarF_[
+---     '__[''IsSelf.Qid,''to.Qid,''_sender.Qid]],'__['aplicarF_['__[''IsTokenOwner.Qid,''token_id.Qid,''_sender.Qid]],'__[
+---     'insertar___[''token_owners.Qid,'posicion_[''token_id.Qid],''to.Qid],'__['delete__[''token_approvals.Qid,
+---     'posicion_[''token_id.Qid]],'__['aplicarF_['__[''UpdateTokenCount.Qid,''sub_operation.Qid,''_sender.Qid]],'__[
+---     'aplicarF_['__[''UpdateTokenCount.Qid,''add_operation.Qid,''to.Qid]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"TransferSuccess".String],'_;_['_:_[''from.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
+---     ''token_id.Qid,''token_id.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"RecipientAcceptTransfer".String],'dirEnvio_[''to.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_[
+---     '_:_[''from.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],'__[
+---     '_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"TransferSuccessCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''from.Qid,''_sender.Qid],'_;_['_:_[''recipient.Qid,
+---     ''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[''two_msgs.Qid,
+---     ''msg_to_recipient.Qid,''msg_to_sender.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]],
+    
+---     'transicion___end[
+---     ''TransferFrom.Qid,'_`,_['_:_[''to.Qid,'ByStr20.NombreTipo],'_:_[''token_id.Qid,'Uint256.TipoEntero]],'__[
+---     'obtener___[''some_token_owner.Qid,''token_owners.Qid,'posicion_[''token_id.Qid]],'match__[''some_token_owner.Qid,
+---     '__['opcionMatch__['None.Option,'__['_=_[''err.Qid,'aplicarF_[''CodeNotFound.Qid]],'aplicarF_['__[''ThrowError.Qid,
+---     ''err.Qid]]]],'opcionMatch__['Some_[''token_owner.Qid],'__['aplicarF_['__[''IsSelf.Qid,''to.Qid,
+---     ''token_owner.Qid]],'__['aplicarF_['__[''IsApprovedSpenderOrOperator.Qid,''token_id.Qid,''token_owner.Qid]],'__[
+---     'insertar___[''token_owners.Qid,'posicion_[''token_id.Qid],''to.Qid],'__['delete__[''token_approvals.Qid,
+---     'posicion_[''token_id.Qid]],'__['aplicarF_['__[''UpdateTokenCount.Qid,''sub_operation.Qid,''token_owner.Qid]],'__[
+---     'aplicarF_['__[''UpdateTokenCount.Qid,''add_operation.Qid,''to.Qid]],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
+---     '"TransferFromSuccess".String],'_;_['_:_[''from.Qid,''token_owner.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[
+---     ''token_id.Qid,''token_id.Qid]]]]],'__['evento_[''e.Qid],'__['_=_[''msg_to_recipient.Qid,'`{_;_;_;_`}['-tag:_[
+---     '"RecipientAcceptTransferFrom".String],'dirEnvio_[''to.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_[
+---     '_:_[''from.Qid,''token_owner.Qid],'_;_['_:_[''recipient.Qid,''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],'__[
+---     '_=_[''msg_to_sender.Qid,'`{_;_;_;_`}['-tag:_['"TransferFromSuccessCallBack".String],'dirEnvio_[''_sender.Qid],
+---     'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_;_['_:_[''from.Qid,''token_owner.Qid],'_;_['_:_[
+---     ''recipient.Qid,''to.Qid],'_:_[''token_id.Qid,''token_id.Qid]]]]],'__['_=_[''msgs.Qid,'aplicarF_['__[
+---     ''two_msgs.Qid,''msg_to_recipient.Qid,''msg_to_sender.Qid]]],'enviar_[
+---     ''msgs.Qid]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]) .
+
+***Contrato 7
 --- red deadCode('Contrato_______['0.Zero,'import_['BoolUtils.LibImportar],'__['NombreLibreria_[''ZilGame.Qid],'__['let__[
 ---     ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
 ---     'Message.NombreTipo],'Cons___['Message.NombreTipo,''msg.Qid,''nil_msg.Qid]]]],'__['let__[''no_msg.Qid,'Nil`{_`}[
@@ -542,7 +850,7 @@ red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['Nombr
 ---     'Uint128.TipoEntero,'0.Zero]],'_:_[''code.Qid,''cannot_withdraw.Qid]]],'__['_=_[''msgs.Qid,'aplicarF_['__[
 ---     ''one_msg.Qid,''msg.Qid]]],'enviar_[''msgs.Qid]]]]]]]]]]]]]]]]) .
 
-
+***Contrato 8
 --- red deadCode(
 --- 'Contrato_______['0.Zero,'import_['PairUtils.LibImportar],'__['NombreLibreria_[''Schnorr.Qid],'__['let__[
 ---     ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
@@ -562,7 +870,7 @@ red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['Nombr
 ---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''status.Qid,'"no key error".String]]],'__[
 ---     '_=_[''mone.Qid,'aplicarF_['__[''one_msg.Qid,''m.Qid]]],'enviar_[''mone.Qid]]]]]]]]]) .
 
-
+***Contrato 9
 --- red deadCode(
 --- 'Contrato_______['0.Zero,'import_['PairUtils.LibImportar],'__['NombreLibreria_[''Ecdsa.Qid],'__['let__[
 ---     ''one_msg.Qid,'funcion__['_:_[''msg.Qid,'Message.NombreTipo],'let__in_[''nil_msg.Qid,'Nil`{_`}[
@@ -582,7 +890,7 @@ red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['Nombr
 ---     ''_sender.Qid],'cantidadEnvio_['__['Uint128.TipoEntero,'0.Zero]],'_:_[''status.Qid,'"no key error".String]]],'__[
 ---     '_=_[''mone.Qid,'aplicarF_['__[''one_msg.Qid,''m.Qid]]],'enviar_[''mone.Qid]]]]]]]]]) .
 
-
+***Contrato 10
 --- red deadCode(
 --- 'Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''LoveZilliqa.Qid],'__['let__[''one.Qid,'__[
 ---     'Uint256.TipoEntero,'s_['0.Zero]]],'let__[''tt.Qid,'true.Bool]]],'NombreContrato_[''LoveZilliqa.Qid],'_`,_['_:_[
@@ -602,6 +910,8 @@ red deadCode('Contrato_______['0.Zero,'import_['IntUtils.LibImportar],'__['Nombr
 ---     ''author_name.Qid],'__['guardar__[''twitter.Qid,''twitter_id.Qid],'__['_=_[''e.Qid,'`{_;_`}['-eventname:_[
 ---     '"Whoami".String],'_;_['_:_[''author_name.Qid,''author.Qid],'_:_[''twitter_id.Qid,''twitter.Qid]]]],'evento_[
 ---     ''e.Qid]]]]]]]) .
+
+
 
 
 

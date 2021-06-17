@@ -9,8 +9,8 @@ let tt = True
 contract LoveZilliqa
 (authorName : String , twitterID : String)
 
-field author_name : String = (authorName)
-field twitter_id : String = (twitterID)
+field author_name : String = authorName
+field twitter_id : String = twitterID
 field upvote_counter : Uint256 = Uint256 0
 field vote_map : Map ByStr20 Bool = Emp ByStr20 Bool
 

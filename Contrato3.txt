@@ -50,23 +50,23 @@ field funded : Bool = False
 
 transition Donate ()
   blk <- & BLOCKNUMBER ;
-  in_time = (blk_leq blk max_block) ;
+  in_time = blk_leq blk max_block ;
   match in_time with 
   | True  => 
     bs  <- backers ;
-    res = (check_update bs _sender _amount) ;
+    res = check_update bs _sender _amount ;
     match res with
     | None => 
       msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
               code : already_backed_code} ;
-      msgs = (one_msg msg) ;
+      msgs = one_msg msg ;
       send msgs  
     | Some bs1 =>
       backers := bs1 ;
       accept ;
       msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
               code : accepted_code} ;
-      msgs = (one_msg msg) ;
+      msgs = one_msg msg ;
       e = { _eventname : "DonationAccepted" ; donor : _sender ; amount : _amount } ;
       event e ;
       send msgs 
@@ -75,7 +75,7 @@ transition Donate ()
   | False => 
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ; 
             code : missed_deadline_code} ;
-    msgs = (one_msg msg) ;
+    msgs = one_msg msg ;
     send msgs
   end
  
@@ -87,28 +87,28 @@ transition GetFunds ()
   | False => 
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
             code : not_owner_code} ;
-    msgs = (one_msg msg) ;
+    msgs = one_msg msg ;
     send msgs
   | True => 
     blk <- & BLOCKNUMBER ;
-    in_time = (blk_leq blk max_block) ;
-    c1 = (negb in_time) ;
+    in_time = blk_leq blk max_block ;
+    c1 = negb in_time ;
     bal <- _balance ;
     c2 = builtin lt bal goal ;
-    c3 = (negb c2) ;
+    c3 = negb c2 ;
     c4 = andb c1 c3 ;
     match c4 with 
     | False =>  
       msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
               code : cannot_get_funds} ;
-      msgs = (one_msg msg) ;
+      msgs = one_msg msg ;
       send msgs
     | True =>   
       tt = True ;
       funded := tt ;
       msg  = {_tag : "" ; _recipient : owner ; _amount : bal ; 
               code : got_funds_code} ;
-      msgs = (one_msg msg) ;
+      msgs = one_msg msg ;
       send msgs
     end
   end
@@ -122,7 +122,7 @@ transition ClaimBack ()
   | False =>
     msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
             code : too_early_code} ;
-    msgs = (one_msg msg) ;
+    msgs = one_msg msg ;
     send msgs
   | True =>
     bs <- backers ;
@@ -130,14 +130,14 @@ transition ClaimBack ()
     f <- funded ;
     c1 = builtin lt bal goal ;
     c2 = builtin contains bs _sender ;  
-    c3 = (negb f) ;
+    c3 = negb f ;
     c4 = andb c1 c2 ;
     c5 = andb c3 c4 ;
     match c5 with
     | False =>
       msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
               code : cannot_reclaim_code} ;
-      msgs = (one_msg msg) ;
+      msgs = one_msg msg ;
       send msgs
     | True =>
       res = builtin get bs _sender ;
@@ -145,14 +145,14 @@ transition ClaimBack ()
       | None =>
         msg  = {_tag : "" ; _recipient : _sender ; _amount : Uint128 0 ;
                 code : cannot_reclaim_code} ;
-        msgs = (one_msg msg) ;
+        msgs = one_msg msg ;
         send msgs
       | Some v =>
         bs1 = builtin remove bs _sender ;
         backers := bs1 ;
         msg  = {_tag : "" ; _recipient : _sender ; _amount : v ; 
                 code : reclaimed_code} ;
-        msgs = (one_msg msg) ;
+        msgs = one_msg msg ;
         e = { _eventname : "ClaimedBack" ; claimed_by : _sender ; amount : v } ;
         event e ;
         send msgs
