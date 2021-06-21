@@ -3,15 +3,43 @@ fmod PREPARSE is
  pr QID-LIST .
 
  vars S S1 S2 S3 S4 : QidList .
- vars Q Q1 : Qid .
+ vars Q Q1 Q2 Q3 : Qid .
  vars St St1 : String .
  var N : Nat .
+
+
+ op tenerPC : QidList -> Bool [ctor] .
+ eq tenerPC('; S) = true .
+ eq tenerPC(Q S) = tenerPC(S) .
+ eq tenerPC(S) = false [owise] .
 
  op preparse : QidList -> QidList .
  eq preparse('scilla_version Q 'library S ) = 'scilla-version Q 'iv 'library preparse(S) .
  eq preparse('scilla_version S) = 'scilla-version preparse(S) .
+ eq preparse(S2 'import S 'library S1) = preparse(S2) 'import '`( S '`) 'library preparse(S1) .
  eq preparse(S 'uint128_le S1) = preparse(S) 'uint128-le preparse(S1) .
  eq preparse(S '`( '`) S1) = preparse(S) '`( 'lpv '`) preparse(S1) .
+ eq preparse(S '; 'ThrowError Q S1) = preparse(S ';) '`( 'ThrowError Q '`)  preparse(S1) .
+ eq preparse(S '`) Q1 Q '; S1) = preparse(S '`)) '`( Q1 Q '`) ';  preparse(S1) .
+ ceq preparse(S Q1 Q Q2 Q3 '; S1) = preparse(S) '`( Q1 Q Q2 Q3 '`) ';  preparse(S1)
+    if Q1 == 'AuthorizedMoveIfSufficientBalance .
+ ceq preparse(S Q1 Q Q2 '; S1) = preparse(S) '`( Q1 Q Q2 '`) ';  preparse(S1)
+    if Q1 == 'IsTokenOwner .
+ ceq preparse(S Q1 Q Q2 '; S1) = preparse(S) '`( Q1 Q Q2 '`) ';  preparse(S1)
+    if Q1 == 'IsApprovedForAll .
+ ceq preparse(S Q1 Q Q2 '; S1) = preparse(S) '`( Q1 Q Q2 '`) ';  preparse(S1)
+    if Q1 == 'UpdateTokenCount .
+ ceq preparse(S Q1 Q '; S1) = preparse(S) '`( Q1 Q '`) ';  preparse(S1)
+    if Q1 == 'IsMinter .
+ ceq preparse(S Q1 Q '; S1) = preparse(S) '`( Q1 Q '`) ';  preparse(S1)
+    if Q1 == 'IsTokenExists .
+ ceq preparse(S Q1 Q '; S1) = preparse(S) '`( Q1 Q '`) ';  preparse(S1)
+    if Q1 == 'Minting .
+ ceq preparse(S Q1 '; S1) = preparse(S) '`( Q1 '`) ';  preparse(S1)
+    if Q1 == 'IsContractOwner .
+ eq preparse(S Q2 '= 'let S2 'in 'match S3 'end '; S1) = preparse(S) Q2 '= '`( 'let S2 'in preparse('match S3 'end) '`) ';  preparse(S1) [print S3] .
+ ****eq preparse(S 'let Q '= Q1 S1) = preparse(S) 'let Q '= '`( Q1 '`)  preparse(S1) .
+***  eq preparse(S '; Q Q1 'end S1) = preparse(S) '; '`(  Q Q1 '`) 'end preparse(S1) [print "entra"] .
  ***eq preparse(S 'match S1 '| S2 '| S3 'end S4) = preparse(S) '`( 'match preparse(S1) '| preparse(S2) '| preparse(S3) 'end '`) preparse(S4) .
  eq preparse(S 'transition S1) = preparse(S) '`( 'transition preparse(S1) .
  eq preparse(S 'procedure S1) = preparse(S) '`( 'procedure preparse(S1) .
@@ -33,8 +61,11 @@ fmod PREPARSE is
  eq preparse(S '_exception: S1) = preparse(S) '-exception: preparse(S1) .
  eq preparse(S '_exception ': S1) = preparse(S) '-exception: preparse(S1) .
  eq preparse(S '<- '& 'BLOCKNUMBER S1) = preparse(S) '<-&BLOCKNUMBER preparse(S1) .
- eq preparse(S '= S2 '; S1) = preparse(S) '= '`( preparse(S2) '`) ';  preparse(S1) .
+
+ ceq preparse(S '= S2 '; S1) = preparse(S) '= '`( preparse(S2) '`) ';  preparse(S1) 
+    if not(tenerPC(S2)) .
  eq preparse(S 'field S3 '= S2 'field S1) = preparse(S) 'field preparse(S3) '= '`( preparse(S2) '`)  preparse('field S1) .
+ 
  ***eq preparse(S '; S2 '| S1) = preparse(S) '; '`( preparse(S2) '`) '|  preparse(S1) .
 ---  ceq preparse(S Q S1) = preparse(S) Q1 ': preparse(S1)
 ---      if St := string(Q) /\

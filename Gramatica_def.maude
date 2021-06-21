@@ -434,7 +434,7 @@ fmod Programa is
   op Some__ : NombreTipo Qid -> Option [ctor prec 13] . 
   op Some_ : Qid -> Option [ctor prec 13] .
   op Some_ : Nat -> Option [ctor] .
-
+  op Some_ : Clave -> Option [ctor] .
   ***Declaración Lista
   op List_ : NombreTipo -> Lista [ctor prec 13] .
   ***Constructoras de las listas
@@ -658,6 +658,7 @@ fmod MEMORIA is
   pr MAP{Nat, Nat} .
   pr MAP{Nat, Clave} .
   pr MAP{Nat, Mapa} .
+  pr MAP{Nat, Qid} .
   ***pr MAP{Bool, Bool} .
   ***pr MAP{Nat, Bool} .
 
@@ -716,6 +717,7 @@ fmod MEMORIA is
   op [_=>_|_] : Variable Map{Nat,Clave} TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable Map{Nat,Nat} TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable Map{Nat,Mapa} TipoVariable  -> Pareja [ctor] .
+  op [_=>_|_] : Variable Map{Nat,Qid} TipoVariable  -> Pareja [ctor] .
   op [_=>_|_] : Variable ParEjecucion Par -> Pareja [ctor] .
   op [_=>_|_] : Variable Int TipoVariable -> Pareja [ctor] .
   op [_=>_|_] : Variable Qid TipoVariable -> Pareja [ctor] .
@@ -739,6 +741,7 @@ fmod MEMORIA is
   op [_=>_] : Variable Map{Nat, Clave} -> Pareja [ctor] .
   op [_=>_] : Variable Map{Nat, Nat} -> Pareja [ctor] .
   op [_=>_] : Variable Map{Nat, Mapa} -> Pareja [ctor] .
+  op [_=>_] : Variable Map{Nat, Qid} -> Pareja [ctor] .
   op [_=>_] : Memoria Memoria -> Pareja [ctor] .
   ***op [_=>_] : Variable Map{Bool, Bool} -> Pareja [ctor] .
   op [_=>_,_] : Variable Evento Memoria -> Pareja [ctor] .
@@ -982,6 +985,7 @@ mod REGLAS is
   var MP : Map{Nat,Clave} .
   var MPN : Map{Nat,Nat} .
   var MNM : Map{Nat, Mapa} .
+  var MNQ : Map{Nat, Qid} .
 
   ***Regla para guardar las importaciones
   rl[Contrato N import LIMP NL LE NC lpv LCM LT ,M, M'] => [Contrato N iv NL LE NC lpv LCM LT ,M Importaciones[LIMP], M'] .
@@ -1018,6 +1022,8 @@ mod REGLAS is
      if x =/= '_balance .
   crl[C,M [x => Emp NT TE | Map NT TE]M1, M'] => [C,M[x => MPN | Map NT TE]M1, M'] 
     if MPN := empty .
+  crl[C,M [x => Emp NT 'Dummy | Map NT 'Dummy]M1, M'] => [C,M[x => MNQ | Map NT 'Dummy]M1, M'] 
+    if MNQ := empty .
   crl[C,M [x => Emp NT (Map NT1 TE) | Map NT (Map NT1 TE)]M1, M'] => [C,M[x => MNM | Map NT (Map NT1 TE)]M1, M'] 
     if MNM := empty .
   crl[C,M [x => Emp NT TV | Map NT TV]M1, M'] => [C,M[x => MP | Map NT TV]M1, M'] 
@@ -1045,6 +1051,7 @@ mod REGLAS is
   
 
   rl[C , M , M3 Proc[x, LPI, D LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 almacenar(D), M4 ]M'] .
+  rl[C , M , M3 Proc[x, LPI, aplicarF (x2 QL) LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 AplicarF[x2,QL], M4 ]M'] .
   ***rl[C , M , M3 Proc[x, LPI, existe x2 x3 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Existe[x2 => x3,LP], M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, delete x2 LP LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 Eliminar[x2,LP], M4 ]M'] .
   rl[C , M , M3 Proc[x, LPI, throw x2 LD, M2, M4]M'] => [C , M , M3 Proc[x, LPI, LD, M2 ['throw => x2], M4 ]M'] .
@@ -1168,11 +1175,14 @@ mod REGLAS-EJECUTAR is
   --- rl [M, M1 [x, M4, M5 [x1 => NT] M6]M7] => [M, M1 [x, M4, M5 [x1 => "Hola"] M6]M7] .
 
   ***Reglas para sustituir variables globales (campos)
+  rl[M [x2 => AplicarF[x]] M1, M3] => [M [x2 => x] M1 , M3] .
   rl[M [x => VV | TV] M1 [x2 => AplicarF[x] | TV] M2 , M3] => [M [x => VV | TV] M1 [x2 => VV | TV] M2 , M3] .
   rl[M [x2 => AplicarF[x] | TV] M1 [x => VV | TV] M2 , M3] => [M [x2 => VV | TV] M1 [x => VV | TV] M2 , M3] .
+ 
 
   ***Reglas para ejecutar un let dentro de un campo modificable.
   rl[M [x => let x3 Emp ByStr20 Uint128 in builtin put x3 x1 x2 | Map NT TE] M1 [x1 => IN | TV] M3 [x2 => IN1 | TV1] M4, M2] => [M [x => insert(IN, IN1, empty) | Map NT TE] M1 [x1 => IN | TV] M3 [x2 => IN1 | TV1] M4, M2] .
+  rl[M [x => let x3 Emp ByStr20 'Dummy in builtin put x3 x1 x2 | Map NT 'Dummy] M1 [x2 => x4] M3 [x1 => IN1 | TV1] M4, M2] => [M [x => insert(IN1, x4, empty) | Map NT 'Dummy] M1 [x2 => x4] M3 [x1 => IN1 | TV1] M4, M2] .
 
   --- ***Regla para sustituir valores globales en las transiciones (de forma directa, es decir, teniendo directamente un terminal)
   --- rl[M [x2 => IN] M7 , [x, M1[x1 => x2] M5, M6]] => [M [x2 => IN] M7 , [x,  M1[x1 => IN] M5, M6]] .
@@ -1238,9 +1248,15 @@ mod REGLAS-EJECUTAR is
   eq obtenerValor((MPN, N |-> N1, MPN1), N) = Some N1 .
   eq obtenerValor(MPN, N) = None [owise] .
 
+  op obtenerValorC : Map{Nat,Clave} Nat -> Option [ctor] .
+  eq obtenerValorC((MP, N |-> CL, MP1), N) = Some CL .
+  eq obtenerValorC(MP, N) = None [owise] .
+
   op obtenerValorMapa : Map{Nat,Mapa} Nat Nat -> Option [ctor] .
   eq obtenerValorMapa((MNM, N |-> MPN, MNM1), N, N1) = obtenerValor(MPN, N1) .
   eq obtenerValorMapa(MNM, N, N1) = None [owise] .
+
+
   
   op sustituirFuncion : Memoria Memoria QidList -> Memoria [ctor] .
   eq sustituirFuncion(M, M1, nil) = M1 .
@@ -1345,12 +1361,14 @@ mod REGLAS-EJECUTAR is
   ***Regla para sustituir las variables de los eventos y mensajes.
   ***Desde una variable global.
   rl[M [x2 => IN | TV] M1 , [x, M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M [x2 => IN | TV] M1 , [x, M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
+  rl[M [x2 => V | TV] M1 , [x, M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M [x2 => V | TV] M1 , [x, M2 [x1 => M5[x3 => V]M6 | x4] M3, M4]] .
   ***Desde una variable local
   rl[M , [x, M1[x2 => VV | TV] M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M , [x, M1 M2 [x1 => M5[x3 => VV]M6 | x4] M3, M4]] .
   ***Desde una variable local, este caso solo vale para enteros
   rl[M , [x, M1[x2 => IN | TV] M2 [x1 => M5[x3 => x2]M6 | x4] M3, M4]] => [M , [x, M1 [x2 => IN | TV] M2 [x1 => M5[x3 => IN]M6 | x4] M3, M4]] .
   ***Desde una variable que está en la entrada de la transicion
   rl[M , [x, M1 [x1 => M5[x3 => x2]M6 | x4] M3, M4[x2 => IN | TV] M2]] => [M , [x, M1 [x1 => M5[x3 => IN]M6 | x4] M3, M4 [x2 => IN | TV] M2]] .
+  rl[M , [x, M1 [x1 => M5[x3 => x2]M6 | x4] M3, M4[x2 => V | TV] M2]] => [M , [x, M1 [x1 => M5[x3 => V]M6 | x4] M3, M4 [x2 => V | TV] M2]] .
   
 
   ***Regla para ejecutar la operacion evento.
@@ -1459,6 +1477,7 @@ mod REGLAS-EJECUTAR is
   rl[M , [x, M1 [ x2 => MPN | Map NT TE] M2 [x4 => [get x2 x3]] M3, M4[x3 => N | TV] M5]] => [M , [x, M1 [ x2 => MPN | Map NT TE] M2 [x4 => obtenerValor(MPN, N) | Option TE] M3, M4[x3 => N | TV] M5]]  .
   rl[M [ x2 => MPN | Map NT TE] M2 , [x, M1 [x3 => N | NT] M5 Obtener[x1 => x2, posicion x3] M3, M4]] => [M [ x2 => MPN | Map NT TE] M2 , [x, M1 [x3 => N | NT] M5 [x1 => obtenerValor(MPN, N) | Option TE ] M3, M4]]  .
   rl[M [ x2 => MPN | Map NT TE] M2 , [x, M1 Obtener[x1 => x2, posicion x3] M3, M4[x3 => N | NT] M5 ]] => [M [ x2 => MPN | Map NT TE] M2 , [x, M1 [x1 => obtenerValor(MPN, N) | Option TE ] M3, M4[x3 => N | NT] M5 ]]  .
+  rl[M [ x2 => MP | Map NT NT1] M2 , [x, M1 Obtener[x1 => x2, posicion x3] M3, M4[x3 => N | NT] M5 ]] => [M [ x2 => MP | Map NT NT1] M2 , [x, M1 [x1 => obtenerValorC(MP, N) | Option NT1 ] M3, M4[x3 => N | NT] M5 ]]  .
   rl[M [ x2 => MNM | Map NT (Map TV TV1)] M2 , [x, M1 Obtener[x1 => x2, posicion x3 posicion x4] M3, M4[x3 => N | NT] M5 [x4 => N1 | NT1] M6 ]] => [M [ x2 => MNM | Map NT (Map TV TV1)] M2 , [x, M1 [x1 => obtenerValorMapa(MNM, N, N1) | Option TV1 ] M3, M4[x3 => N | NT] M5 [x4 => N1 | NT1] M6 ]]  .
   rl[M [ x2 => MNM | Map NT (Map TV TV1)] M2 , [x, M1 Obtener[x1 => x2, posicion x4 posicion x3] M3, M4[x3 => N | NT] M5 [x4 => N1 | NT1] M6 ]] => [M [ x2 => MNM | Map NT (Map TV TV1)] M2 , [x, M1 [x1 => obtenerValorMapa(MNM, N, N1) | Option TV1 ] M3, M4[x3 => N | NT] M5 [x4 => N1 | NT1] M6 ]]  .
 
