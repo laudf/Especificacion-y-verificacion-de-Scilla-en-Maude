@@ -1,0 +1,16 @@
+scilla_version 0
+
+library HelloWorld
+
+let set_hello_code  = Uint32 2
+
+contract HelloWorld
+()
+
+field welcome_msg : String = "Hola"
+
+transition getHello ()
+  r <- welcome_msg ;
+  e = {_eventname : "getHello" ; msg : r} ;
+  event e
+end

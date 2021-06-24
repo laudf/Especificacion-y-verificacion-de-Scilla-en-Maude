@@ -136,12 +136,13 @@ fmod SCILLA-INST is
  eq varSort = 'Qid .
 endfm
 
-view Scilla from DEAD-CODE-TH to SCILLA-INST is endv
+view SCILLA from DEAD-CODE-TH to SCILLA-INST is endv
 
 fmod DEAD-CODE-SCILLA is
- pr DEAD-CODE-DEF{Scilla} .
+ pr DEAD-CODE-DEF{SCILLA} .
 endfm
 
+***Pruebas
 ***Contrato 1
 --- red deadCode('Contrato_______['0.Zero,'iv.Importacion,'__['NombreLibreria_[''HelloWorld.Qid],'__['let__[
 ---     ''not_owner_code.Qid,'__['Uint32.TipoEntero,'s_['0.Zero]]],'let__[''set_hello_code.Qid,'__['Uint32.TipoEntero,

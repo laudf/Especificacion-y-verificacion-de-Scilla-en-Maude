@@ -3,488 +3,8 @@ load Gramatica_def.maude
 load codigoMuerto.maude
 load file.maude
 
-fmod PARSING is
- pr META-LEVEL .
- pr CONVERSION .
- pr PREPARSE .
- ***pr SISTEMA .
 
- ***pr datos_primitivos .
-
----  sort ParsingRes .
----  op <_> : Term -> ParsingRes [ctor] .
-
- vars T T1 T1' T2 T2' T3 T3' T4 T4' T5 T5' T6 T6' T7 T7' : Term .
- var  TL TL' TL1 : TermList .
- var  Ct : Constant .
- var  S : String .
- var  F : Float .
- vars Q Q' : Qid .
- var  I : Int .
- vars St St' St'' St''' : String .
- vars  N N' : Nat .
- vars QIL QIL1 : QidList .
-
- op parse : Term -> Term .
- ***eq parse(T) = parse(upModule('campos_modificables, true), T) .
- ***eq parse(T) = parse(T) .
-
- ***op parse : Term -> ParsingRes .
- ceq parse('scilla-version_______[T1, T2, T3, T4, T5, T6, T7]) = 'Contrato_______[T1', T2', T3', T4', T5', T6', T7']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) /\
-     T4' := parse(T4) /\
-     T5' := parse(T5) /\
-     T6' := parse(T6) /\
-     T7' := parse(T7)  .
---- ceq parse('scilla-version__[T1, T2]) = 'Contrato__[T1', T2']
----   if T1' := parse(T1) /\ 
----      T2' := parse(T2).
- ceq parse('token[T]) = upTerm(F)
-  if Q := downQid(T) /\
-     S := string(Q) /\
-     F := float(S) .
- ceq parse('token[T]) = upTerm(F)
-  if Q := downQid(T) /\
-     S := string(Q) /\
-     rat(S, 10) :: Nat /\
-     F := float(S + ".0") .
- ceq parse('token[T]) = upTerm(St)
-  if Q := downQid(T) /\
-     S := string(Q) /\
-     N := find(S, "\"", 0) /\
-     St := substr(S, N + 1, sd(length(S), 2)) /\
-     St :: String [print St]  .
- ceq parse('token[T]) = T
-  if Q := downQid(T) /\
-     S := string(Q) /\
-     not (float(S) :: Float) /\
-     not (rat(S, 10) :: Nat)  .
-
-
- eq parse('bubble[TL]) = TL .
-
-
-
- ***ENTEROS
- ceq parse('eq__[T1, T2]) = '_==._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('add__[T1, T2]) = '_+._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('sub__[T1, T2]) = '_-_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('mul__[T1, T2]) = '_*_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('div__[T1, T2]) = '_/_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('rem__[T1, T2]) = '_rem_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('lt__[T1, T2]) = '_<._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('pow__[T1, T2]) = '_^_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('isqrt_[T1]) = 'raiz_[T1']
-  if T1' := parse(T1) .
- ceq parse('to-nat_[T1]) = 'to-nat_[T1']
-  if T1' := parse(T1) .
-
- ***STRINGS
- ceq parse('concat__[T1, T2]) = '_++_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('substr___[T1, T2, T3]) = 'substr___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('to-string_[T1]) = 'to-string_[T1']
-  if T1' := parse(T1) .
- ceq parse('strlen_[T1]) = 'length_[T1']
-  if T1' := parse(T1) .
-
- ***HASHES
- ceq parse('sha256hash_[T1]) = 'sha256hash_[T1']
-  if T1' := parse(T1) .
- ceq parse('schnorr-verify___[T1, T2, T3]) = 'schnorr-verify___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('ecdsa-verify___[T1, T2, T3]) = 'ecdsa-verify___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
-
- ***MAPS
- ceq parse('Emp__[T1, T2]) = 'Emp__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('Map__[T1, T2]) = 'Map__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('`[_`][T1]) = 'posicion_[T1']
-  if T1' := parse(T1) .
- ceq parse('put___[T1, T2, T3]) = 'put___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('__:=_[T1, T2, T3]) = 'insertar___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parseL(T2) /\
-     T3' := parse(T3) .
- ceq parse('_<-__[T1, T2, T3]) = 'obtener___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parseL(T3) .
- ceq parse('get__[T1, T2]) = 'get__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('contains__[T1, T2]) = 'contains__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_<-exists__[T1, T2, T3]) = 'existe___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parseL(T3) .
- ceq parse('remove__[T1, T2]) = 'remove__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('delete__[T1, T2]) = 'delete__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parseL(T2) .
-
- ***BNUM
- ceq parse('blt__[T1, T2]) = '_<._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('badd__[T1, T2]) = '_+._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('bsub__[T1, T2]) = '_-_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
-
- ***DATOS ALGEBRAICOS
- ***Option
- ceq parse('None`{_`}[T1]) = 'None`{_`}[T1']
-  if T1' := parse(T1) .
- ceq parse('Some`{_`}_[T1, T2]) = 'Some__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('Some_[T1]) = 'Some_[T1']
-  if T1' := parse(T1) .
- ceq parse('Option_[T1]) = 'Option_[T1']
-  if T1' := parse(T1) .
- ***Listas
- ceq parse('List_[T1]) = 'List_[T1']
-  if T1' := parse(T1) .
- ceq parse('Nil`{_`}[T1]) = 'Nil`{_`}[T1']
-  if T1' := parse(T1) .
- ceq parse('Cons`{_`}__[T1, T2, T3]) = 'Cons___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ***Pares
- ceq parse('Pair`{__`}__[T1, T2, T3, T4]) = 'Pair____[T1', T2', T3', T4']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) /\ 
-     T4' := parse(T4) .
- ceq parse('Pair__[T1, T2]) = 'Pair__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ***Naturales
- ceq parse('Succ_[T1]) = 'Sucesor_[T1']
-  if T1' := parse(T1) .
-
- ***PARÁMETROS INMUTABLES
- ceq parse('_:_[T1, T2]) = '_:_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
----  ceq parse(M, '_`,_[T1, T2]) = M2, 'ListaParamInm__[T1', T2']
----   if M1, T1' := parse(M, T1) /\
----      M2, T2' := parse(M1, T2) .
- eq parse('_`,_[TL]) = '_`,_[parseL(TL)]  .
-
- ***CAMPOS MODIFICABLES
- ceq parse('field_=_[T1, T2]) = 'campo_=_[T1', T2'] 
-  if T1'  := parse(T1) /\
-     T2'  := parse(T2) .
- eq parse('__[TL]) = '__[parseL(TL)] .
-
- ***EXPRESIONES
- ceq parse('let_=_[T1, T2]) = 'let__[T1', T2'] 
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('let_=_in_[T1, T2, T3]) = 'let__in_[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('fun`(_`)=>_[T1, T2]) = 'funcion__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_=__[T1, T2, T3]) = 'aplicarFuncion___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
-
- ceq parse('`(_`)['bubble[TL]]) = 'aplicarF_[TL']
-  if TL' := parseL(TL) .
- 
-
- ceq parse('@___[T1, T2, T3]) = '@___[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('builtin_[T1]) = 'builtin_[T1']
-  if T1' := parse(T1) .
- ceq parse('|_=>_[T1, T2]) = 'opcionMatch__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('match_with_end[T1, T2]) = 'match__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
-
- ***DECLARACIONES
- ceq parse('_<-_[T1, T2]) = 'guardar__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_:=_[T1, T2]) = 'actualizar__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_<-&BLOCKNUMBER[T1]) = '_<-&BLOCKNUMBER[T1']
-  if T1' := parse(T1) .
- ceq parse('_=_[T1, T2]) = '_=_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('forall__[T1, T2]) = 'forall__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('send_[T1]) = 'enviar_[T1']
-  if T1' := parse(T1) .
- ceq parse('event_[T1]) = 'evento_[T1']
-  if T1' := parse(T1) .
- eq parse('_;_[('_:_[T1, T2], TL)]) = '_;_[parse('_:_[T1, T2]), parseL(TL)] .
- eq parse('_;_[TL]) = '__[parseL(TL)] .
-
-
- ***COMUNICACIONES 
- ceq parse('`{_;_`}[T1, T2]) = '`{_;_`}[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('-recipient:_[T1]) = 'dirEnvio_[T1']
-  if T1' := parse(T1) .
- ceq parse('-amount:_[T1]) = 'cantidadEnvio_[T1']
-  if T1' := parse(T1) .
- ceq parse('`{_;_;_;_`}[T1, T2, T3, T4]) = '`{_;_;_;_`}[T1', T2', T3', T4']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) /\
-     T4' := parse(T4) .
-
- ***TRANSICIONES Y PROCEDIMIENTOS
- ceq parse('procedure_`(_`)_end[T1, T2, T3]) = 'procedimiento___end[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('transition_`(_`)_end[T1, T2, T3]) = 'transicion___end[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
-
-***BOOLUTILS
- ceq parse('andb__[T1, T2]) = '_and_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_.andb__[T1, T2, T3]) = '_and.__[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('orb__[T1, T2]) = '_or_[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('_.orb__[T1, T2, T3]) = '_or.__[T1', T2', T3']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) /\
-     T3' := parse(T3) .
- ceq parse('negb_[T1]) = 'negb_[T1']
-  if T1' := parse(T1) .
- ceq parse('_.negb_[T1, T2]) = 'negb.__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
- ceq parse('bool-to-string_[T1]) = 'bool-to-string_[T1']
-  if T1' := parse(T1) .
-ceq parse('_.bool-to-string_[T1, T2]) = 'bool-to-string.__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
-
- ***INTUTILS
- ceq parse('uint128-le__[T1, T2]) = '_<._[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parse(T2) .
-
- ***ADTS
- ceq parse('|_[T1]) = '|_[T1']
-  if T1' := parse(T1) .
- ceq parse('type_=_[T1, T2]) = 'tipo__[T1', T2']
-  if T1' := parse(T1) /\
-     T2' := parseL(T2) .
-
- ***Errores
- ceq parse('throw_[T1]) = 'throw_[T1']
-  if T1' := parse(T1) .
-
- ceq parse('library_[T1]) = 'NombreLibreria_[T1']
-  if T1' := parse(T1) .
- ceq parse('contract_[T1]) = 'NombreContrato_[T1']
-  if T1' := parse(T1) .
- ceq parse('import_[T1]) = 'import_[T1']
-  if T1' := parse(T1) .
-
-
- ceq parse(T) = Q'
-    if St := string(T) /\
-    N := find(St, "@", 0) /\ 
-    St' := substr(St, 0, N) /\
-    St'' := substr(St, N + 1, length(St)) /\
-    N' := find(St'', "@", 0) /\
-    St''' := substr(St'', 0, N') /\
-    Q' := qid(St' + St''') .
-   
-
- *** TODO: terminar
- var QL : QidList .
- eq parse(T) = T [owise] .
-
- op parseL : TermList -> TermList .
- eq parseL(empty) = empty .
- ***eq parseL('bubble[QL]) = QL .
-
- eq parseL((T, TL)) = parse(T), parseL(TL) .
-
- op downQid : Term -> [Qid] [memo] .
- eq downQid(Ct)
-    = qid(substr(string(getName(Ct)), 1, length(string(getName(Ct))))) .
-
- op downQidType : Term -> [Qid] [memo] .
- eq downQidType(Ct)
-    = qid(substr(string(getName(Ct)), 0, length(string(getName(Ct))))) .
-
- op downQidList : TermList -> QidList [ctor] .
- eq downQidList(T)
-    = downQid(T) .
- eq downQidList(T TL)
-    = downQid(T) downQidList(TL) [print TL] .
- 
-
- ***sort TipoValorE .
-
- ***var TV : TipoVariable .
-
- ***op {_:_} : Term Term -> TipoValorE [ctor] .
-
- op obtenerEntradas : Term -> Term [ctor] .
- ***eq obtenerEntradas('Entrada`[_=>_`][T, T1], TL) = '`{_:_`}[T, T1] .
- eq obtenerEntradas('__['Entrada`[_=>_`][T, T1], TL]) = '`{_:_`}[T, T1] .
- eq obtenerEntradas('`[_`,_`][T, T1]) = obtenerEntradas(T)  .
-
- op obtenerEntradasTransicion : Term -> Term [ctor] .
- ***eq obtenerEntradas('Entrada`[_=>_`][T, T1], TL) = '`{_:_`}[T, T1] .
- eq obtenerEntradasTransicion('__['Entrada`[_=>_`][T, T1], TL]) = '`{_:_`}[T, T1] .
- eq obtenerEntradasTransicion('`[_`,_`][T, '`[_`,_`,_`][T1, T2, T3]]) = obtenerEntradasTransicion(T3)  .
-
- op hayEntradas : Term -> Bool [ctor] .
- eq hayEntradas('__['Entrada`[_=>_`][T, T1], TL]) = true .
- eq hayEntradas(T) = false [owise] .
- eq hayEntradas('`[_`,_`][T, T1]) = hayEntradas(T)  .
-
- op hayEntradasTransicion : Term -> Bool [ctor] .
- eq hayEntradasTransicion('__['Entrada`[_=>_`][T, T1], TL]) = true .
- eq hayEntradasTransicion(T) = false [owise] .
- eq hayEntradasTransicion('`[_`,_`][T, '`[_`,_`,_`][T1, T2, T3]]) = hayEntradasTransicion(T3)  .
-
- op modificarTermino : Term -> Term [ctor] .
- eq modificarTermino('`[_`,_`,_`][T, T1, T2]) = '`[_`,_`][T1, T2] .
-
- op obtenerTermino : Term -> Term [ctor] .
- eq obtenerTermino('`[_`,_`][T, T1]) = T .
-
- op obtenerTerminoTransiciones : Term -> Term [ctor] .
- eq obtenerTerminoTransiciones('`[_`,_`][T, T1]) = T1 .
-
- op sustituirTermino : Term Term -> Term [ctor] .
- eq sustituirTermino('`[_`,_`][T, T1], '`{_`,_`}[T2, T3]) = '`[_`,_`][T2, T1]  .
- eq sustituirTermino('`[_`,_`][T, T1], '`[_`,_`][T2, T3]) = '`[_`,_`][T2, T1]  .
-
- op sustituirTerminoTransicion : Term Term -> Term [ctor] .
- eq sustituirTerminoTransicion('`[_`,_`][T, T1], '`{_`,_`}[T2, T3]) = '`[_`,_`][T, T2]  .
-
- op obtenerNombresTransiciones : TermList -> QidList [ctor] .
- eq obtenerNombresTransiciones(empty) = nil .
- eq obtenerNombresTransiciones(('`[_`,_`,_`][T, T1, T2], TL)) = downQid(T) obtenerNombresTransiciones(TL) .
- ***eq obtenerNombresTransiciones(('Proc`[_`,_`,_`,_`,_`][T, T1, T2, T3, T4], TL)) = obtenerNombresTransiciones(TL) .
- eq obtenerNombresTransiciones('`[_`,_`][T, '__[TL]]) = obtenerNombresTransiciones(TL) .
- eq obtenerNombresTransiciones('`[_`,_`][T, T1]) = obtenerNombresTransiciones(T1) .
-
- op devolverString : QidList -> String [ctor] .
- eq devolverString(Q) = string(Q) .
- eq devolverString(Q QL) = string(Q) + ", " + devolverString(QL) .
-
- op tenerDev : TermList -> Bool [ctor] .
- eq tenerDev(('`[_=>_`][''enviar.Qid, TL], TL')) = true .
- eq tenerDev(('`[_=>_`][''evento.Qid, TL], TL')) = true .
- eq tenerDev(('`[_=>_`][''evento.Qid, TL], TL')) = true .
- eq tenerDev((T, TL')) = tenerDev(TL') .
- eq tenerDev(TL) = false [owise] .
-
- op obtenerResultado : TermList -> TermList [ctor] .
- eq obtenerResultado(empty) = empty .
- ceq obtenerResultado((TL1, '`[_=>_`][''enviar.Qid, TL], TL')) = '`[_=>_`][''enviar.Qid, TL], obtenerResultado(TL')
-    if not(tenerDev(TL1)) .
- ceq obtenerResultado((TL1, '`[_=>_`][''evento.Qid, TL], TL')) = '`[_=>_`][''evento.Qid, TL], obtenerResultado(TL') 
-    if not(tenerDev(TL1)) .
- eq obtenerResultado('`[_`,_`,_`][T, '__[TL], T2]) = obtenerResultado(TL) .
- eq obtenerResultado('`[_`,_`,_`][T, 'mv.Memoria, T2]) = empty .
- eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''evento.Qid, TL], T2]) = '`[_=>_`][''evento.Qid, TL] .
- eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''enviar.Qid, TL], T2]) = '`[_=>_`][''enviar.Qid, TL] .
- eq obtenerResultado('`[_`,_`,_`][T, '`[_=>_`][''throw.Qid, TL], T2]) = '`[_=>_`][''throw.Qid, TL] .
- eq obtenerResultado('`[_`,_`][T, T1]) = obtenerResultado(T1) .
-
-
----  op introducirValor : Term Term -> Term [ctor] .
----  eq introducirValor('__['Entrada`[_=>_`][T, T1], TL], T2) = '__[TL, '`[_=>_|_`][T, T2, T1]] [print T2] .
----  eq introducirValor('`[_`,_`][T, T1], T2) = '`[_`,_`][introducirValor(T, T2), T1] [print "aa"] .
- op obtenerCampos : QidList -> QidList [ctor] .
- eq obtenerCampos(nil) = nil .
- eq obtenerCampos('field Q QIL) = Q obtenerCampos(QIL) .
- eq obtenerCampos(Q QIL) = obtenerCampos(QIL) .
-
- var C : Constant .
- var Q'' : Qid .
-
- op obtenerCamposMod : TermList QidList -> TermList [ctor] .
- eq obtenerCamposMod(TL, nil) = empty .
- ceq obtenerCamposMod((TL1, '`[_=>_|_`][C, T, T1], TL'), Q QIL) = '`[_=>_|_`][C, T, T1], obtenerCamposMod((TL1, TL'), QIL)
-   if Q' := getName(C) /\
-      S := string(Q') /\
-      St := substr(S, 1, length(S)) /\
-      Q'' := qid(St) /\
-      Q'' == Q  .
- eq obtenerCamposMod('__[TL], QIL) = obtenerCamposMod(TL, QIL) .
- 
-
-
-endfm
-
-
-mod MTP is
+mod SCIMAUDE is
  ***pr SISTEMA .
  inc STD-STREAM .
  pr  CONVERSION .
@@ -581,6 +101,7 @@ rl [newLine] :
         getLine(FHIn, example)
    fi .
 
+***Regl que realiza el parseado.
 crl [parsing] :
     < example : EXAMPLE | read: Read, state: parsing, Attrs >
  => < example : EXAMPLE | read: "", state: eleccion, term: T', listaCampos: QIL2, Attrs >
@@ -592,32 +113,66 @@ crl [parsing] :
     {T, Ty} := metaParse(GRAMMAR, QIL1, anyType) /\
     T' := parse(T) [print QIL "\n" QIL1 "\n" T "\nParseado: " T' "\n"] .
 
-
+***Regla que elige entro si se quiere ejecutar o analizar
 rl [elegir] :
     < example : EXAMPLE | read: "", state: eleccion, term: T, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: eleccionHecha, term: T, listaCampos: QIL2, Attrs >
-    getLine(stdin, example, "Que quieres hacer: 1 ejecutar o 2 analizar codigo muerto > ") .
+    getLine(stdin, example, "Que quieres hacer: 1 analizar codigo muerto o cualquier otro carecter para ejecutar > ") .
 
 rl [eleccionHecha] :
    gotLine(example, FHIn, Text)
    < example : EXAMPLE | read: "", state: eleccionHecha, term: T, listaCampos: QIL2, Attrs  >
 => if Text == "1\n"
-   then < example : EXAMPLE | read: "", state: guardarMem, term: T, listaCampos: QIL2, Attrs  > 
-        closeFile(FHIn, example)
-   else < example : EXAMPLE | read: "", state: analisis, term: T, Attrs   >
+   then < example : EXAMPLE | read: "", state: analisis, term: T, Attrs   >
         getLine(FHIn, example)
+   else < example : EXAMPLE | read: "", state: guardarMem, term: T, listaCampos: QIL2, Attrs  > 
+        
+        closeFile(FHIn, example)
    fi .
+
+var DT : DeadCodeTuple .
+var QL : QidList .
+
+***Operaciones para mostrar la salida del análisis más bonita
+op convertir : DeadCodeInfo Term -> String [ctor] .
+eq convertir(allOK, T) = "" .
+eq convertir(< 'transicion___end[T], T1 > DCI, T2) = "< " + "transicion" + "[" + string(downQid(T)) + "]" + " => " +  string(downQid(T1)) + " > " + convertir(DCI, T2) .
+ceq convertir(< 'funcion__[TL], T1 > DCI, T2) = "< " + "funcion" + "[" + string(downQid(buscar(T2 , < 'funcion__[TL], T1 >))) + "]" + " => " +  string(downQid(T1)) + " > " + convertir(DCI, T2) 
+   if QL := buscar(T2 , < 'funcion__[TL], T1 >) .
+
+op buscar : Term DeadCodeInfo -> QidList [ctor] .
+eq buscar(Q[Q1, T], < T, T1 >) = Q1 .
+eq buscar(Q[TL], DCI) = buscar*(TL, DCI)  . 
+eq buscar(T, DCI) = nil .
+
+op buscar* : TermList DeadCodeInfo -> QidList .
+eq buscar*(empty, DCI) = nil .
+eq buscar*((T, TL), DCI) = buscar(T, DCI) buscar*(TL, DCI) .
+
+
+***Reglas para realizar el análisis
+crl [analizar] :
+    < example : EXAMPLE | read: "", state: analisis, term: T, Attrs >
+ => < example : EXAMPLE | read: "", state: terminar, term: T, Attrs >
+   write(stdout, example, "El resultado del analisis es: " + "allOK" + "\n" )
+
+  if DCI := deadCode(T) /\ 
+     DCI == allOK .
 
 crl [analizar] :
     < example : EXAMPLE | read: "", state: analisis, term: T, Attrs >
  => < example : EXAMPLE | read: "", state: terminar, term: T, Attrs >
+   write(stdout, example, "El resultado del analisis es: " + S + "\n" )
 
-  if DCI := deadCode(T) [print "El resultado del analisis es: " DCI] .
+  if DCI := deadCode(T) /\
+     S := convertir(DCI, T) .
 
+***Regla para indicar que ha finalizado la ejecución del programa.
 rl [terminar] :
     < example : EXAMPLE | read: "", state: terminar, term: T, Attrs >
  => write(stdout, example, "Terminado.\n") .
 
+***Regla para guardar en memoria los datos
 crl [guardarMemoria] :
     < example : EXAMPLE | file: noFile, read: "",  state: guardarMem, terms: empty,  term: T, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: suprimir, term: T1, listaCampos: QIL2, Attrs >
@@ -626,6 +181,7 @@ crl [guardarMemoria] :
     {T', Ty} := metaRewrite(upModule('REGLAS, true), '`[_`,_`,_`][T, 'mv.Memoria, 'mv.Memoria], unbounded) /\
     T1 := modificarTermino(T') [print T' "\nGuardarMemoria: " T1]  .
 
+***Regla para suprimir algunos campos innecesarios.
 crl [suprimirCampos] :
     < example : EXAMPLE | read: "",  state: suprimir, term: T, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: pedirInfo, term: T', listaCampos: QIL2, Attrs >
@@ -633,17 +189,7 @@ crl [suprimirCampos] :
  if 
     {T', Ty} := metaRewrite(upModule('REGLAS-SUPRIMIR, true), T, unbounded) [print T'] .
 
----  sort conjSalida .
-
----  var C : Contrato .
----  var x : Qid .
----  var TV : TipoVariable .
-
----  op {_,_} : Qid TipoVariable -> conjSalida [ctor] .
-
----  op obtenerEntrada : Term -> conjSalida [ctor] .
----  eq obtenerEntrada([C, M Entrada[x => TV] M1, M2]) = {x, TV} .
-
+***Regla para pedir los parámetros inmutables.
 crl [pedirParametros] :
     < example : EXAMPLE | read: "", state: pedirInfo, term: T, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: cargarParametros, term: T, listaCampos: QIL2, Attrs >
@@ -652,7 +198,8 @@ crl [pedirParametros] :
       hayEntradas(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradas(T) [print T] .
 
-crl [noHayParametros] :
+***Regla que pide una transición para ejecutar siempre que se hayan introducido los valores de todos los parámetros.
+ crl [noHayParametros] :
     < example : EXAMPLE | read: "", state: pedirInfo, term: T, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: cogerTransicion, term: T, listaCampos: QIL2, Attrs >
     getLine(stdin, example, "Que transicion quieres ejecutar? " + devolverString(QIL) + " > ") 
@@ -660,6 +207,7 @@ crl [noHayParametros] :
       not(hayEntradas(T)) /\
       QIL := obtenerNombresTransiciones(T) [print QIL] .
 
+***Regla para cargar los valores introducidos por el usuario en la memoria.
  crl [cargarP] :
     gotLine(example, stdin, Text)
     < example : EXAMPLE | read: "", state: cargarParametros, term: T, listaCampos: QIL2, Attrs >
@@ -673,6 +221,7 @@ crl [noHayParametros] :
      {T', Ty} := metaRewrite(upModule('REGLAS-VALOR, true), '`{_`,_`}[T1, Q1], unbounded) /\
      T2 := sustituirTermino(T, T')  [print Q T2] .
 
+***Regla para coger la parte de la memoria que corresponde a la transición elegida.
 crl [cogerTransicion] :
     gotLine(example, stdin, Text)
     < example : EXAMPLE | read: "", state: cogerTransicion, term: T, listaCampos: QIL2, Attrs >
@@ -686,6 +235,7 @@ crl [cogerTransicion] :
      {T', Ty} := metaRewrite(upModule('REGLAS-TRANSICION, true), '`{_`,_`}[T1, Q1], unbounded) /\
      T2 := sustituirTerminoTransicion(T, T')  [print Q T2] .
 
+***Regla para pedir los parámetros de entrada de la transición.
 crl [pedirParamTransicion] :
     < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
@@ -694,17 +244,38 @@ crl [pedirParamTransicion] :
       hayEntradasTransicion(T) /\
       '`{_:_`}[T1, T2] := obtenerEntradasTransicion(T) [print T] .
 
+***Reglas para ejecutar una transición siempre que se hayan introducido todos los parámetros de entrada.
  crl [ejecutarTransicion] :
     < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T1, listaCampos: QIL2, Attrs >
  => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, listaCampos: QIL2, Attrs >
+      write(stdout, example, "El resultado de los campos modificables es: " +  quitarComillas(printTokens(QIL)) + "\nEl resultado de la transicion es: " + quitarComillas(printTokens(QIL1)) + "\n")
     if 
       not(hayEntradasTransicion(T)) /\
       {T', Ty} := metaRewrite(upModule('REGLAS-EJECUTAR, true), T, unbounded) /\
       T2 := sustituirTermino(T1, T') /\
       T3 := obtenerTermino(T2) /\
-      TL1 := obtenerCamposMod(T3, QIL2) /\
-      TL := obtenerResultado(T')  [print T' "\nEl resultado de las variables globales es: "  TL1  "\nEl resultado de la transicion es: " TL] .
+      N := obtenerTamaño(QIL2) /\
+      TL1 := obtenerCamposMod(T3, QIL2, N) /\
+      TL := obtenerResultado(T') /\
+      QIL := metaPrettyPrint(upModule('REGLAS-EJECUTAR, false),  TL1,  mixfix number) /\
+      QIL1 := metaPrettyPrint(upModule('REGLAS-EJECUTAR, false),  TL,  mixfix number) [print T']  . ***[print T' "\nEl resultado de los campos modificables es: "  QIL  "\nEl resultado de la transicion es: " QIL1] .
+ 
+ crl [ejecutarTransicion1] :
+    < example : EXAMPLE | read: "", state: pedirParamTransicion, terms: T T1, listaCampos: QIL2, Attrs >
+ => < example : EXAMPLE | read: "", state: pedirInfo, term: T2, listaCampos: QIL2, Attrs >
+    write(stdout, example, "El resultado de los campos modificables es: " +  quitarComillas(printTokens(QIL)) + "\nEl resultado de la transicion es: " + quitarComillas(printTokens(QIL1)) + "\n")
+    if 
+      not(hayEntradasTransicion(T)) /\
+      {T', Ty} := metaRewrite(upModule('REGLAS-EJECUTAR, true), T, unbounded) /\
+      T2 := sustituirTermino(T1, T') /\
+      T3 := obtenerTermino(T2) /\
+      N := obtenerTamaño(QIL2) /\
+      TL1 := obtenerCamposMod(T3, QIL2, N) /\
+      TL := obtenerResultado(T') /\
+      QIL := metaPrettyPrint(upModule('REGLAS-EJECUTAR, false),  TL1,  mixfix number) /\
+      QIL1 := metaPrettyPrint(upModule('REGLAS-EJECUTAR, false),  '__[TL],  mixfix number) [print T'] .
 
+***Regla para cargar los parámetros de la transición.
  crl [cargarPTransicion] :
     gotLine(example, stdin, Text)
     < example : EXAMPLE | read: "", state: cargarParamTransicion, terms: T T3, listaCampos: QIL2, Attrs >
@@ -756,7 +327,34 @@ crl [pedirParamTransicion] :
     getLine(stdin, example, "Introduce el nombre del archivo> ") .
 endm
 
+***Pruebas
+--- red convertir(< 'transicion___end[''addMember.Qid],''msgs.Qid > ) .
+--- red convertir(< 'transicion___end[''addMember.Qid],''msgs.Qid > < 'transicion___end[''addMember.Qid],''msgs.Qid >) .
 
+--- red buscar('let__['x, 'funcion__['_:_[''puzzle.Qid,
+---     'ByStr32.NombreTipo],'funcion__['_:_[''guess_a.Qid,'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''guess_b.Qid,
+---     'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''pa.Qid,'ByStr20.NombreTipo],'funcion__['_:_[''pb.Qid,
+---     'ByStr20.NombreTipo],'funcion__['_:_[''oa.Qid,'ByStr20.NombreTipo],'let__in_[''gab.Qid,'Pair____['Option_[
+---     'ByStr32.NombreTipo],'Option_['ByStr32.NombreTipo],''guess_a.Qid,''guess_b.Qid],'match__[''gab.Qid,'__[
+---     'opcionMatch__['Pair__['Some_[''ga.Qid],'Some_[''gb.Qid]],'let__in_[''c1.Qid,'builtin_['_<._[''d1.Qid,''d2.Qid]],
+---     'match__[''c1.Qid,'__['opcionMatch__['true.Bool,''pa.Qid],'opcionMatch__['false.Bool,'let__in_[''c2.Qid,'builtin_[
+---     '_==._[''d1.Qid,''d2.Qid]],'match__[''c2.Qid,'__['opcionMatch__['false.Bool,''pb.Qid],'opcionMatch__['true.Bool,
+---     ''oa.Qid]]]]]]]]],'__['opcionMatch__['Pair__['Some_[''_.Qid],'None.Option],''pa.Qid],'__['opcionMatch__['Pair__[
+---     'None.Option,'Some_[''_.Qid]],''pb.Qid],'opcionMatch__['Pair__['None.Option,'None.Option],''oa.Qid]]]]]]]]]]]]], 
+    
+---     < 'funcion__['_:_[''puzzle.Qid,
+---     'ByStr32.NombreTipo],'funcion__['_:_[''guess_a.Qid,'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''guess_b.Qid,
+---     'Option_['ByStr32.NombreTipo]],'funcion__['_:_[''pa.Qid,'ByStr20.NombreTipo],'funcion__['_:_[''pb.Qid,
+---     'ByStr20.NombreTipo],'funcion__['_:_[''oa.Qid,'ByStr20.NombreTipo],'let__in_[''gab.Qid,'Pair____['Option_[
+---     'ByStr32.NombreTipo],'Option_['ByStr32.NombreTipo],''guess_a.Qid,''guess_b.Qid],'match__[''gab.Qid,'__[
+---     'opcionMatch__['Pair__['Some_[''ga.Qid],'Some_[''gb.Qid]],'let__in_[''c1.Qid,'builtin_['_<._[''d1.Qid,''d2.Qid]],
+---     'match__[''c1.Qid,'__['opcionMatch__['true.Bool,''pa.Qid],'opcionMatch__['false.Bool,'let__in_[''c2.Qid,'builtin_[
+---     '_==._[''d1.Qid,''d2.Qid]],'match__[''c2.Qid,'__['opcionMatch__['false.Bool,''pb.Qid],'opcionMatch__['true.Bool,
+---     ''oa.Qid]]]]]]]]],'__['opcionMatch__['Pair__['Some_[''_.Qid],'None.Option],''pa.Qid],'__['opcionMatch__['Pair__[
+---     'None.Option,'Some_[''_.Qid]],''pb.Qid],'opcionMatch__['Pair__['None.Option,'None.Option],''oa.Qid]]]]]]]]]]]],
+---     ''puzzle.Qid >) .
+
+****red metaPrettyPrint(upModule('REGLAS-EJECUTAR, false),  '`[_=>_|_`][''members.Qid,'_|->_['s_['0.Zero],'`[_`,_`]['"Laura".String,'s_^2['0.Zero]]],'Map__['ByStr20.NombreTipo,'Pair__['String.NombreTipo,'Uint32.TipoEntero]]],  mixfix) .
 
 --- red metaParse(GRAMMAR, tokenize("If xxw\nThen 4 = 4 + w ;\nElse z = 4.5 ;\nFi"), anyType) .
 --- red metaParse(GRAMMAR, tokenize("scilla-version 0 (a : String , b : BNum , c : Uint32) cv | None => @ a Uint32 | None => @ a Uint32"), anyType) .

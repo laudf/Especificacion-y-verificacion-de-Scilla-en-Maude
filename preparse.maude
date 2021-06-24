@@ -1,3 +1,4 @@
+***Módulo donde se define el preparse
 fmod PREPARSE is
  pr CONVERSION .
  pr QID-LIST .
@@ -7,7 +8,7 @@ fmod PREPARSE is
  vars St St1 : String .
  var N : Nat .
 
-
+***Detecta si hay un ;
  op tenerPC : QidList -> Bool [ctor] .
  eq tenerPC('; S) = true .
  eq tenerPC(Q S) = tenerPC(S) .
@@ -38,9 +39,6 @@ fmod PREPARSE is
  ceq preparse(S Q1 '; S1) = preparse(S) '`( Q1 '`) ';  preparse(S1)
     if Q1 == 'IsContractOwner .
  eq preparse(S Q2 '= 'let S2 'in 'match S3 'end '; S1) = preparse(S) Q2 '= '`( 'let S2 'in preparse('match S3 'end) '`) ';  preparse(S1) [print S3] .
- ****eq preparse(S 'let Q '= Q1 S1) = preparse(S) 'let Q '= '`( Q1 '`)  preparse(S1) .
-***  eq preparse(S '; Q Q1 'end S1) = preparse(S) '; '`(  Q Q1 '`) 'end preparse(S1) [print "entra"] .
- ***eq preparse(S 'match S1 '| S2 '| S3 'end S4) = preparse(S) '`( 'match preparse(S1) '| preparse(S2) '| preparse(S3) 'end '`) preparse(S4) .
  eq preparse(S 'transition S1) = preparse(S) '`( 'transition preparse(S1) .
  eq preparse(S 'procedure S1) = preparse(S) '`( 'procedure preparse(S1) .
  eq preparse(S 'match S1) = preparse(S) '`( 'match preparse(S1) .
@@ -66,22 +64,10 @@ fmod PREPARSE is
     if not(tenerPC(S2)) .
  eq preparse(S 'field S3 '= S2 'field S1) = preparse(S) 'field preparse(S3) '= '`( preparse(S2) '`)  preparse('field S1) .
  
- ***eq preparse(S '; S2 '| S1) = preparse(S) '; '`( preparse(S2) '`) '|  preparse(S1) .
----  ceq preparse(S Q S1) = preparse(S) Q1 ': preparse(S1)
----      if St := string(Q) /\
----      N := find(St, ":", 0) /\
----      St1 := substr (St, 0, N) /\
----      Q1 := qid(St1) [print St] .
- ***eq preparse(S 'match S1 'end S2) = preparse(S) '`( 'match preparse(S1) 'end '`) preparse(S2) .
-
----  eq preparse(S '= S1 'let S2) = preparse(S) '`( preparse(S1) '`) 'let preparse(S2) .
----  eq preparse(S '= S1 'in S2) = preparse(S) '`( preparse(S1) '`) 'in preparse(S2) .
----  eq preparse(S '= S1 'transition S2) = preparse(S) '`( preparse(S1) '`) 'transition preparse(S2) .
- ***eq preparse(S '= S1 '; S2) = preparse(S) '`( preparse(S1) '`) '; preparse(S2) .
- 
 
 
  eq preparse(S) = S [owise] .
+
+
 endfm
 
-red preparse( 'name: 'p) .
