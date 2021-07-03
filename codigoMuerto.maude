@@ -6,6 +6,8 @@ fth DEAD-CODE-TH is
  op assignOpL : -> QidList .
  op varSort : -> Qid .
  op noCuentaL : -> QidList .
+ op usarDos : -> QidList .
+ op cogerNombre : -> QidList .
 endfth
 
 fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
@@ -72,30 +74,21 @@ fmod DEAD-CODE-DEF{X :: DEAD-CODE-TH} is
  op getUsed : Term -> TermList .
  ceq getUsed(Q[T]) = getVars(T)
    if occurs(Q, assignOpL) .
- eq getUsed('match__[T, TL]) = (getVars(T), getUsed*(TL)) .
  ceq getUsed(Q[Q1, T]) = (getVars(Q1), getUsed*(T))
-   if Q := 'opcionMatch__ /\
+   if occurs(Q, cogerNombre) /\
       getType(Q1) == varSort .
  ceq getUsed(Q[T, Q1]) = getVars(Q1)
-   if Q := 'opcionMatch__ .
- 
- ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
-   if occurs(Q, assignOpL) /\
-      Q := 'delete__ .
- ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
-   if occurs(Q, assignOpL) /\
-      Q := '_or_ .
- ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
-   if occurs(Q, assignOpL) /\
-      Q := 'forall__ .
+   if occurs(Q, cogerNombre) .
+ ceq getUsed(Q[T, TL]) = (getVars(T), getUsed*(TL)) 
+   if occurs(Q, cogerNombre) .
+  ceq getUsed(Q[T, T']) = (getVars(T), getVars(T'))
+   if occurs(Q, usarDos) .
  ceq getUsed(Q[T, Q1[TL]]) = getVars*(TL) 
-   if occurs(Q, assignOpL) /\
-      Q1 := '`{_;_`} .
+   if occurs(Q, assignOpL) .
  ceq getUsed(Q[T, T']) = getVars(T') 
    if occurs(Q, assignOpL) .
  ceq getUsed(Q[T, T', T'']) = (getVars(T'), getUsed*(T'')) 
-   if occurs(Q, assignOpL) /\
-      Q := 'let__in_ .
+   if occurs(Q, usarDos) .
  ceq getUsed(Q[T, T', T'']) = (getVars(T), getVars(T'), getVars(T'')) 
    if occurs(Q, assignOpL) .
  ceq getUsed(Q[TL]) = getVars*(TL)
@@ -131,9 +124,13 @@ fmod SCILLA-INST is
  op noCuentaL : -> QidList .
  eq noCuentaL = 'actualizar__ '`{_;_`} .
  op assignOpL : -> QidList .
- eq assignOpL = 'evento_ '_=_ '_:_ 'actualizar__ 'guardar__ 'insertar___ 'enviar_ 'delete__ 'Cons___ 'Some__ 'let__in_ '_or_ 'Some_ 'negb_ 'builtin_ 'throw_ 'aplicarF_ 'Pair____ 'existe___ 'obtener___ 'forall__ .
+ eq assignOpL = 'evento_ '_=_ '_:_ 'actualizar__ 'guardar__ 'insertar___ 'enviar_  'Cons___ 'Some__ 'Some_ 'negb_ 'builtin_ 'throw_ 'aplicarF_ 'Pair____ 'existe___ 'obtener___  .
  op varSort : -> Qid .
  eq varSort = 'Qid .
+ op usarDos : -> QidList .
+ eq usarDos = 'delete__ '_or_ 'forall__ 'let__in_ .
+ op cogerNombre : -> QidList .
+ eq cogerNombre = 'match__ 'opcionMatch__ .
 endfm
 
 view SCILLA from DEAD-CODE-TH to SCILLA-INST is endv
